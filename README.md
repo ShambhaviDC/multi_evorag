@@ -81,6 +81,7 @@ pick up a rebuilt index otherwise.
 | `voting.py` | Peer scoring between personas |
 | `synthesis.py` | Top-K synthesis into final answer |
 | `pipeline.py` | Full consensus orchestration (`/query/consensus`) |
+| `evorag_framework.py` | Python design framework, ABCs, schemas & reference architecture |
 | `score_store.py` | Persists per-query persona scores |
 | `persona_evolution/` | Tracks persona performance, detects/replaces weak personas |
 | `api.py` | FastAPI app — all HTTP routes |

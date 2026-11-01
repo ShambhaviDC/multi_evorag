@@ -165,12 +165,14 @@ def compute_final_scores(score_matrix: ScoreMatrix) -> dict[str, float]:
 
     for target_id in target_ids:
         total = 0.0
+        count = 0
         for scorer_row in score_matrix.values():
             score = scorer_row.get(target_id)
             if not score:
                 continue
             total += sum(score[dimension] for dimension in DIMENSIONS) / len(DIMENSIONS)
-        final_scores[target_id] = round(total, 4)
+            count += 1
+        final_scores[target_id] = round(total / count, 4) if count > 0 else 0.0
     return final_scores
 
 

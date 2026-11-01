@@ -57,8 +57,8 @@ async def call_gemini_async(
     prompt: str,
     model: str = GEMINI_MODEL,
     timeout_seconds: int = 90,
-    max_attempts: int = 2,
-    retry_delay_seconds: float = 3.0,
+    max_attempts: int = 5,
+    retry_delay_seconds: float = 2.0,
 ) -> Optional[str]:
     """Call Gemini's generateContent endpoint.
 
@@ -68,10 +68,12 @@ async def call_gemini_async(
     it exactly like a timed-out Ollama call.
 
     Transient errors (429 rate-limit, 5xx server overload) are retried a few
-    times with a short delay — a single "high demand" blip from Google
-    shouldn't waste the one shot this fallback gets against a slow persona.
+    times with a short exponential backoff delay — ensuring quick bursts of
+    scoring calls complete reliably.
     """
-    if not GEMINI_API_KEY:
+    import os
+    api_key = os.getenv("GEMINI_API_KEY", "") or GEMINI_API_KEY
+    if not api_key:
         log.warning("Gemini fallback skipped: GEMINI_API_KEY is not set.")
         return None
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -80,7 +82,7 @@ async def call_gemini_async(
     for attempt in range(1, max_attempts + 1):
         try:
             async with httpx.AsyncClient(timeout=timeout_seconds) as client:
-                response = await client.post(url, params={"key": GEMINI_API_KEY}, json=payload)
+                response = await client.post(url, params={"key": api_key}, json=payload)
                 response.raise_for_status()
                 data = response.json()
                 candidates = data.get("candidates") or []
@@ -93,11 +95,12 @@ async def call_gemini_async(
         except httpx.HTTPStatusError as exc:
             status = exc.response.status_code if exc.response is not None else None
             if status in _GEMINI_RETRYABLE_STATUS and attempt < max_attempts:
+                wait_time = retry_delay_seconds * (1.5 ** (attempt - 1))
                 log.warning(
-                    "Gemini fallback got %s (attempt %s/%s) — retrying in %ss...",
-                    status, attempt, max_attempts, retry_delay_seconds,
+                    "Gemini fallback got %s (attempt %s/%s) — retrying in %.1fs...",
+                    status, attempt, max_attempts, wait_time,
                 )
-                await asyncio.sleep(retry_delay_seconds)
+                await asyncio.sleep(wait_time)
                 continue
             log.warning("Gemini fallback call failed: %s", exc)
             return None
