@@ -1,3 +1,4 @@
+import asyncio
 """Peer scoring and consensus score computation for EvoRAG."""
 
 import logging
@@ -109,6 +110,8 @@ async def score_as_persona(
         prompt,
         total_timeout_seconds=SCORING_TIMEOUT_SECONDS,
         log_label=f"[{scorer_id}] ",
+        max_output_tokens=350,
+        temperature=0.1,
     )
 
     # ── Diagnostic: log raw LLM output BEFORE any parsing ─────────────────────
@@ -145,15 +148,14 @@ async def build_score_matrix(
     import time as _time
     scorer_ids = list(responses.keys())
     matrix: ScoreMatrix = {}
-    for scorer_id in scorer_ids:
-        t0 = _time.time()
-        log.info("[SCORING] %s scoring peers...", scorer_id)
-        row = await score_as_persona(scorer_id, query, responses)
-        elapsed = round(_time.time() - t0, 1)
+    t0 = _time.time()
+    log.info("[SCORING] Running peer scoring concurrently for %d personas...", len(scorer_ids))
+    rows = await asyncio.gather(*[score_as_persona(sid, query, responses) for sid in scorer_ids])
+    for scorer_id, row in zip(scorer_ids, rows):
         valid_scores = sum(1 for v in row.values() if v is not None)
-        log.info("[SCORING] %s done in %ss — %d/%d valid scores",
-                 scorer_id, elapsed, valid_scores, len(row) - 1)
+        log.info("[SCORING] %s scored peers — %d/%d valid scores", scorer_id, valid_scores, len(row) - 1)
         matrix[scorer_id] = row
+    log.info("[SCORING] All peer scoring completed in %ss", round(_time.time() - t0, 1))
     log.info("SCORE MATRIX:\n%s", matrix)
     return matrix
 

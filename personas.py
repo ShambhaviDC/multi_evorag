@@ -106,7 +106,7 @@ async def _get_response_with_fallback(
     """
     if GEMINI_ONLY_MODE:
         # Ollama is parked for now — go straight to Gemini, no head start.
-        result = await call_gemini_async(prompt)
+        result = await call_gemini_async(prompt, max_output_tokens=550, temperature=0.7)
         if result:
             return result, "gemini_only"
         raise asyncio.TimeoutError(
@@ -302,10 +302,10 @@ async def run_all_personas(
     log.debug("Created Ollama semaphore (max_concurrent=%s) on loop %s",
               OLLAMA_MAX_CONCURRENT, id(asyncio.get_event_loop()))
 
-    # Step 5 — Initial pass (sequential; semaphore inside run_persona guards Ollama)
-    results: List[Dict] = []
-    for persona in active:
-        results.append(await run_persona(persona, context_prompt, semaphore))
+    # Step 5 â Initial pass (run active personas concurrently)
+    results: List[Dict] = list(await asyncio.gather(
+        *[run_persona(persona, context_prompt, semaphore) for persona in active]
+    ))
 
     # Step 6 — Retry empty responses sequentially
     persona_by_id  = {p["id"]: p for p in active}

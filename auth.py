@@ -14,7 +14,8 @@ Google OAuth is left as a stub – integration can be added later using
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import Request, Response, RedirectResponse
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -31,7 +32,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # Security utilities
 # ---------------------------------------------------------------------------
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
 
 oauth_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -42,11 +43,20 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 week
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode('utf-8')[:72],
+            hashed_password.encode('utf-8')
+        )
+    except Exception:
+        return False
 
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(
+        password.encode('utf-8')[:72],
+        bcrypt.gensalt()
+    ).decode('utf-8')
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -77,7 +87,7 @@ class UserRead(BaseModel):
     full_name: Optional[str] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 def get_user_by_email(session: Session, email: str) -> Optional[User]:
@@ -105,11 +115,11 @@ async def get_current_user(
     )
     try:
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        user_id: int = payload.get("sub")
-        if user_id is None:
+        user_id_raw = payload.get("sub")
+        if user_id_raw is None:
             raise credentials_exception
-        token_data = TokenData(user_id=user_id)
-    except JWTError:
+        token_data = TokenData(user_id=int(user_id_raw))
+    except (JWTError, ValueError):
         raise credentials_exception
     user = session.get(User, token_data.user_id)
     if user is None:
@@ -138,8 +148,26 @@ def signup(user_in: UserCreate, session: Session = Depends(get_session)):
 
 
 @router.post("/login", response_model=Token, summary="Obtain a JWT access token")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
-    user = authenticate_user(session, form_data.username, form_data.password)
+async def login(
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    username = None
+    password = None
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        body = await request.json()
+        username = body.get("username") or body.get("email")
+        password = body.get("password")
+    else:
+        form = await request.form()
+        username = form.get("username") or form.get("email")
+        password = form.get("password")
+
+    if not username or not password:
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
+
+    user = authenticate_user(session, username, password)
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     access_token = create_access_token(data={"sub": str(user.id)})

@@ -80,6 +80,8 @@ async def synthesize_top_k(
         prompt,
         total_timeout_seconds=PERSONA_TIMEOUT_SECONDS,
         log_label="[synthesis] ",
+        max_output_tokens=1000,
+        temperature=0.5,
     )
     if answer:
         log.info("[synthesis] Done (source=%s)", source)

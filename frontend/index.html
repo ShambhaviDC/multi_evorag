@@ -23,7 +23,7 @@
       --radius:    12px;
       --radius-sm: 8px;
       --shadow:    0 4px 24px rgba(0,0,0,.55);
-      --font:      -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font:      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     }
 
     /* ── Reset / Base ───────────────────────────────────────────────── */
@@ -49,10 +49,10 @@
 
     /* ── Header ─────────────────────────────────────────────────────── */
     .header {
-      padding: 40px 0 32px;
+      padding: 32px 0 28px;
       text-align: center;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 40px;
+      margin-bottom: 32px;
     }
     .header-badge {
       display: inline-block;
@@ -64,10 +64,10 @@
       text-transform: uppercase;
       padding: 4px 14px;
       border-radius: 100px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
     .header h1 {
-      font-size: clamp(28px, 5vw, 48px);
+      font-size: clamp(28px, 5vw, 46px);
       font-weight: 800;
       letter-spacing: -1px;
       background: linear-gradient(135deg, #fff 40%, var(--accent2));
@@ -79,7 +79,7 @@
     .header p {
       color: var(--muted);
       font-size: 15px;
-      max-width: 600px;
+      max-width: 620px;
       margin: 0 auto;
     }
 
@@ -91,6 +91,9 @@
       text-transform: uppercase;
       color: var(--accent2);
       margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     /* ── Card ───────────────────────────────────────────────────────── */
@@ -102,15 +105,469 @@
       box-shadow: var(--shadow);
     }
 
-    /* ── Query section ──────────────────────────────────────────────── */
-    #section-query { margin-bottom: 32px; }
+    /* ── Top Navigation Bar ─────────────────────────────────────────── */
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .nav-brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover {
+      background: var(--surface2);
+      border-color: var(--accent);
+    }
+    .nav-btn.primary-subtle {
+      background: rgba(108, 99, 255, 0.15);
+      border-color: rgba(108, 99, 255, 0.4);
+      color: var(--accent2);
+    }
+    .nav-btn.primary-subtle:hover {
+      background: rgba(108, 99, 255, 0.25);
+    }
+    .badge-count {
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      padding: 1px 7px;
+      border-radius: 10px;
+    }
+    .nav-auth-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-user-badge {
+      font-size: 13px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 100px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-link-btn {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      transition: color 0.2s;
+    }
+    .nav-link-btn:hover {
+      color: var(--text);
+      text-decoration: none;
+    }
+    .nav-auth-btn {
+      padding: 7px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .nav-auth-btn.login {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .nav-auth-btn.login:hover {
+      border-color: var(--accent);
+      text-decoration: none;
+    }
+    .nav-auth-btn.signup {
+      background: var(--accent);
+      color: #fff;
+      border: 1px solid var(--accent);
+    }
+    .nav-auth-btn.signup:hover {
+      opacity: 0.9;
+      text-decoration: none;
+    }
 
-    .query-inner {
+    /* ── Active Conversation Bar ────────────────────────────────────── */
+    .active-chat-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    .active-chat-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .active-chat-icon { font-size: 18px; }
+    .active-chat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    #active-chat-title {
+      font-size: 14px;
+      color: #fff;
+      font-weight: 600;
+      max-width: 480px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .active-chat-badge {
+      font-size: 11px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--accent2);
+      padding: 2px 8px;
+      border-radius: 100px;
+      font-weight: 600;
+    }
+    .active-chat-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Conversation Thread Section ────────────────────────────────── */
+    #chat-thread-section {
+      margin-bottom: 32px;
+    }
+    .chat-thread-container {
       display: flex;
       flex-direction: column;
       gap: 16px;
+      margin-top: 12px;
+    }
+    .chat-msg {
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      border: 1px solid var(--border);
+      transition: border-color 0.2s;
+    }
+    .chat-msg-user {
+      background: var(--surface2);
+      border-left: 4px solid var(--accent);
+      margin-left: 40px;
+    }
+    .chat-msg-assistant {
+      background: var(--surface);
+      border-left: 4px solid var(--success);
+      margin-right: 40px;
+      box-shadow: var(--shadow);
+    }
+    .chat-msg-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chat-msg-author {
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chat-msg-time {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .chat-msg-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chat-msg-content {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg-action-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+    .msg-action-btn:hover {
+      border-color: var(--accent);
+      background: rgba(108, 99, 255, 0.15);
+      color: #fff;
+    }
+    .msg-audio-badge {
+      font-size: 11px;
+      color: var(--success);
+      font-weight: 600;
+      padding: 2px 7px;
+      background: rgba(67, 233, 123, 0.12);
+      border-radius: 100px;
+      display: none;
+    }
+    .msg-audio-badge.active {
+      display: inline-block;
+      animation: pulse-dot 1s infinite alternate;
     }
 
+    /* ── History Drawer ─────────────────────────────────────────────── */
+    .history-drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 340px;
+      height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      box-shadow: 4px 0 30px rgba(0,0,0,0.5);
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+    .history-drawer.open { transform: translateX(0); }
+    .history-drawer-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .history-drawer-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .history-close-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .history-close-btn:hover { color: #fff; }
+    .history-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--surface2);
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s;
+      gap: 8px;
+    }
+    .history-item:hover {
+      border-color: var(--accent);
+      background: rgba(108, 99, 255, 0.08);
+    }
+    .history-item.active {
+      border-color: var(--accent);
+      background: rgba(108, 99, 255, 0.18);
+    }
+    .history-item-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      flex: 1;
+    }
+    .history-item-title {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .history-item-meta {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      gap: 8px;
+    }
+    .history-delete-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+      line-height: 1;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .history-delete-btn:hover {
+      color: var(--error);
+      background: rgba(255, 78, 106, 0.12);
+    }
+    .history-drawer-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .clear-all-btn {
+      background: rgba(255, 78, 106, 0.1);
+      border: 1px solid rgba(255, 78, 106, 0.35);
+      color: #ff7a8a;
+      width: 100%;
+      padding: 9px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .clear-all-btn:hover {
+      background: rgba(255, 78, 106, 0.22);
+      border-color: var(--error);
+      color: #fff;
+    }
+    .history-drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(2px);
+      z-index: 999;
+      display: none;
+    }
+    .history-drawer-overlay.open { display: block; }
+
+    /* ── Recommendations ────────────────────────────────────────────── */
+    .recommendations-box { margin-bottom: 12px; }
+    .rec-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .rec-chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+    .rec-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+      padding: 5px 12px;
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .rec-chip:hover {
+      border-color: var(--accent);
+      color: var(--accent2);
+      background: rgba(108, 99, 255, 0.1);
+    }
+
+    /* ── Voice Preferences Toolbar ──────────────────────────────────── */
+    .voice-toolbar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 10px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+    .voice-selector-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .voice-selector-group label {
+      color: var(--muted);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .voice-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    .voice-select:focus { border-color: var(--accent); }
+    .voice-info-note {
+      color: var(--muted);
+      font-size: 11px;
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ── Query section ──────────────────────────────────────────────── */
+    #section-query { margin-bottom: 32px; }
+    .query-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
     #query-input {
       width: 100%;
       background: var(--surface2);
@@ -118,11 +575,11 @@
       border-radius: var(--radius);
       color: var(--text);
       font-family: var(--font);
-      font-size: 16px;
+      font-size: 15px;
       line-height: 1.6;
       padding: 16px 20px;
       resize: vertical;
-      min-height: 100px;
+      min-height: 90px;
       transition: border-color .2s;
       outline: none;
     }
@@ -132,7 +589,7 @@
     .query-actions {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
       flex-wrap: wrap;
     }
 
@@ -143,9 +600,9 @@
       color: #fff;
       cursor: pointer;
       font-family: var(--font);
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
-      padding: 12px 32px;
+      padding: 11px 28px;
       letter-spacing: .3px;
       transition: opacity .2s, transform .15s;
       flex-shrink: 0;
@@ -159,10 +616,87 @@
       50% { opacity: 1; }
     }
 
+    /* ── Microphone button & Recording Indicator ────────────────────── */
+    .mic-btn {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .mic-btn:hover {
+      border-color: var(--accent);
+      background: rgba(108, 99, 255, 0.15);
+    }
+    .mic-btn.recording {
+      background: rgba(255, 78, 106, 0.2);
+      border-color: var(--error);
+      color: #fff;
+      animation: pulse-mic 1.2s infinite;
+    }
+    @keyframes pulse-mic {
+      0% { box-shadow: 0 0 0 0 rgba(255,78,106,0.6); }
+      70% { box-shadow: 0 0 0 10px rgba(255,78,106,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,78,106,0); }
+    }
+
+    .recording-indicator {
+      background: rgba(255, 78, 106, 0.12);
+      border: 1px solid rgba(255, 78, 106, 0.35);
+      border-radius: var(--radius-sm);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: #ff9aa8;
+    }
+    .pulse-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--error);
+      animation: pulse-dot 0.8s infinite alternate;
+    }
+    @keyframes pulse-dot {
+      0% { transform: scale(0.8); opacity: 0.5; }
+      100% { transform: scale(1.3); opacity: 1; }
+    }
+    .recording-text {
+      flex: 1;
+    }
+    .stop-rec-btn {
+      background: var(--error);
+      color: #fff;
+      border: none;
+      padding: 5px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .stop-rec-btn:hover { opacity: 0.9; }
+
     .toggle-row {
       display: flex;
-      gap: 20px;
+      gap: 18px;
       flex-wrap: wrap;
+      margin-left: auto;
     }
     .toggle-row label {
       display: flex;
@@ -229,7 +763,7 @@
 
     .consensus-header {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       gap: 12px;
       margin-bottom: 16px;
@@ -243,14 +777,50 @@
       font-family: monospace;
     }
 
+    /* ── Audio / Speech Controls Toolbar ──────────────────────────── */
+    .tts-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .audio-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .audio-btn:hover {
+      border-color: var(--accent);
+      background: rgba(108, 99, 255, 0.15);
+      color: #fff;
+    }
+    .audio-badge {
+      font-size: 11px;
+      color: var(--success);
+      font-weight: 600;
+      padding: 2px 8px;
+      background: rgba(67, 233, 123, 0.12);
+      border-radius: 100px;
+    }
+
     #answer-text {
       font-size: 16px;
       line-height: 1.8;
       cursor: pointer;
       border-radius: var(--radius-sm);
-      padding: 12px;
+      padding: 14px;
       transition: background .15s;
       margin-bottom: 20px;
+      white-space: pre-wrap;
     }
     #answer-text:hover { background: rgba(108,99,255,.07); }
 
@@ -375,9 +945,7 @@
     }
 
     /* Panel B — Score matrix */
-    .matrix-wrap {
-      overflow-x: auto;
-    }
+    .matrix-wrap { overflow-x: auto; }
     #score-matrix-table {
       border-collapse: collapse;
       font-size: 11px;
@@ -448,12 +1016,10 @@
 
     /* ── Evolution section ────────────────────────────────────────── */
     #section-evolution { margin-bottom: 32px; }
-
     #chart-canvas {
       width: 100%;
       max-height: 320px;
     }
-
     .stats-table-wrap { margin-top: 24px; overflow-x: auto; }
     #stats-table {
       border-collapse: collapse;
@@ -474,16 +1040,53 @@
     .stats-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 16px 0; }
 
     /* ── Responsive ──────────────────────────────────────────────── */
-    @media (max-width: 640px) {
-      .app { padding: 0 12px 60px; }
+    @media (max-width: 768px) {
+      .app { padding: 0 14px 60px; }
       .header { padding: 24px 0 20px; }
       .query-actions { flex-direction: column; align-items: stretch; }
-      #analyse-btn { text-align: center; }
+      .toggle-row { margin-left: 0; justify-content: flex-start; }
+      #analyse-btn, .mic-btn { text-align: center; justify-content: center; width: 100%; }
+      .chat-msg-user { margin-left: 12px; }
+      .chat-msg-assistant { margin-right: 12px; }
+      .active-chat-bar { flex-direction: column; align-items: flex-start; }
+      .active-chat-actions { width: 100%; justify-content: flex-end; }
     }
   </style>
+  <script src="/static/auth.js"></script>
 </head>
 <body>
 <div class="app">
+
+  <!-- ── Top Navigation Bar ──────────────────────────────────────── -->
+  <nav class="top-nav">
+    <div class="nav-brand-group">
+      <button id="toggle-history-btn" class="nav-btn" title="Toggle Conversation History">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        <span>Chat History</span>
+        <span id="history-count" class="badge-count">0</span>
+      </button>
+      <button id="new-chat-btn" class="nav-btn primary-subtle" title="Start New Conversation">+ New Chat</button>
+    </div>
+    <div class="nav-auth-group" id="nav-user-container">
+      <a href="/static/login.html" class="nav-auth-btn login">Log In</a>
+      <a href="/static/signup.html" class="nav-auth-btn signup">Sign Up</a>
+    </div>
+  </nav>
+
+  <!-- ── History Drawer & Overlay ────────────────────────────────── -->
+  <div id="history-overlay" class="history-drawer-overlay"></div>
+  <aside id="history-drawer" class="history-drawer">
+    <div class="history-drawer-header">
+      <h3>Chat History (<span id="drawer-count">0</span>)</h3>
+      <button id="close-history-btn" class="history-close-btn">&times;</button>
+    </div>
+    <div id="history-list" class="history-list"></div>
+    <div class="history-drawer-footer">
+      <button id="clear-all-history-btn" class="clear-all-btn" title="Delete all conversation history">
+        🗑️ Clear All History
+      </button>
+    </div>
+  </aside>
 
   <!-- ── Header ──────────────────────────────────────────────────── -->
   <header class="header">
@@ -496,19 +1099,100 @@
   <div id="banner-error" class="banner banner-error" role="alert"></div>
   <div id="banner-warn"  class="banner banner-warn"  role="alert"></div>
 
+  <!-- ── Active Conversation Indicator Bar ───────────────────────── -->
+  <div id="active-chat-banner" class="active-chat-bar">
+    <div class="active-chat-info">
+      <span class="active-chat-icon">💬</span>
+      <span class="active-chat-label">Current Chat:</span>
+      <strong id="active-chat-title">New Research Chat</strong>
+      <span id="active-chat-badge" class="active-chat-badge">New Session</span>
+    </div>
+    <div class="active-chat-actions">
+      <button id="banner-new-chat-btn" class="nav-btn primary-subtle" title="Start a fresh conversation topic">+ New Topic</button>
+      <button id="banner-delete-chat-btn" class="nav-btn" style="color:var(--error); border-color:rgba(255,78,106,0.3); display:none;" title="Delete this conversation">🗑️ Delete</button>
+    </div>
+  </div>
+
+  <!-- ── Conversation Thread Section (Multi-Turn History) ────────── -->
+  <section id="chat-thread-section" style="display:none;">
+    <div class="section-title">
+      <span>Conversation Thread</span>
+      <span id="thread-count-badge" style="font-size:11px; color:var(--muted); font-weight:600;">0 messages</span>
+    </div>
+    <div id="chat-thread-container" class="chat-thread-container"></div>
+  </section>
+
   <!-- ── Section 1: Query ────────────────────────────────────────── -->
   <section id="section-query">
     <div class="section-title">Research Query</div>
     <div class="card query-inner">
+      <!-- Personalized Prompt Recommendations -->
+      <div id="recommendations-container" class="recommendations-box" style="display:none;">
+        <span class="rec-label">Personalized Suggested Prompts</span>
+        <div id="rec-chips" class="rec-chips-wrap"></div>
+      </div>
+
+      <!-- Voice Preferences Toolbar -->
+      <div class="voice-toolbar">
+        <div class="voice-selector-group">
+          <label for="voice-input-lang">
+            <span>🎤</span> Voice Input:
+          </label>
+          <select id="voice-input-lang" class="voice-select" title="Language used for browser Speech Recognition">
+            <option value="en-IN" selected>English (India)</option>
+            <option value="kn-IN">Kannada (kn-IN)</option>
+            <option value="hi-IN">Hindi (hi-IN)</option>
+            <option value="ta-IN">Tamil (ta-IN)</option>
+            <option value="te-IN">Telugu (te-IN)</option>
+          </select>
+        </div>
+
+        <div class="voice-selector-group">
+          <label for="voice-output-lang">
+            <span>🔊</span> Voice Output:
+          </label>
+          <select id="voice-output-lang" class="voice-select" title="Voice language used for browser Speech Synthesis">
+            <option value="en-IN" selected>English (India)</option>
+            <option value="kn-IN">Kannada (kn-IN)</option>
+            <option value="hi-IN">Hindi (hi-IN)</option>
+            <option value="ta-IN">Tamil (ta-IN)</option>
+            <option value="te-IN">Telugu (te-IN)</option>
+          </select>
+        </div>
+
+        <div class="voice-info-note" title="Free native browser speech features">
+          ℹ️ <span>Browser voice: transcribes and speaks in chosen language (no translation).</span>
+        </div>
+      </div>
+
       <textarea
         id="query-input"
-        placeholder="Type a research question… e.g. Should AI be used in judicial judgment writing, and what are the risks?"
+        placeholder="Type a research question or click Voice Input… e.g. What are the key ethical challenges of synthetic biology?"
         rows="4"
         aria-label="Research query input"
       ></textarea>
 
+      <!-- Recording indicator banner -->
+      <div id="recording-indicator" class="recording-indicator" style="display:none;">
+        <div class="pulse-indicator"><span class="pulse-dot"></span></div>
+        <div class="recording-text">
+          <strong>Listening...</strong> Speak clearly in <span id="recording-lang-label">English (India)</span>. Your speech will stream into the box above.
+        </div>
+        <button id="stop-recording-btn" type="button" class="stop-rec-btn">⏹ Stop</button>
+      </div>
+
       <div class="query-actions">
         <button id="analyse-btn" aria-label="Analyse query">Analyse</button>
+        <button id="mic-btn" type="button" class="mic-btn" title="Click to speak your question" aria-label="Microphone input">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+          <span id="mic-btn-label">Voice Input</span>
+        </button>
+
         <div class="toggle-row">
           <label for="toggle-personas">
             <input type="checkbox" id="toggle-personas" checked /> Show persona responses
@@ -531,12 +1215,28 @@
 
   <!-- ── Section 2: Consensus ────────────────────────────────────── -->
   <section id="section-consensus" aria-label="Consensus answer">
-    <div class="section-title">Synthesis Result</div>
+    <div class="section-title">Latest Synthesis Result</div>
     <div class="card">
       <div class="consensus-header">
         <div class="consensus-header-left">
           <h2>Consensus Answer</h2>
           <div class="query-id" id="query-id-display"></div>
+        </div>
+        <!-- Consensus Audio Playback Toolbar -->
+        <div class="tts-toolbar" id="consensus-tts-toolbar">
+          <button id="consensus-speak-btn" class="audio-btn" title="Read consensus response aloud">
+            🔊 <span>Listen</span>
+          </button>
+          <button id="consensus-pause-btn" class="audio-btn" style="display:none;" title="Pause audio playback">
+            ⏸️ <span>Pause</span>
+          </button>
+          <button id="consensus-resume-btn" class="audio-btn" style="display:none;" title="Resume audio playback">
+            ▶️ <span>Resume</span>
+          </button>
+          <button id="consensus-stop-btn" class="audio-btn" style="display:none;" title="Stop audio playback">
+            ⏹️ <span>Stop</span>
+          </button>
+          <span id="consensus-audio-badge" class="audio-badge" style="display:none;">Playing...</span>
         </div>
       </div>
       <div id="answer-text" title="Click to copy" role="button" tabindex="0" aria-label="Consensus answer — click to copy"></div>
@@ -633,9 +1333,9 @@ const PROGRESS_MESSAGES = [
 
 const state = {
   isLoading:       false,
-  evolutionHistory: [],   // [{queryNumber, queryText, scores: {id: score}}]
+  evolutionHistory: [],
   currentResult:   null,
-  personaColors:   {},    // {persona_id: hex}
+  personaColors:   {},
 };
 
 /* ════════════════════════════════════════════════════════════════════
@@ -663,6 +1363,43 @@ const statsEmpty   = $('stats-empty');
 const togglePersonas = $('toggle-personas');
 const toggleScores   = $('toggle-scores');
 const toggleSources  = $('toggle-sources');
+
+// Chat thread & active conversation refs
+const activeChatBanner   = $('active-chat-banner');
+const activeChatTitle    = $('active-chat-title');
+const activeChatBadge    = $('active-chat-badge');
+const bannerNewChatBtn   = $('banner-new-chat-btn');
+const bannerDeleteChatBtn = $('banner-delete-chat-btn');
+const chatThreadSection  = $('chat-thread-section');
+const chatThreadContainer = $('chat-thread-container');
+const threadCountBadge   = $('thread-count-badge');
+
+// Voice input / output refs
+const micBtn             = $('mic-btn');
+const micBtnLabel        = $('mic-btn-label');
+const voiceInputLang     = $('voice-input-lang');
+const voiceOutputLang    = $('voice-output-lang');
+const recordingIndicator = $('recording-indicator');
+const recordingLangLabel = $('recording-lang-label');
+const stopRecordingBtn   = $('stop-recording-btn');
+
+// Consensus TTS refs
+const consensusSpeakBtn  = $('consensus-speak-btn');
+const consensusPauseBtn  = $('consensus-pause-btn');
+const consensusResumeBtn = $('consensus-resume-btn');
+const consensusStopBtn   = $('consensus-stop-btn');
+const consensusAudioBadge = $('consensus-audio-badge');
+
+// History drawer refs
+const historyDrawer      = $('history-drawer');
+const historyOverlay     = $('history-overlay');
+const toggleHistoryBtn   = $('toggle-history-btn');
+const closeHistoryBtn    = $('close-history-btn');
+const newChatBtn         = $('new-chat-btn');
+const historyList        = $('history-list');
+const historyCount       = $('history-count');
+const drawerCount        = $('drawer-count');
+const clearAllHistoryBtn = $('clear-all-history-btn');
 
 /* ════════════════════════════════════════════════════════════════════
    CHART SETUP
@@ -730,7 +1467,6 @@ function assignColors(personaIds) {
 }
 
 function scoreColor(score, max = 10) {
-  // red → yellow → green interpolation
   const t = score / max;
   if (t < 0.5) {
     const r = 255, g = Math.round(t * 2 * 200);
@@ -744,7 +1480,7 @@ function scoreColor(score, max = 10) {
 function showToast(msg = 'Copied!') {
   toast.textContent = msg;
   toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2000);
+  setTimeout(() => toast.classList.remove('show'), 2200);
 }
 
 function showBanner(type, msg) {
@@ -779,15 +1515,721 @@ function stopProgress() {
   progressWrap.classList.remove('visible');
 }
 
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function formatRelativeTime(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    const now = new Date();
+    const diffSec = Math.floor((now - d) / 1000);
+    if (diffSec < 60) return 'Just now';
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch (e) {
+    return '';
+  }
+}
+
 /* ════════════════════════════════════════════════════════════════════
-   RENDERING
+   VOICE ENGINE: SPEECH-TO-TEXT (Web Speech API)
+   ════════════════════════════════════════════════════════════════════ */
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let isRecording = false;
+
+function updateRecLangLabel() {
+  const selectedText = voiceInputLang.options[voiceInputLang.selectedIndex].text;
+  recordingLangLabel.textContent = selectedText;
+}
+voiceInputLang.addEventListener('change', updateRecLangLabel);
+
+function startVoiceRecording() {
+  if (!SpeechRecognition) {
+    showToast('Voice recognition not supported in this browser. Please use Chrome or Edge.');
+    showBanner('warn', 'Speech Recognition (Web Speech API) is not supported in this browser. Please use Google Chrome or Microsoft Edge.');
+    return;
+  }
+
+  if (isRecording) {
+    stopVoiceRecording();
+    return;
+  }
+
+  try {
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = voiceInputLang.value || 'en-IN';
+
+    updateRecLangLabel();
+
+    let initialQuery = qInput.value.trim();
+
+    recognition.onstart = () => {
+      isRecording = true;
+      micBtn.classList.add('recording');
+      micBtnLabel.textContent = 'Listening...';
+      recordingIndicator.style.display = 'flex';
+      showToast(`Listening in ${voiceInputLang.options[voiceInputLang.selectedIndex].text}...`);
+    };
+
+    recognition.onresult = (event) => {
+      let finalTranscript = '';
+      let interimTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+
+      const activeSpeech = (finalTranscript + ' ' + interimTranscript).trim();
+      if (initialQuery) {
+        qInput.value = initialQuery + ' ' + activeSpeech;
+      } else {
+        qInput.value = activeSpeech;
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.warn('Speech recognition error:', event.error);
+      if (event.error === 'not-allowed') {
+        showBanner('error', 'Microphone access denied. Please click the lock/settings icon in your browser address bar to allow microphone access.');
+      } else if (event.error === 'no-speech') {
+        showToast('No speech detected. Please speak into your microphone.');
+      } else if (event.error !== 'aborted') {
+        showToast(`Voice input error: ${event.error}`);
+      }
+      stopVoiceRecording();
+    };
+
+    recognition.onend = () => {
+      isRecording = false;
+      micBtn.classList.remove('recording');
+      micBtnLabel.textContent = 'Voice Input';
+      recordingIndicator.style.display = 'none';
+    };
+
+    recognition.start();
+
+  } catch (err) {
+    console.error('Failed to initialize speech recognition:', err);
+    showToast('Failed to start microphone: ' + err.message);
+    isRecording = false;
+    micBtn.classList.remove('recording');
+    micBtnLabel.textContent = 'Voice Input';
+    recordingIndicator.style.display = 'none';
+  }
+}
+
+function stopVoiceRecording() {
+  if (recognition) {
+    try {
+      recognition.stop();
+    } catch (e) {}
+  }
+  isRecording = false;
+  micBtn.classList.remove('recording');
+  micBtnLabel.textContent = 'Voice Input';
+  recordingIndicator.style.display = 'none';
+}
+
+micBtn.addEventListener('click', () => {
+  if (isRecording) {
+    stopVoiceRecording();
+  } else {
+    startVoiceRecording();
+  }
+});
+stopRecordingBtn.addEventListener('click', stopVoiceRecording);
+
+/* ════════════════════════════════════════════════════════════════════
+   VOICE ENGINE: TEXT-TO-SPEECH (SpeechSynthesis API)
+   ════════════════════════════════════════════════════════════════════ */
+let currentUtterance = null;
+let activeSpeakerContainer = null;
+let systemVoices = [];
+
+function loadVoices() {
+  if ('speechSynthesis' in window) {
+    systemVoices = window.speechSynthesis.getVoices();
+  }
+}
+if ('speechSynthesis' in window) {
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+function cleanTextForSpeech(text) {
+  if (!text) return '';
+  return text
+    .replace(/```[\s\S]*?```/g, ' [code block] ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^#+\s+/gm, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/\[\d+\]/g, '')
+    .replace(/https?:\/\/\S+/g, 'link')
+    .replace(/^[-*+]\s+/gm, '')
+    .replace(/\n+/g, '. ')
+    .trim();
+}
+
+function stopAllPlayback() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+  currentUtterance = null;
+  if (activeSpeakerContainer) {
+    setSpeakerUIState(activeSpeakerContainer, 'idle');
+    activeSpeakerContainer = null;
+  }
+}
+
+function setSpeakerUIState(container, status) {
+  if (!container) return;
+  const speakBtn = container.querySelector('.speak-btn') || container.querySelector('#consensus-speak-btn');
+  const pauseBtn = container.querySelector('.pause-btn') || container.querySelector('#consensus-pause-btn');
+  const resumeBtn = container.querySelector('.resume-btn') || container.querySelector('#consensus-resume-btn');
+  const stopBtn = container.querySelector('.stop-btn') || container.querySelector('#consensus-stop-btn');
+  const badge = container.querySelector('.audio-badge') || container.querySelector('#consensus-audio-badge');
+
+  if (status === 'playing') {
+    if (speakBtn) speakBtn.style.display = 'none';
+    if (pauseBtn) pauseBtn.style.display = 'inline-flex';
+    if (resumeBtn) resumeBtn.style.display = 'none';
+    if (stopBtn) stopBtn.style.display = 'inline-flex';
+    if (badge) {
+      badge.textContent = 'Playing...';
+      badge.style.display = 'inline-block';
+      badge.classList.add('active');
+    }
+  } else if (status === 'paused') {
+    if (speakBtn) speakBtn.style.display = 'none';
+    if (pauseBtn) pauseBtn.style.display = 'none';
+    if (resumeBtn) resumeBtn.style.display = 'inline-flex';
+    if (stopBtn) stopBtn.style.display = 'inline-flex';
+    if (badge) {
+      badge.textContent = 'Paused';
+      badge.style.display = 'inline-block';
+      badge.classList.remove('active');
+    }
+  } else { // idle
+    if (speakBtn) speakBtn.style.display = 'inline-flex';
+    if (pauseBtn) pauseBtn.style.display = 'none';
+    if (resumeBtn) resumeBtn.style.display = 'none';
+    if (stopBtn) stopBtn.style.display = 'none';
+    if (badge) {
+      badge.style.display = 'none';
+      badge.classList.remove('active');
+    }
+  }
+}
+
+function speakText(rawText, containerEl) {
+  if (!('speechSynthesis' in window)) {
+    showToast('Speech synthesis not supported in this browser.');
+    return;
+  }
+
+  // If clicking on already active container and paused, resume
+  if (activeSpeakerContainer === containerEl && window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+    setSpeakerUIState(containerEl, 'playing');
+    return;
+  }
+
+  // Stop any previous speech
+  stopAllPlayback();
+
+  const cleaned = cleanTextForSpeech(rawText);
+  if (!cleaned) {
+    showToast('No readable text to speak.');
+    return;
+  }
+
+  const selectedLang = voiceOutputLang.value || 'en-IN';
+  const utter = new SpeechSynthesisUtterance(cleaned);
+  utter.rate = 1.0;
+  utter.pitch = 1.0;
+  utter.lang = selectedLang;
+
+  // Try to find matching system voice
+  if (!systemVoices.length) loadVoices();
+  const langPrefix = selectedLang.split('-')[0].toLowerCase();
+  const matchedVoice = systemVoices.find(v => v.lang === selectedLang || v.lang.toLowerCase().replace('_', '-').startsWith(selectedLang.toLowerCase())) ||
+                       systemVoices.find(v => v.lang.toLowerCase().startsWith(langPrefix));
+
+  if (matchedVoice) {
+    utter.voice = matchedVoice;
+  } else if (langPrefix !== 'en') {
+    showToast(`Note: ${voiceOutputLang.options[voiceOutputLang.selectedIndex].text} voice not found in OS. Reading in default voice.`);
+  }
+
+  activeSpeakerContainer = containerEl;
+  currentUtterance = utter;
+
+  utter.onstart = () => {
+    setSpeakerUIState(containerEl, 'playing');
+  };
+
+  utter.onpause = () => {
+    setSpeakerUIState(containerEl, 'paused');
+  };
+
+  utter.onresume = () => {
+    setSpeakerUIState(containerEl, 'playing');
+  };
+
+  utter.onend = () => {
+    setSpeakerUIState(containerEl, 'idle');
+    if (activeSpeakerContainer === containerEl) {
+      activeSpeakerContainer = null;
+      currentUtterance = null;
+    }
+  };
+
+  utter.onerror = (e) => {
+    console.warn('Speech synthesis error:', e);
+    setSpeakerUIState(containerEl, 'idle');
+    if (activeSpeakerContainer === containerEl) {
+      activeSpeakerContainer = null;
+      currentUtterance = null;
+    }
+  };
+
+  window.speechSynthesis.speak(utter);
+}
+
+function pausePlayback(containerEl) {
+  if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+    window.speechSynthesis.pause();
+    setSpeakerUIState(containerEl, 'paused');
+  }
+}
+
+function resumePlayback(containerEl) {
+  if ('speechSynthesis' in window && window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+    setSpeakerUIState(containerEl, 'playing');
+  }
+}
+
+// Wire consensus audio controls
+consensusSpeakBtn.addEventListener('click', () => {
+  const text = answerText.textContent;
+  if (!text) {
+    showToast('Run an analysis first to hear the consensus answer.');
+    return;
+  }
+  speakText(text, $('consensus-tts-toolbar'));
+});
+consensusPauseBtn.addEventListener('click', () => pausePlayback($('consensus-tts-toolbar')));
+consensusResumeBtn.addEventListener('click', () => resumePlayback($('consensus-tts-toolbar')));
+consensusStopBtn.addEventListener('click', () => stopAllPlayback());
+
+/* ════════════════════════════════════════════════════════════════════
+   CHAT HISTORY & MULTI-TURN PERSISTENCE MANAGEMENT
+   ════════════════════════════════════════════════════════════════════ */
+let currentUser = null;
+let activeConversationId = null;
+let activeMessages = [];
+let conversationsList = [];
+
+function getActiveConvStorageKey() {
+  const uid = currentUser && currentUser.id ? currentUser.id : 'anon';
+  return `evorag_active_conv_${uid}`;
+}
+
+function updateActiveChatBar(title, count, id) {
+  if (id) {
+    activeChatTitle.textContent = title || `Conversation #${id}`;
+    activeChatBadge.textContent = `Chat #${id} (${count} msgs)`;
+    bannerDeleteChatBtn.style.display = 'inline-flex';
+  } else {
+    activeChatTitle.textContent = 'New Research Chat';
+    activeChatBadge.textContent = 'New Session';
+    bannerDeleteChatBtn.style.display = 'none';
+  }
+}
+
+function startNewChat() {
+  stopAllPlayback();
+  activeConversationId = null;
+  activeMessages = [];
+  try {
+    sessionStorage.removeItem(getActiveConvStorageKey());
+  } catch (e) {}
+
+  updateActiveChatBar('New Research Chat', 0, null);
+  chatThreadContainer.innerHTML = '';
+  chatThreadSection.style.display = 'none';
+  threadCountBadge.textContent = '0 messages';
+  qInput.value = '';
+  renderConversationsList();
+  showToast('Started new conversation session');
+}
+
+bannerNewChatBtn.addEventListener('click', startNewChat);
+newChatBtn.addEventListener('click', () => {
+  startNewChat();
+  closeHistoryDrawer();
+});
+
+bannerDeleteChatBtn.addEventListener('click', async () => {
+  if (!activeConversationId) return;
+  if (!confirm('Are you sure you want to delete this conversation?')) return;
+  await deleteConversation(activeConversationId);
+});
+
+clearAllHistoryBtn.addEventListener('click', async () => {
+  if (!conversationsList.length) {
+    showToast('No chat history to clear.');
+    return;
+  }
+  if (!confirm('Are you sure you want to delete ALL your conversations? This cannot be undone.')) {
+    return;
+  }
+  await clearAllConversations();
+});
+
+function openHistoryDrawer() {
+  historyDrawer.classList.add('open');
+  historyOverlay.classList.add('open');
+}
+
+function closeHistoryDrawer() {
+  historyDrawer.classList.remove('open');
+  historyOverlay.classList.remove('open');
+}
+
+toggleHistoryBtn.addEventListener('click', openHistoryDrawer);
+closeHistoryBtn.addEventListener('click', closeHistoryDrawer);
+historyOverlay.addEventListener('click', closeHistoryDrawer);
+
+/* Render Chat Thread View (All past turns in order) */
+function renderThread(messages) {
+  chatThreadContainer.innerHTML = '';
+  if (!messages || !messages.length) {
+    chatThreadSection.style.display = 'none';
+    threadCountBadge.textContent = '0 messages';
+    return;
+  }
+
+  threadCountBadge.textContent = `${messages.length} message${messages.length === 1 ? '' : 's'}`;
+  chatThreadSection.style.display = 'block';
+
+  messages.forEach((msg, idx) => {
+    const isUser = msg.role === 'user';
+    const msgEl = document.createElement('div');
+    msgEl.className = `chat-msg ${isUser ? 'chat-msg-user' : 'chat-msg-assistant'}`;
+
+    const timeStr = formatRelativeTime(msg.timestamp);
+
+    if (isUser) {
+      msgEl.innerHTML = `
+        <div class="chat-msg-header">
+          <span class="chat-msg-author">👤 You</span>
+          <span class="chat-msg-time">${escHtml(timeStr)}</span>
+        </div>
+        <div class="chat-msg-content">${escHtml(msg.content)}</div>
+      `;
+    } else {
+      // Assistant message with speaker controls
+      msgEl.innerHTML = `
+        <div class="chat-msg-header">
+          <span class="chat-msg-author">🤖 EvoRAG Synthesis</span>
+          <span class="chat-msg-time">${escHtml(timeStr)}</span>
+          <div class="chat-msg-actions msg-audio-controls" id="msg-audio-${idx}">
+            <button class="msg-action-btn copy-msg-btn" title="Copy response text">📋 Copy</button>
+            <button class="msg-action-btn speak-btn" title="Listen to this response">🔊 Listen</button>
+            <button class="msg-action-btn pause-btn" style="display:none;" title="Pause audio">⏸️ Pause</button>
+            <button class="msg-action-btn resume-btn" style="display:none;" title="Resume audio">▶️ Resume</button>
+            <button class="msg-action-btn stop-btn" style="display:none;" title="Stop audio">⏹️ Stop</button>
+            <span class="audio-badge" style="display:none;">Playing...</span>
+          </div>
+        </div>
+        <div class="chat-msg-content">${escHtml(msg.content)}</div>
+      `;
+
+      // Wire copy button
+      const copyBtn = msgEl.querySelector('.copy-msg-btn');
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(msg.content)
+          .then(() => showToast('Copied message!'))
+          .catch(() => showToast('Select + copy text manually'));
+      });
+
+      // Wire audio buttons for this assistant turn
+      const audioContainer = msgEl.querySelector(`#msg-audio-${idx}`);
+      const speakBtn = audioContainer.querySelector('.speak-btn');
+      const pauseBtn = audioContainer.querySelector('.pause-btn');
+      const resumeBtn = audioContainer.querySelector('.resume-btn');
+      const stopBtn = audioContainer.querySelector('.stop-btn');
+
+      speakBtn.addEventListener('click', () => speakText(msg.content, audioContainer));
+      pauseBtn.addEventListener('click', () => pausePlayback(audioContainer));
+      resumeBtn.addEventListener('click', () => resumePlayback(audioContainer));
+      stopBtn.addEventListener('click', () => stopAllPlayback());
+    }
+
+    chatThreadContainer.appendChild(msgEl);
+  });
+}
+
+async function loadAuthAndHistory() {
+  const token = window.EvoRAG ? window.EvoRAG.getToken() : localStorage.getItem('evorag_token');
+  const userContainer = $('nav-user-container');
+  const recContainer = $('recommendations-container');
+  const recChips = $('rec-chips');
+
+  if (!token) {
+    userContainer.innerHTML = `
+      <a href="/static/login.html" class="nav-auth-btn login">Log In</a>
+      <a href="/static/signup.html" class="nav-auth-btn signup">Sign Up</a>
+    `;
+    historyCount.textContent = '0';
+    drawerCount.textContent = '0';
+    if (recContainer) recContainer.style.display = 'none';
+    return;
+  }
+
+  try {
+    const meResp = await fetch('/auth/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!meResp.ok) throw new Error('Invalid token');
+    currentUser = await meResp.json();
+
+    const displayName = currentUser.full_name || currentUser.email.split('@')[0];
+    userContainer.innerHTML = `
+      <div class="nav-user-badge">👤 <strong>${escHtml(displayName)}</strong></div>
+      <a href="/static/onboarding.html" class="nav-link-btn" title="Preferences & Profile">Preferences</a>
+      <button id="logout-btn" class="nav-btn" style="padding: 6px 12px; font-size: 12px;">Log Out</button>
+    `;
+
+    $('logout-btn').addEventListener('click', () => {
+      stopAllPlayback();
+      if (window.EvoRAG) window.EvoRAG.clearToken();
+      else localStorage.removeItem('evorag_token');
+      try { sessionStorage.removeItem(getActiveConvStorageKey()); } catch (e) {}
+      window.location.reload();
+    });
+
+    // Load recommendations
+    fetch('/recommendations/', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (data && data.recommendations && data.recommendations.length) {
+        recChips.innerHTML = '';
+        data.recommendations.forEach(prompt => {
+          const chip = document.createElement('button');
+          chip.className = 'rec-chip';
+          chip.textContent = prompt;
+          chip.addEventListener('click', () => {
+            qInput.value = prompt;
+            qInput.focus();
+          });
+          recChips.appendChild(chip);
+        });
+        recContainer.style.display = 'block';
+      }
+    })
+    .catch(() => {});
+
+    // Load conversations list and restore active session if available
+    await loadConversations();
+
+    const savedConvId = sessionStorage.getItem(getActiveConvStorageKey());
+    if (savedConvId) {
+      const parsedId = parseInt(savedConvId, 10);
+      if (!isNaN(parsedId)) {
+        await openConversation(parsedId, false);
+      }
+    }
+
+  } catch (err) {
+    console.warn('Auth error:', err);
+    if (window.EvoRAG) window.EvoRAG.clearToken();
+    else localStorage.removeItem('evorag_token');
+    userContainer.innerHTML = `
+      <a href="/static/login.html" class="nav-auth-btn login">Log In</a>
+      <a href="/static/signup.html" class="nav-auth-btn signup">Sign Up</a>
+    `;
+  }
+}
+
+async function loadConversations() {
+  const token = window.EvoRAG ? window.EvoRAG.getToken() : localStorage.getItem('evorag_token');
+  if (!token) return;
+
+  try {
+    const resp = await fetch('/conversations/', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!resp.ok) return;
+    conversationsList = await resp.json();
+    historyCount.textContent = conversationsList.length;
+    drawerCount.textContent = conversationsList.length;
+    renderConversationsList();
+  } catch (e) {
+    console.warn('Failed to load conversations:', e);
+  }
+}
+
+function renderConversationsList() {
+  historyList.innerHTML = '';
+  if (!conversationsList.length) {
+    historyList.innerHTML = `
+      <div style="color:var(--muted); font-size:13px; text-align:center; padding:32px 16px;">
+        <p style="margin-bottom:8px; font-size:24px;">💬</p>
+        No conversations yet.<br>Ask a research question or use voice input to start!
+      </div>
+    `;
+    return;
+  }
+
+  conversationsList.forEach(c => {
+    const item = document.createElement('div');
+    const isActive = c.id === activeConversationId;
+    item.className = 'history-item' + (isActive ? ' active' : '');
+    const title = c.title || `Conversation #${c.id}`;
+    const timeStr = formatRelativeTime(c.updated_at || c.created_at);
+
+    item.innerHTML = `
+      <div class="history-item-content">
+        <div class="history-item-title" title="${escHtml(title)}">${escHtml(title)}</div>
+        <div class="history-item-meta">
+          <span>#${c.id}</span>
+          ${timeStr ? `<span>• ${escHtml(timeStr)}</span>` : ''}
+        </div>
+      </div>
+      <button class="history-delete-btn" title="Delete conversation">&times;</button>
+    `;
+
+    item.querySelector('.history-item-content').addEventListener('click', () => {
+      openConversation(c.id, true);
+    });
+
+    item.querySelector('.history-delete-btn').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+      await deleteConversation(c.id);
+    });
+
+    historyList.appendChild(item);
+  });
+}
+
+async function openConversation(id, closeDrawerOnDone = true) {
+  const token = window.EvoRAG ? window.EvoRAG.getToken() : localStorage.getItem('evorag_token');
+  if (!token) return;
+
+  try {
+    const resp = await fetch(`/conversations/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!resp.ok) {
+      if (resp.status === 404) {
+        sessionStorage.removeItem(getActiveConvStorageKey());
+        startNewChat();
+      }
+      return;
+    }
+    const convo = await resp.json();
+    stopAllPlayback();
+
+    activeConversationId = convo.id;
+    activeMessages = convo.messages || [];
+
+    try {
+      sessionStorage.setItem(getActiveConvStorageKey(), convo.id);
+    } catch (e) {}
+
+    updateActiveChatBar(convo.title, activeMessages.length, convo.id);
+    renderConversationsList();
+    if (closeDrawerOnDone) closeHistoryDrawer();
+
+    // Render full chronological conversation thread
+    renderThread(activeMessages);
+
+    // If there is an assistant response, also present it in consensus section
+    const assistantMessages = activeMessages.filter(m => m.role === 'assistant');
+    if (assistantMessages.length) {
+      const latestAssistant = assistantMessages[assistantMessages.length - 1];
+      answerText.textContent = latestAssistant.content;
+      qIdDisplay.textContent = `Conversation #${convo.id}`;
+      secConsensus.classList.add('visible');
+    }
+
+    showToast(`Loaded "${convo.title || 'Conversation #' + id}"`);
+  } catch (e) {
+    console.warn('Error opening conversation:', e);
+  }
+}
+
+async function deleteConversation(id) {
+  const token = window.EvoRAG ? window.EvoRAG.getToken() : localStorage.getItem('evorag_token');
+  if (!token) return;
+
+  try {
+    const resp = await fetch(`/conversations/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!resp.ok && resp.status !== 204) throw new Error('Delete failed');
+
+    if (activeConversationId === id) {
+      startNewChat();
+    }
+    await loadConversations();
+    showToast('Conversation deleted.');
+  } catch (e) {
+    showToast('Failed to delete conversation: ' + e.message);
+  }
+}
+
+async function clearAllConversations() {
+  const token = window.EvoRAG ? window.EvoRAG.getToken() : localStorage.getItem('evorag_token');
+  if (!token) return;
+
+  try {
+    const resp = await fetch('/conversations/', {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!resp.ok && resp.status !== 204) throw new Error('Clear failed');
+
+    startNewChat();
+    await loadConversations();
+    showToast('All conversation history cleared.');
+  } catch (e) {
+    showToast('Failed to clear conversations: ' + e.message);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   RENDERING CONSENSUS, PERSONAS & EVOLUTION
    ════════════════════════════════════════════════════════════════════ */
 
 /* Section 2 — Consensus */
 function renderConsensus(data) {
   const answer = data.final_answer || '';
   answerText.textContent = answer;
-  qIdDisplay.textContent = data.query_id ? `Query ID: ${data.query_id}` : '';
+  qIdDisplay.textContent = data.query_id ? `Query ID: ${data.query_id}` : (activeConversationId ? `Chat #${activeConversationId}` : '');
 
   topPersonRow.innerHTML = '';
   const top = Array.isArray(data.top_personas) ? data.top_personas : [];
@@ -809,7 +2251,6 @@ function renderConsensus(data) {
 function renderPersonaCards(data) {
   const responses = data.all_responses || {};
   const scores    = data.scores || {};
-  const top       = new Set(data.top_personas || []);
 
   const allIds = Object.keys(responses);
   const sorted = allIds.slice().sort((a, b) => (scores[b] || 0) - (scores[a] || 0));
@@ -856,16 +2297,13 @@ function renderPersonaCards(data) {
   });
 }
 
-/* Section 3 Panel B — Score matrix
- * data.score_matrix is {scorer_id: {target_id: {factual_grounding, reasoning_quality, completeness} | null}} —
- * a dict keyed by persona id, not an array, and each cell is a 3-dimension score object, not a plain number. */
+/* Section 3 Panel B — Score matrix */
 function renderScoreMatrix(data) {
   const matrix = data.score_matrix || {};
   const allIds = Object.keys(data.all_responses || {});
 
   matrixTable.innerHTML = '';
 
-  // Header row
   const thead = matrixTable.createTHead();
   const hr = thead.insertRow();
   const cornerTh = document.createElement('th');
@@ -873,7 +2311,7 @@ function renderScoreMatrix(data) {
   hr.appendChild(cornerTh);
   allIds.forEach(pid => {
     const th = document.createElement('th');
-    th.textContent = personaDisplay(pid).split(' ')[0]; // short label
+    th.textContent = personaDisplay(pid).split(' ')[0];
     th.title = personaDisplay(pid);
     hr.appendChild(th);
   });
@@ -888,7 +2326,7 @@ function renderScoreMatrix(data) {
 
     const row = matrix[scorerId] || {};
     allIds.forEach((scoredId, ci) => {
-      const cellScore = row[scoredId]; // {factual_grounding, reasoning_quality, completeness} | null
+      const cellScore = row[scoredId];
       const td = tr.insertCell();
       if (ri === ci) {
         td.textContent = '—';
@@ -899,7 +2337,6 @@ function renderScoreMatrix(data) {
         const val = composite === null ? '?' : composite.toFixed(1);
         td.textContent = val;
         if (val !== '?') td.style.backgroundColor = scoreColor(composite);
-        // Tooltip
         const tip = document.createElement('span');
         tip.className = 'matrix-tooltip';
         const scorer = personaDisplay(scorerId);
@@ -1008,20 +2445,15 @@ function updateStatsTable(history) {
   statsEmpty.style.display  = statsBody.children.length ? 'none' : '';
 }
 
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
 /* ════════════════════════════════════════════════════════════════════
-   MAIN QUERY HANDLER
+   MAIN QUERY HANDLER (Multi-Turn & History Integrated)
    ════════════════════════════════════════════════════════════════════ */
 async function runQuery() {
   const queryText = qInput.value.trim();
   if (!queryText || state.isLoading) return;
+
+  // Stop recording if mic was active
+  if (isRecording) stopVoiceRecording();
 
   state.isLoading = true;
   clearBanners();
@@ -1030,7 +2462,58 @@ async function runQuery() {
   analyseBtn.classList.add('loading');
   startProgress();
 
+  const token = window.EvoRAG ? window.EvoRAG.getToken() : localStorage.getItem('evorag_token');
+
+  // Optimistically add user turn to conversation thread
+  const userMsgObj = {
+    role: 'user',
+    content: queryText,
+    timestamp: new Date().toISOString()
+  };
+  activeMessages.push(userMsgObj);
+  renderThread(activeMessages);
+
+  // Clear input box
+  qInput.value = '';
+
   try {
+    // 1. If user is authenticated and this is a new conversation session, create session first
+    if (token && !activeConversationId) {
+      try {
+        const createResp = await fetch('/conversations/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ title: queryText })
+        });
+        if (createResp.ok) {
+          const convo = await createResp.json();
+          activeConversationId = convo.id;
+          try {
+            sessionStorage.setItem(getActiveConvStorageKey(), convo.id);
+          } catch (e) {}
+          updateActiveChatBar(convo.title, activeMessages.length, convo.id);
+        }
+      } catch (err) {
+        console.warn('Failed to create new conversation session:', err);
+      }
+    }
+
+    // 2. Persist user message to active conversation
+    if (token && activeConversationId) {
+      fetch(`/conversations/${activeConversationId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: 'user', content: queryText })
+      }).catch(e => console.warn('Error saving user message:', e));
+    }
+
+    // 3. Run EvoRAG 8-persona Consensus pipeline
     const response = await fetch(`${API_BASE}/query/consensus`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1044,7 +2527,6 @@ async function runQuery() {
 
     const data = await response.json();
 
-    // Warn if any expected fields are missing
     const required = ['final_answer', 'top_personas', 'query_id', 'sources', 'score_matrix', 'all_responses', 'scores'];
     const missing  = required.filter(k => !(k in data));
     if (missing.length) {
@@ -1053,14 +2535,14 @@ async function runQuery() {
 
     state.currentResult = data;
 
-    // Assign persona colors on first result
+    // Assign persona colors
     const personaIds = Object.keys(data.all_responses || {});
     if (!Object.keys(state.personaColors).length) assignColors(personaIds);
 
-    // Section 2
+    // Section 2 — Consensus
     renderConsensus(data);
 
-    // Section 3
+    // Section 3 — Breakdown panels
     const showPersonas = togglePersonas.checked;
     const showScores   = toggleScores.checked;
     const showSources  = toggleSources.checked;
@@ -1070,15 +2552,15 @@ async function runQuery() {
       if (showScores)   renderScoreMatrix(data);
       if (showSources)  renderSources(data);
 
-      document.getElementById('panel-a').style.display = showPersonas ? '' : 'none';
-      document.getElementById('panel-b').style.display = showScores   ? '' : 'none';
-      document.getElementById('panel-c').style.display = showSources  ? '' : 'none';
+      $('panel-a').style.display = showPersonas ? '' : 'none';
+      $('panel-b').style.display = showScores   ? '' : 'none';
+      $('panel-c').style.display = showSources  ? '' : 'none';
       secPersonas.classList.add('visible');
     } else {
       secPersonas.classList.remove('visible');
     }
 
-    // Section 4 — evolution
+    // Section 4 — Evolution
     state.evolutionHistory.push({
       queryNumber: state.evolutionHistory.length + 1,
       queryText,
@@ -1086,6 +2568,34 @@ async function runQuery() {
       topPersonas: data.top_personas || [],
     });
     updateEvolutionChart(state.evolutionHistory);
+
+    // Add assistant turn to active conversation thread
+    const assistantMsgObj = {
+      role: 'assistant',
+      content: data.final_answer || '',
+      timestamp: new Date().toISOString()
+    };
+    activeMessages.push(assistantMsgObj);
+    renderThread(activeMessages);
+
+    // 4. Persist assistant message to active conversation
+    if (token && activeConversationId && data.final_answer) {
+      await fetch(`/conversations/${activeConversationId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: 'assistant', content: data.final_answer })
+      }).catch(e => console.warn('Error saving assistant message:', e));
+
+      // Refresh list to update message counts & timestamps
+      await loadConversations();
+      const currentConvo = conversationsList.find(c => c.id === activeConversationId);
+      if (currentConvo) {
+        updateActiveChatBar(currentConvo.title, activeMessages.length, activeConversationId);
+      }
+    }
 
   } catch (err) {
     if (err.name === 'TypeError' && err.message.includes('fetch')) {
@@ -1114,11 +2624,11 @@ qInput.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runQuery();
 });
 
-// Copy answer on click
+// Copy consensus answer on click
 answerText.addEventListener('click', () => {
   const text = answerText.textContent;
   if (!text) return;
-  navigator.clipboard.writeText(text).then(() => showToast('Copied!')).catch(() => showToast('Select + copy manually'));
+  navigator.clipboard.writeText(text).then(() => showToast('Copied answer!')).catch(() => showToast('Select + copy manually'));
 });
 answerText.addEventListener('keydown', e => {
   if (e.key === 'Enter' || e.key === ' ') answerText.click();
@@ -1128,14 +2638,18 @@ answerText.addEventListener('keydown', e => {
 function applyToggle() {
   if (!state.currentResult) return;
   const sp = togglePersonas.checked, ss = toggleScores.checked, src = toggleSources.checked;
-  document.getElementById('panel-a').style.display = sp  ? '' : 'none';
-  document.getElementById('panel-b').style.display = ss  ? '' : 'none';
-  document.getElementById('panel-c').style.display = src ? '' : 'none';
+  $('panel-a').style.display = sp  ? '' : 'none';
+  $('panel-b').style.display = ss  ? '' : 'none';
+  $('panel-c').style.display = src ? '' : 'none';
   secPersonas.classList.toggle('visible', sp || ss || src);
 }
 togglePersonas.addEventListener('change', applyToggle);
 toggleScores.addEventListener('change',   applyToggle);
 toggleSources.addEventListener('change',  applyToggle);
+
+// Initialize authentication & history on page load
+loadAuthAndHistory();
+
 </script>
 </body>
 </html>

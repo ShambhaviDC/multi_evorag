@@ -68,23 +68,32 @@ async def lifespan(app: FastAPI):
 
 
 # ── App ───────────────────────────────────────────────────────────────────────
+app = FastAPI(
+    title="EvoRAG API",
+    description="Evolutionary Multi-Personality RAG — retrieval, personas, and consensus voting",
+    version="0.5.0",
+    lifespan=lifespan,
+)
+
 from database import create_db_and_tables
-# Load DB tables when app starts (called in lifespan)
 
 from auth import router as auth_router
 from conversations import router as conversations_router
 from preferences import router as preferences_router
 from recommendations import router as recommendations_router
+
 app.include_router(auth_router)
 app.include_router(conversations_router)
 app.include_router(preferences_router)
 app.include_router(recommendations_router)
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
-from fastapi.staticfiles import StaticFiles
-from fastapi.staticfiles import StaticFiles
-from fastapi.staticfiles import StaticFiles
-from fastapi.staticfiles import StaticFiles
+@app.get("/", summary="Root endpoint - serves UI")
+def read_root():
+    return FileResponse("frontend/index.html")
+
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 app.add_middleware(
     CORSMiddleware,

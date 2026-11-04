@@ -25,7 +25,7 @@ def recent_titles(session: Session, user_id: int):
         .order_by(Conversation.updated_at.desc())
         .limit(5)
     )
-    return [t for (t,) in session.exec(stmt).all() if t]
+    return [t for t in session.exec(stmt).all() if t]
 
 @router.get("/", summary="Get personalized prompt suggestions")
 def get_recommendations(current_user: User = Depends(get_current_user), session: Session = Depends(get_session)):
@@ -50,10 +50,10 @@ def get_recommendations(current_user: User = Depends(get_current_user), session:
             "Summarize recent AI research.",
             "Give a quick overview of a technology trend.",
         ])
-    # Add recent conversation‑based suggestions
+    # Add recent conversation-based suggestions
     titles = recent_titles(session, current_user.id)
     for t in titles:
         suggestions.append(f"Continue the discussion on '{t}'.")
     # Limit to 6 total
-    return {"suggestions": suggestions[:6]}
-
+    recs = suggestions[:6]
+    return {"recommendations": recs, "suggestions": recs}
