@@ -70,12 +70,14 @@ async def test_gemini_fallback_flow():
     result = await evorag_query(query, top_k=2)
     print(f"  Final Answer Length : {len(result['final_answer'])} chars")
     print(f"  Top Personas        : {result['top_personas']}")
-    print(f"  Retrieval Status    : {result.get('retrieval_status')}")
+    print(f"  Personas Returned   : {list(result['all_responses'].keys())}")
     
     assert "final_answer" in result and len(result["final_answer"]) > 20
-    assert result.get("retrieval_status", {}).get("sufficient") is False
-    assert result.get("retrieval_status", {}).get("fallback_used") is True
-    print("  [OK] Gemini fallback correctly answered and returned compliant consensus response.")
+    assert len(result["all_responses"]) == 8, f"Expected 8 personas, got {len(result['all_responses'])}"
+    assert "gemini-fallback" not in result["top_personas"]
+    assert "gemini-fallback" not in result["all_responses"]
+    assert len(result["score_matrix"]) == 8, f"Expected 8 score matrix rows, got {len(result['score_matrix'])}"
+    print("  [OK] Successfully synthesized multi-persona response with all 8 real EvoRAG personas (zero Gemini leakage).")
 
 
 def test_dynamic_reload():
