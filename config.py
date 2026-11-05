@@ -10,10 +10,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
-
-# ── Project root ──────────────────────────────────────────────────────────────
 ROOT_DIR = Path(__file__).parent.resolve()
+load_dotenv(ROOT_DIR / ".env")
+
 
 # ── Data directory ────────────────────────────────────────────────────────────
 DATA_DIR = ROOT_DIR / "data"

@@ -20,6 +20,7 @@ Usage (module — import from Phase 3):
 import argparse
 import gc
 import glob
+import hashlib
 import json
 import logging
 import os
@@ -128,21 +129,150 @@ def build_index(chunks: List[Dict]) -> None:
     index = faiss.IndexFlatL2(dimension)
     index.add(embeddings)
 
-    # ── Persist index ──────────────────────────────────────────────────────────
-    faiss.write_index(index, str(FAISS_INDEX_FILE))
-    log.info(f"Saved FAISS index → {FAISS_INDEX_FILE}")
-
-    # ── Persist metadata sidecar ───────────────────────────────────────────────
-    # Store only the fields Phase 3 needs; excludes raw_text (already cleaned → 'text')
+    # ── Persist index and metadata sidecar atomically ─────────────────────────
     meta_keys = (
         "chunk_id", "source", "url", "url_hash",
         "title", "published_at", "chunk_index", "total_chunks",
         "word_count", "text",
     )
     metadata = [{k: c.get(k, "") for k in meta_keys} for c in chunks]
-    with open(META_FILE, "w", encoding="utf-8") as f:
+    save_index_atomic(index, metadata)
+
+
+def save_index_atomic(index: faiss.Index, metadata: List[Dict]) -> None:
+    """Save FAISS index and metadata sidecar atomically using temporary files.
+
+    Prevents race conditions or corrupted partial reads by other processes.
+    """
+    INDEX_DIR.mkdir(parents=True, exist_ok=True)
+    tmp_faiss = FAISS_INDEX_FILE.with_suffix(".faiss.tmp")
+    tmp_meta = META_FILE.with_suffix(".json.tmp")
+
+    faiss.write_index(index, str(tmp_faiss))
+    with open(tmp_meta, "w", encoding="utf-8") as f:
         json.dump(metadata, f, ensure_ascii=False, indent=2)
-    log.info(f"Saved metadata sidecar → {META_FILE}  ({len(metadata)} entries)")
+
+    os.replace(tmp_faiss, FAISS_INDEX_FILE)
+    os.replace(tmp_meta, META_FILE)
+    log.info(
+        "Saved FAISS index (%s vectors) and metadata (%s entries) atomically.",
+        index.ntotal,
+        len(metadata),
+    )
+
+
+def add_chunks_to_index(new_chunks: List[Dict]) -> Tuple[Optional[faiss.Index], List[Dict], int]:
+    """
+    Incrementally add new chunks to the existing FAISS index and metadata.
+    Only newly discovered chunks (not already present) are embedded and added.
+    Saves the updated index atomically.
+
+    Args:
+        new_chunks: List of chunk dicts (from fetcher.fetch() or similar)
+
+    Returns:
+        (index, metadata, added_count)
+    """
+    if not new_chunks:
+        log.info("No candidate chunks provided for incremental addition.")
+        if FAISS_INDEX_FILE.exists() and META_FILE.exists():
+            idx, meta = load_index()
+            return idx, meta, 0
+        return None, [], 0
+
+    INDEX_DIR.mkdir(parents=True, exist_ok=True)
+
+    # 1. Load existing index or prepare new
+    if FAISS_INDEX_FILE.exists() and META_FILE.exists():
+        index, metadata = load_index()
+    else:
+        log.info("No existing index found. Initializing a new index.")
+        index = None
+        metadata = []
+
+    # 2. Extract existing signatures to avoid duplicate embedding
+    existing_sigs = set()
+    for item in metadata:
+        uh = str(item.get("url_hash", "")).strip().lower()
+        ci = item.get("chunk_index", 0)
+        if uh:
+            existing_sigs.add(f"{uh}:{ci}")
+        txt = str(item.get("text", "")).strip()
+        if txt:
+            existing_sigs.add(hashlib.sha256(txt.encode("utf-8")).hexdigest())
+
+    # 3. Filter candidate chunks to truly new chunks
+    meta_keys = (
+        "chunk_id", "source", "url", "url_hash",
+        "title", "published_at", "chunk_index", "total_chunks",
+        "word_count", "text",
+    )
+    truly_new: List[Dict] = []
+    for c in new_chunks:
+        txt = str(c.get("text", "")).strip()
+        if not txt:
+            continue
+        uh = str(c.get("url_hash", "")).strip().lower()
+        ci = c.get("chunk_index", 0)
+        sig1 = f"{uh}:{ci}" if uh else None
+        sig2 = hashlib.sha256(txt.encode("utf-8")).hexdigest()
+
+        if (sig1 and sig1 in existing_sigs) or (sig2 in existing_sigs):
+            continue
+
+        if sig1:
+            existing_sigs.add(sig1)
+        existing_sigs.add(sig2)
+        truly_new.append(c)
+
+    if not truly_new:
+        log.info(
+            "All %d candidate chunks already exist in index. No new embeddings needed.",
+            len(new_chunks),
+        )
+        return index, metadata, 0
+
+    log.info(
+        "Incrementally embedding %d new chunks (out of %d candidates)...",
+        len(truly_new),
+        len(new_chunks),
+    )
+    model = _get_model()
+    texts = [c["text"] for c in truly_new]
+    embeddings = model.encode(
+        texts,
+        batch_size=EMBED_BATCH_SIZE,
+        show_progress_bar=True,
+        convert_to_numpy=True,
+        normalize_embeddings=False,
+    ).astype(np.float32)
+
+    dimension = embeddings.shape[1]
+    if index is None:
+        index = faiss.IndexFlatL2(dimension)
+    elif index.d != dimension:
+        raise ValueError(
+            f"Embedding dimension mismatch: existing index has d={index.d}, "
+            f"model produces d={dimension}"
+        )
+
+    start_id = len(metadata)
+    new_metadata_entries = []
+    for i, c in enumerate(truly_new):
+        entry = {k: c.get(k, "") for k in meta_keys}
+        entry["chunk_id"] = start_id + i
+        new_metadata_entries.append(entry)
+
+    index.add(embeddings)
+    metadata.extend(new_metadata_entries)
+
+    save_index_atomic(index, metadata)
+    log.info(
+        "Successfully added %d new vectors. Index total: %d vectors.",
+        len(truly_new),
+        index.ntotal,
+    )
+    return index, metadata, len(truly_new)
 
 
 # ══════════════════════════════════════════════════════════════════════════════

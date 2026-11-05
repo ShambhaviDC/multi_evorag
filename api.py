@@ -228,14 +228,34 @@ async def _run_evolution_check() -> None:
 @app.get("/health", summary="Health check")
 async def health():
     """Returns server status and the number of vectors in the loaded index."""
-    index = _state.get("index")
-    if index is None:
+    from retriever import reload_index_if_updated, get_loaded_index_stats
+    reload_index_if_updated()
+    stats = get_loaded_index_stats()
+    if stats["vectors"] == 0 and stats["last_mtime"] == 0.0:
         raise HTTPException(status_code=503, detail="Index not loaded yet.")
     return {
         "status": "ok",
-        "index_vectors": index.ntotal,
-        "embedding_dim": index.d,
+        "index_vectors": stats["vectors"],
+        "embedding_dim": stats["dim"],
+        "metadata_count": stats["metadata_count"],
         "model": OLLAMA_MODEL,
+        "last_mtime": stats["last_mtime"],
+    }
+
+
+@app.post("/index/reload", summary="Reload FAISS index from disk")
+async def reload_index_endpoint():
+    """Manually reload the latest FAISS index and metadata without server restart."""
+    from retriever import reload_index_if_updated, get_loaded_index_stats
+    reloaded = reload_index_if_updated()
+    stats = get_loaded_index_stats()
+    return {
+        "status": "ok",
+        "reloaded": reloaded,
+        "index_vectors": stats["vectors"],
+        "embedding_dim": stats["dim"],
+        "metadata_count": stats["metadata_count"],
+        "last_mtime": stats["last_mtime"],
     }
 
 

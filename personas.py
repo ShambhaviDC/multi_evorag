@@ -240,10 +240,11 @@ async def run_all_personas(
     query: str,
     top_k: int = RETRIEVAL_TOP_K,
     persona_ids: Optional[List[str]] = None,
+    pre_retrieved_chunks: Optional[List[Dict]] = None,
 ) -> Dict:
     """
     Full multi-persona pipeline:
-        1. Retrieve top-k chunks (once, shared)
+        1. Retrieve top-k chunks (once, shared, or reuse pre_retrieved_chunks)
         2. Build shared RAG context prompt
         3. Create a fresh asyncio.Semaphore on the *running* event loop
         4. Run persona calls sequentially (semaphore limit=1 by default)
@@ -251,15 +252,16 @@ async def run_all_personas(
         6. Return structured result dict
 
     Args:
-        query:       User question.
-        top_k:       Chunks to retrieve.
-        persona_ids: Optional list of persona IDs to run. None = all 8.
+        query:                User question.
+        top_k:                Chunks to retrieve.
+        persona_ids:          Optional list of persona IDs to run. None = all 8.
+        pre_retrieved_chunks: Optional pre-evaluated chunks to reuse.
 
     Returns:
         {"query": str, "sources": [...], "personas": [...]}
     """
     # Step 1 — Retrieve (shared)
-    chunks = retrieve(query, top_k=top_k)
+    chunks = pre_retrieved_chunks if pre_retrieved_chunks is not None else retrieve(query, top_k=top_k)
     sources = [
         {
             "title":  c.get("title", ""),

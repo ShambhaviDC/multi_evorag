@@ -28,6 +28,7 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
 from config import (
+    ROOT_DIR,
     DATA_DIR,
     MAX_ARTICLES_PER_SOURCE,
     MAX_CHUNK_FILES,
@@ -47,7 +48,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # Load .env once at import time
-load_dotenv()
+load_dotenv(ROOT_DIR / ".env")
 
 # Browser-like headers so sites don't block us
 _HEADERS = {

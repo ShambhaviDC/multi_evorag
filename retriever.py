@@ -12,7 +12,9 @@ This module is imported by api.py (Phase 3) and by the persona engine (Phase 4).
 """
 
 import logging
-from typing import List, Dict, Optional
+import re
+from datetime import datetime, timezone
+from typing import List, Dict, Optional, Tuple
 
 import httpx
 
@@ -25,27 +27,142 @@ from config import (
     RETRIEVAL_MIN_CANDIDATES,
     PERSONA_TIMEOUT_SECONDS,
     GEMINI_ONLY_MODE,
+    FAISS_INDEX_FILE,
+    META_FILE,
 )
 from embedder import query as faiss_query, load_index, build_or_load, release_model
 from utils import call_gemini_async
 
 log = logging.getLogger(__name__)
 
-# ── Module-level index cache (loaded once at import / first call) ─────────────
+# ── Module-level index cache with auto-reload synchronization ─────────────
 _index = None
 _metadata = None
+_last_index_mtime: float = 0.0
 
 
-def _preview(text: str, limit: int = 100) -> str:
-    """Return a compact single-line preview for logs."""
-    return text[:limit].strip().replace("\n", " ")
+def reload_index_if_updated() -> bool:
+    """Check if the FAISS index or metadata on disk was modified, and safely reload if valid.
+
+    Prevents loading corrupted or partially written indices.
+    Returns True if a new index was reloaded, False otherwise.
+    """
+    global _index, _metadata, _last_index_mtime
+
+    if not FAISS_INDEX_FILE.exists() or not META_FILE.exists():
+        return False
+
+    try:
+        current_mtime = max(FAISS_INDEX_FILE.stat().st_mtime, META_FILE.stat().st_mtime)
+        if _index is None or _metadata is None or current_mtime > _last_index_mtime:
+            new_index, new_metadata = load_index()
+            # Strict safety check: index vector count MUST match metadata entries count
+            if new_index.ntotal == len(new_metadata):
+                _index = new_index
+                _metadata = new_metadata
+                _last_index_mtime = current_mtime
+                log.info(
+                    "Retriever successfully reloaded FAISS index: %d vectors, dim=%d (disk mtime: %s)",
+                    _index.ntotal,
+                    _index.d,
+                    _last_index_mtime,
+                )
+                return True
+            else:
+                log.warning(
+                    "Index mismatch detected (%d vectors in FAISS vs %d metadata entries). "
+                    "Keeping existing valid index in memory.",
+                    new_index.ntotal,
+                    len(new_metadata),
+                )
+    except Exception as exc:
+        log.error("Failed to reload index from disk: %s. Continuing with existing index.", exc)
+    return False
+
+
+def get_loaded_index_stats() -> Dict:
+    """Return in-memory index stats and last reload timestamp."""
+    _ensure_index()
+    return {
+        "vectors": _index.ntotal if _index is not None else 0,
+        "dim": _index.d if _index is not None else 0,
+        "metadata_count": len(_metadata) if _metadata is not None else 0,
+        "last_mtime": _last_index_mtime,
+    }
 
 
 def _ensure_index():
-    """Load the FAISS index from disk exactly once per process."""
+    """Ensure index is loaded and synchronized with disk updates."""
     global _index, _metadata
     if _index is None or _metadata is None:
-        _index, _metadata = load_index()
+        reload_index_if_updated()
+    else:
+        # Check if disk index has been updated by background scheduler
+        reload_index_if_updated()
+
+
+def evaluate_retrieval(
+    query: str,
+    chunks: List[Dict],
+    relevance_threshold: float = 1.35,
+    min_chunks: int = 1,
+    min_total_words: int = 40,
+) -> Tuple[bool, str]:
+    """
+    Evaluate the relevance, freshness, and sufficiency of retrieved chunks for a user query.
+
+    Returns:
+        (is_sufficient: bool, rationale: str)
+    """
+    if not chunks:
+        return False, "No chunks retrieved from the local knowledge base."
+
+    if len(chunks) < min_chunks:
+        return False, f"Retrieved only {len(chunks)} chunks, below minimum threshold ({min_chunks})."
+
+    total_words = sum(c.get("word_count", 0) or len(c.get("text", "").split()) for c in chunks)
+    if total_words < min_total_words:
+        return False, f"Total retrieved context is too sparse ({total_words} words < {min_total_words} words)."
+
+    # 1. Relevance check using FAISS L2 score (lower is more similar)
+    best_score = float(chunks[0].get("score", 999.0))
+    if best_score > relevance_threshold:
+        return False, (
+            f"Retrieved context is not sufficiently relevant "
+            f"(best L2 score {best_score:.3f} > threshold {relevance_threshold:.2f})."
+        )
+
+    # 2. Freshness check for "latest news" queries
+    latest_news_pattern = re.compile(
+        r"\b(latest|breaking|today|current|recent|newest|this week|yesterday|2026)\b",
+        re.IGNORECASE,
+    )
+    if latest_news_pattern.search(query):
+        now = datetime.now(timezone.utc)
+        has_fresh_chunk = False
+        parsed_dates = []
+
+        for c in chunks:
+            pub = c.get("published_at")
+            if pub:
+                try:
+                    dt = datetime.fromisoformat(str(pub).replace("Z", "+00:00"))
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    age_days = (now - dt).total_seconds() / 86400.0
+                    parsed_dates.append(age_days)
+                    if age_days <= 14:  # within 14 days
+                        has_fresh_chunk = True
+                except Exception:
+                    pass
+
+        if parsed_dates and not has_fresh_chunk:
+            min_age = min(parsed_dates)
+            return False, (
+                f"Query requests latest/recent news, but local information is {min_age:.1f} days old (outdated)."
+            )
+
+    return True, f"Sufficient relevant context retrieved (best score {best_score:.3f}, {total_words} words)."
 
 
 def _document_keys(chunk: Dict) -> List[str]:
