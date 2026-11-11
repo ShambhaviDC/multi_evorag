@@ -1,0 +1,422 @@
+\chapter{Implementation}
+\label{chap:implementation}
+
+\section{Implementation Overview}
+The implementation of the EvoRAG (Evolutionary Multi-Personality Retrieval-Augmented Generation) framework is structured as an end-to-end, modular, privacy-preserving analytical pipeline. While classical RAG architectures rely on a single-pass retrieve-and-read sequence, EvoRAG introduces structured cognitive diversity by executing eight parallel reasoning personas, evaluating their responses through a multi-dimensional peer-scoring matrix, and dynamically adapting persona prompts through an evolutionary learning loop.
+
+The physical implementation is divided into four interconnected architectural tiers:
+\begin{enumerate}[label=(\roman*)]
+    \item \textbf{Data Ingestion and Indexing Tier:} Handles scheduled and on-demand news harvesting across NewsAPI, GNews, and curated RSS feeds, followed by DOM extraction, HTML boilerplate stripping, SHA-256 URL deduplication, sliding-window chunking, and incremental vectorization using dense Sentence-Transformers in FAISS.
+    \item \textbf{Semantic Retrieval and Synchronization Tier:} Performs nearest-neighbour vector search over the indexed corpus, evaluates context sufficiency and freshness, and dynamically reloads updated index vectors in memory without requiring server restarts.
+    \item \textbf{Multi-Persona Reasoning and Consensus Tier:} Orchestrates eight specialized analytical personas executing concurrently across an asynchronous semaphore pool, facilitates multi-criteria peer evaluation, and synthesizes the winning arguments into a unified consensus output.
+    \item \textbf{Service, Persistence, and Presentation Tier:} Exposes asynchronous REST endpoints via FastAPI, maintains conversation sessions and user preferences in SQLite via SQLModel, manages background task scheduling via APScheduler, and renders an interactive web interface supporting Web Speech API speech-to-text and text-to-speech interaction.
+\end{enumerate}
+
+\section{Dataset and Knowledge Acquisition Pipeline}
+\label{sec:dataset_pipeline}
+
+\subsection{Knowledge Corpus Acquisition}
+Unlike static open-domain question answering systems that depend on pre-compiled, frozen corpora such as Wikipedia dumps, EvoRAG constructs its runtime knowledge base dynamically from live, multi-source digital news feeds. This design prevents temporal obsolescence and enables the system to analyze breaking events and technical developments. Data acquisition is orchestrated by \texttt{fetcher.py} using three heterogeneous channels:
+
+\begin{itemize}
+    \item \textbf{NewsAPI REST Endpoint:} Queries global journalistic publishers by keyword, specifying English-language constraints, recency sorting (\texttt{sortBy=publishedAt}), and page size limits.
+    \item \textbf{Google News (GNews) API:} Accesses aggregated Google News indexing to capture top-ranking mainstream reporting across regional editions.
+    \item \textbf{Curated Technical RSS Feeds:} Continuously monitors high-credibility syndicate feeds using the \texttt{feedparser} library. Monitored sources include BBC World News, Reuters Technology, MIT Technology Review (AI), The Verge, VentureBeat AI, Google AI Blog, and OpenAI News.
+\end{itemize}
+
+Table~\ref{tab:news_sources} outlines the ingestion sources and operational characteristics configured in \texttt{config.py}.
+
+\begin{table}[H]
+\centering
+\caption{Knowledge Ingestion Source Configuration}
+\label{tab:news_sources}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{|l|p{3.2cm}|p{2.8cm}|X|}
+\hline
+\textbf{Source Channel} & \textbf{Protocol / Format} & \textbf{Query Mechanism} & \textbf{Coverage Scope} \\
+\hline
+NewsAPI & HTTPS REST (JSON) & Keyword search endpoint & Global mainstream news publishers \\
+\hline
+GNews API & HTTPS REST (JSON) & Topic search endpoint & Top-ranked international news articles \\
+\hline
+BBC World News & RSS 2.0 (XML) & Syndicated feed polling & International geopolitical and world reporting \\
+\hline
+Reuters Tech & RSS 2.0 (XML) & Syndicated feed polling & Global technology and market developments \\
+\hline
+MIT Tech Review & RSS 2.0 / Atom (XML) & Topic-filtered feed & Artificial intelligence and applied science research \\
+\hline
+The Verge / VentureBeat & RSS 2.0 (XML) & Category feed polling & Industry computing, semiconductor and enterprise news \\
+\hline
+Google AI / OpenAI Blog & Atom / RSS (XML) & Official feed polling & Frontier model research and alignment announcements \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Document Cleaning and Normalization}
+Raw web documents extracted from digital news feeds contain substantial non-informative structural overhead, including navigation menus, inline scripts, styling directives, tracking pixels, and advertising banners. To prevent context window pollution and maintain high signal-to-noise ratios, incoming HTML responses are processed through a deterministic multi-stage cleaning pipeline:
+\begin{enumerate}
+    \item \textbf{DOM Parsing and Tree Sanitization:} The document body is parsed using \texttt{BeautifulSoup4} with the native \texttt{lxml} or \texttt{html.parser} engine. Elements tagged as \texttt{<script>}, \texttt{<style>}, \texttt{<nav>}, \texttt{<header>}, \texttt{<footer>}, \texttt{<aside>}, \texttt{<form>}, \texttt{<noscript>}, or \texttt{<iframe>} are recursively decomposed.
+    \item \textbf{Semantic Body Extraction:} The parser prioritizes semantic container tags (\texttt{<article>}, \texttt{<main>}) before falling back to \texttt{<body>}, extracting continuous narrative text while filtering navigation lists.
+    \item \textbf{Whitespace and Encoding Normalization:} Multiple consecutive whitespace characters, line breaks, and HTML entity encodings are normalized into standard UTF-8 whitespace-separated tokens.
+    \item \textbf{Length Filtering:} Articles yielding fewer than 100 words following sanitization are discarded, eliminating stub pages, redirection notices, and paywalled previews.
+\end{enumerate}
+
+\subsection{Deduplication Strategy}
+To prevent duplicate reporting from flooding the retrieval index when multiple outlets publish syndicated coverage of the same event, deduplication is enforced at both the document and chunk levels:
+\begin{equation}
+\label{eq:url_hash}
+h_{\text{url}} = \text{MD5}(\text{normalize\_url}(U))
+\end{equation}
+where $\text{normalize\_url}(U)$ strips trailing slashes, URL tracking parameters (\texttt{utm\_*}, \texttt{ref}), and protocol variations. If $h_{\text{url}}$ matches an existing article identifier in the current index or session database, the document is discarded prior to chunking. Furthermore, chunk-level deduplication generates a SHA-256 cryptographic digest of the normalized chunk body text to detect duplicate paragraphs across distinct syndication URLs:
+\begin{equation}
+\label{eq:text_hash}
+h_{\text{text}} = \text{SHA-256}(\text{strip}(\text{text}))
+\end{equation}
+
+\subsection{Sliding-Window Chunking}
+Transformer-based language models exhibit fixed positional encoding budgets. Feeding whole articles directly into prompts impairs attention distribution and degrades inference latency. EvoRAG implements a character-bounded sliding-window chunking strategy with controlled overlap.
+
+Let an article's word sequence be $W = (w_1, w_2, \dots, w_M)$. The sequence is partitioned into overlapping subsets:
+\begin{equation}
+\label{eq:chunk_window}
+C_k = (w_{s_k}, w_{s_k + 1}, \dots, w_{e_k})
+\end{equation}
+where the stride step is governed by chunk target length $L_{\text{target}} = 350$ words and overlap length $L_{\text{overlap}} = 50$ words:
+\begin{equation}
+s_k = k \cdot (L_{\text{target}} - L_{\text{overlap}}) + 1, \quad e_k = \min(s_k + L_{\text{target}} - 1, M)
+\end{equation}
+Chunks shorter than $L_{\text{min}} = 300$ words are discarded unless they represent the terminal segment of an article exceeding the minimum threshold. Chunks exceeding $L_{\text{max}} = 400$ words are split recursively. Each chunk is packaged with a metadata dictionary preserving the source publication name, canonical article URL, publication timestamp, chunk ordinal index, and document title:
+\begin{equation}
+\mathcal{M}_k = \{ \text{chunk\_id}, \text{source}, \text{url}, \text{url\_hash}, \text{title}, \text{published\_at}, \text{chunk\_index}, \text{total\_chunks}, \text{word\_count}, \text{text} \}
+\end{equation}
+
+\section{Models, Embedding Representations, and Vector Database}
+\label{sec:models_vector}
+
+\subsection{Dense Vector Embedding Generation}
+Semantic vectorization is implemented in \texttt{embedder.py} utilizing the \texttt{sentence-transformers} library. The system employs \texttt{all-MiniLM-L6-v2}, a distilled 6-layer bidirectional transformer pre-trained on over one billion sentence pairs. 
+
+Given a sanitized text passage $C_k$, the model computes token-level contextual representations and applies mean pooling over the output layer to yield a dense vector $\mathbf{v}_k \in \mathbb{R}^{D}$ where $D = 384$:
+\begin{equation}
+\label{eq:mean_pooling}
+\mathbf{v}_k = \frac{\sum_{i=1}^{T_k} m_i \mathbf{h}_i}{\sum_{i=1}^{T_k} m_i}
+\end{equation}
+where $\mathbf{h}_i$ is the $i$-th hidden token vector, $m_i \in \{0, 1\}$ is the attention mask, and $T_k$ is the sequence length. Vectorization is performed in mini-batches of size $B = 64$ with PyTorch running in CPU-optimized FP32 precision.
+
+\subsection{FAISS Vector Store Architecture}
+Nearest-neighbour similarity search is supported via Facebook AI Similarity Search (FAISS). EvoRAG adopts an exact Euclidean flat index structure (\texttt{IndexFlatL2}). For query embedding $\mathbf{q} \in \mathbb{R}^{D}$ and indexed passage vectors $\mathbf{v}_k \in \mathbb{R}^{D}$, the retrieval distance is:
+\begin{equation}
+\label{eq:l2_distance}
+d(\mathbf{q}, \mathbf{v}_k) = \|\mathbf{q} - \mathbf{v}_k\|_2 = \sqrt{\sum_{j=1}^{D} (q_j - v_{k,j})^2}
+\end{equation}
+Because the MiniLM-L6-v2 embeddings operate within a compact 384-dimensional manifold, \texttt{IndexFlatL2} provides deterministic, exact retrieval with sub-millisecond query latency on local workstations for corpus sizes up to $50,000$ chunks, eliminating the quantization noise and hyperparameter tuning required by approximate inverted index schemes (IVF-PQ).
+
+Alongside the binary index file (\texttt{index/evorag.faiss}), a companion JSON sidecar (\texttt{index/evorag\_meta.json}) stores aligned metadata records indexed by their contiguous row identifiers.
+
+\subsection{Incremental Vector Updates and Atomic Persistence}
+In dynamic news environments, rebuilding the entire vector index from scratch upon each news ingestion cycle is computationally wasteful. In \texttt{embedder.py}, the \texttt{add\_chunks\_to\_index()} function implements incremental vector addition. Newly discovered chunks are identified by comparing their cryptographic URL-index and text signatures against the existing metadata set. Only genuine novel chunks are passed to the embedding model.
+
+The resulting embeddings are directly appended to the live index:
+\begin{equation}
+\text{index.add}(\mathbf{V}_{\text{new}})
+\end{equation}
+where $\mathbf{V}_{\text{new}} \in \mathbb{R}^{N_{\text{new}} \times 384}$. Metadata records are updated with consecutive identifiers starting from $N_{\text{old}}$.
+
+To guarantee crash resilience and prevent concurrent read corruption, index persistence follows a two-stage atomic replacement protocol:
+\begin{enumerate}
+    \item Vectors and metadata are serialized to temporary disk paths: \texttt{evorag.faiss.tmp} and \texttt{evorag\_meta.json.tmp}.
+    \item Upon verified write completion, the operating system executes atomic rename operations via \texttt{os.replace()}, replacing the production index files in a single atomic transaction.
+\end{enumerate}
+
+\subsection{Local and Accelerated LLM Inference Runtime}
+For generative reasoning, EvoRAG supports dual execution configurations:
+\begin{itemize}
+    \item \textbf{Local Ollama Runtime:} Hosts quantized open-weight instruction models locally via Ollama (\texttt{http://localhost:11434}). The default configuration utilizes \texttt{phi3:mini} (3.8B parameters, 4-bit quantization), which provides high execution throughput on workstation CPUs while maintaining an active RAM footprint under 4.0~GiB. Model weights remain resident between sequential calls by configuring \texttt{keep\_alive = "30m"}.
+    \item \textbf{Async Gateway Fallback:} In scenarios where local CPU resources are constrained or when broad general-domain queries exceed local news coverage, an asynchronous HTTPS gateway communicates with Gemini Flash endpoints via persistent \texttt{httpx.AsyncClient} connection pools with token caps and exponential back-off retries.
+\end{itemize}
+
+Table~\ref{tab:model_specs} details the core model configurations deployed within the framework.
+
+\begin{table}[H]
+\centering
+\caption{Model Parameters and Specifications}
+\label{tab:model_specs}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{|l|l|l|X|}
+\hline
+\textbf{Role} & \textbf{Model Name / Tag} & \textbf{Parameters / Dim} & \textbf{Execution Environment} \\
+\hline
+Text Embedding & \texttt{all-MiniLM-L6-v2} & 22.7M params / 384-D & Local PyTorch / ONNX CPU runtime \\
+\hline
+Vector Index & FAISS \texttt{IndexFlatL2} & 384-D exact L2 & In-process C++ library wrapper \\
+\hline
+Local Reasoning & \texttt{phi3:mini} & 3.8B params (4-bit) & Local Ollama server (\texttt{localhost:11434}) \\
+\hline
+Alternative Local & \texttt{llama3.1:8b} / \texttt{mistral:7b} & 7B--8B params (Q4) & Local Ollama GPU/CPU runtime \\
+\hline
+Fallback Reasoning & \texttt{gemini-flash-lite-latest} & Cloud MoE Architecture & Asynchronous HTTP/2 gateway \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{Semantic Retrieval and Dynamic Synchronization}
+\label{sec:retrieval_sync}
+
+\subsection{Candidate Retrieval and Over-Fetch Deduplication}
+When a user submits a query string $Q$, the retrieval engine in \texttt{retriever.py} encodes $Q$ into query vector $\mathbf{q}$. Rather than retrieving only the target $k = 5$ items directly, the system over-fetches a candidate pool of size:
+\begin{equation}
+k_{\text{cand}} = \min(N, \max(k \cdot M_{\text{mult}}, M_{\text{min}}))
+\end{equation}
+where candidate multiplier $M_{\text{mult}} = 6$ and minimum pool size $M_{\text{min}} = 20$. 
+
+The candidate chunks are evaluated using document-level identity keys:
+\begin{equation}
+\mathcal{K}(C) = \{ \text{title}(C), \text{url\_hash}(C), \text{url}(C) \}
+\end{equation}
+For articles producing multiple top-ranked chunks, only the single chunk with the lowest Euclidean distance is retained. This prevents multiple segments of a single long article from monopolizing the context window, maximizing source diversity across the retrieved context passages.
+
+\subsection{Context Sufficiency and Freshness Evaluation}
+Before invoking persona reasoning, the retrieved candidates are evaluated by \texttt{evaluate\_retrieval()} across three criteria:
+\begin{enumerate}
+    \item \textbf{Sufficiency Threshold:} Total word count across retrieved passages must satisfy $\sum \text{words}(C_i) \ge 40$, and passage count must satisfy $|C| \ge 1$.
+    \item \textbf{Relevance Threshold:} The best (minimum) L2 Euclidean distance must satisfy:
+    \begin{equation}
+    d_{\text{min}} = \min_{i} d(\mathbf{q}, \mathbf{v}_i) \le \tau_{\text{rel}}
+    \end{equation}
+    where $\tau_{\text{rel}} = 1.35$. Queries yielding distances exceeding $1.35$ indicate that the local news corpus contains no semantically related documents.
+    \item \textbf{Temporal Freshness:} For queries matching temporal indicators (e.g., \emph{latest, breaking, today, 2026, recent}), publication timestamps are parsed against current UTC time:
+    \begin{equation}
+    \Delta t_{\text{age}} = t_{\text{current}} - t_{\text{published}} \le 14\text{ days}
+    \end{equation}
+    If all retrieved documents are older than 14 days for a breaking news query, the retrieval engine flags the context as temporally stale, rerouting the query to broad knowledge synthesis.
+\end{enumerate}
+
+\subsection{Zero-Restart Dynamic Index Auto-Reloading}
+In continuous deployment, the news ingestion scheduler updates the FAISS index on disk every three days. In traditional RAG backends, loading new vectors requires restarting the web application process, causing service downtime. 
+
+EvoRAG implements a zero-restart dynamic index synchronization mechanism in \texttt{retriever.py}. The module tracks the modification timestamp of the index files:
+\begin{equation}
+T_{\text{disk}} = \max\left(\text{mtime}(\texttt{evorag.faiss}),\ \text{mtime}(\texttt{evorag\_meta.json})\right)
+\end{equation}
+Upon each incoming request, \texttt{reload\_index\_if\_updated()} compares $T_{\text{disk}}$ against the in-memory timestamp $T_{\text{mem}}$. If $T_{\text{disk}} > T_{\text{mem}}$, the system verifies that the FAISS vector count matches the metadata array length:
+\begin{equation}
+\text{index.ntotal} \equiv \text{len}(\text{metadata})
+\end{equation}
+Upon positive validation, the in-memory pointer is updated to point to the newly deserialized index. If a write operation is mid-flight or corrupted, the check fails safely, and the server continues serving queries using the existing valid index without interruption.
+
+\section{Multi-Persona Reasoning Engine}
+\label{sec:persona_engine}
+
+\subsection{Cognitive Diversity Architecture}
+Standard RAG frameworks rely on a single system prompt, which forces the model into a single analytical posture and often mirrors training biases. EvoRAG implements structured cognitive diversity by decomposing analytical reasoning across eight distinct personas. Table~\ref{tab:personas} defines the eight operational personas and their respective reasoning objectives.
+
+\begin{table}[H]
+\centering
+\caption{The Eight EvoRAG Analytical Personas}
+\label{tab:personas}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{|l|p{3.8cm}|X|}
+\hline
+\textbf{Persona Identifier} & \textbf{Role Title} & \textbf{Core Analytical Function and Directive} \\
+\hline
+\texttt{analytical-critical} & Analytical-Critical & Deconstructs logical arguments, uncovers hidden assumptions, and evaluates premise validity. \\
+\hline
+\texttt{empirical-evidential} & Empirical-Evidential & Demands quantitative metrics, verified dates, empirical data points, and strict factual citations. \\
+\hline
+\texttt{adversarial-skeptical} & Adversarial-Skeptical & Serves as devil's advocate; surfaces failure modes, counter-claims, bias, and conflicting narratives. \\
+\hline
+\texttt{synthesis-integrative} & Synthesis-Integrative & Bridges disparate facts, harmonizes conflicting passages, and identifies overarching thematic patterns. \\
+\hline
+\texttt{domain-expert} & Domain-Expert & Explains complex domain mechanics with precise terminology, contextual depth, and theoretical rigor. \\
+\hline
+\texttt{temporal-contextual} & Temporal-Contextual & Evaluates historical antecedents, timelines, rate of development, and forward trajectories. \\
+\hline
+\texttt{risk-evaluative} & Risk-Evaluative & Identifies systemic vulnerabilities, threat vectors, regulatory exposure, and impact severity. \\
+\hline
+\texttt{creative-lateral} & Creative-Lateral & Draws lateral analogies, examines interdisciplinary impacts, and explores non-obvious scenarios. \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Concurrent Generation via Asyncio Semaphores}
+Each persona prompt combines the persona's specialized system directive with the shared contextual context passages assembled from the retrieved chunks. Context blocks are cited systematically:
+\begin{equation}
+\label{eq:context_block}
+\text{Block}_i = \text{``[}i\text{] Source: } S_i \text{ | Title: } T_i \text{ $\backslash$n Text: } P_i\text{''}
+\end{equation}
+
+To execute eight independent persona analyses on resource-constrained development hardware without exhausting CPU or VRAM bandwidth, \texttt{personas.py} manages invocation concurrency using an \texttt{asyncio.Semaphore}:
+\begin{equation}
+\Sigma = \text{asyncio.Semaphore}(C_{\text{max}})
+\end{equation}
+where $C_{\text{max}} = 1$ by default for local CPU execution, ensuring serialized Ollama execution that prevents thread contention, memory thrashing, and socket timeouts. All calls are scheduled concurrently using \texttt{asyncio.gather()}, allowing personas to execute as threads become available.
+
+\section{Peer-Review Consensus Evaluation and Voting Matrix}
+\label{sec:consensus_voting}
+
+\subsection{Multi-Criteria Evaluation Dimensions}
+Following generation, the eight raw responses $\mathbf{R} = \{r_1, r_2, \dots, r_8\}$ enter a peer-review scoring round. Rather than relying on an external judge model or arbitrary heuristic lengths, EvoRAG employs a peer-review mechanism implemented in \texttt{voting.py}. Each persona $p_i$ evaluates every peer response $r_j$ ($j \neq i$) across three scoring criteria:
+\begin{itemize}
+    \item \textbf{Factual Grounding ($s^{\text{fact}} \in [1, 10]$):} Degree to which claims are directly supported by the retrieved context rather than unverified parametric speculation.
+    \item \textbf{Reasoning Quality ($s^{\text{reas}} \in [1, 10]$):} Coherence, logical rigor, clarity of deduction, and absence of logical fallacies.
+    \item \textbf{Completeness ($s^{\text{comp}} \in [1, 10]$):} Thoroughness in addressing the multifaceted aspects of the user query.
+\end{itemize}
+
+\subsection{Peer Scoring Matrix Formulation}
+Let $\mathbf{M} \in \mathbb{R}^{8 \times 8 \times 3}$ denote the complete peer scoring tensor. The composite scalar score awarded by persona $p_i$ to persona $p_j$ is computed as:
+\begin{equation}
+\label{eq:peer_score}
+S_{i,j} = 
+\begin{cases} 
+\text{null}, & \text{if } i = j \text{ (self-scoring excluded)} \\
+\frac{1}{3} \left( s_{i,j}^{\text{fact}} + s_{i,j}^{\text{reas}} + s_{i,j}^{\text{comp}} \right), & \text{if } i \neq j 
+\end{cases}
+\end{equation}
+
+Self-scoring is strictly prohibited to eliminate self-enhancement bias. The unweighted consensus score for persona $p_j$ is obtained by averaging the ratings awarded by all peers:
+\begin{equation}
+\label{eq:avg_score}
+\bar{S}_j = \frac{1}{N-1} \sum_{i \neq j} S_{i,j}
+\end{equation}
+where $N = 8$.
+
+\subsection{Top-$K$ Selection and Final Answer Synthesis}
+In \texttt{synthesis.py}, the personas are ranked in descending order according to $\bar{S}_j$. The top $K = 3$ personas are selected:
+\begin{equation}
+\mathcal{P}_{\text{top}} = \operatorname{arg\,top-}K_{p_j \in \mathcal{P}} (\bar{S}_j)
+\end{equation}
+
+A specialized synthesis prompt compiles the original question, the retrieved context, and the full text of the top three winning persona perspectives. The synthesis model reconciles any minor discrepancies among the winners and compiles an authoritative, structured consensus answer. The response is paired with full citation metadata and the complete $8 \times 8$ peer matrix, ensuring transparency and auditability.
+
+\section{Continuous Evolutionary Learning Engine}
+\label{sec:evolution_engine}
+
+To address the static limitation of conventional RAG systems, EvoRAG incorporates an autonomous evolutionary learning engine located in \texttt{persona_evolution/}. Over multiple queries, the system monitors persona performance, detects chronic underperformers, and evolves persona prompt definitions without fine-tuning base model weights.
+
+\subsection{Longitudinal Performance Tracking}
+After every completed consensus cycle, \texttt{score_store.py} logs a structured audit record into \texttt{score_store.json}:
+\begin{equation}
+\mathcal{E}_q = \{ \text{query\_id}, \text{timestamp}, \text{winner}, \mathcal{P}_{\text{top}}, \mathbf{S}_q, \text{user\_signal} \}
+\end{equation}
+where $\mathbf{S}_q$ contains the peer scores and response word counts for all personas.
+
+In \texttt{tracker.py}, the system computes a rolling performance window over the last $N_w = 30$ queries:
+\begin{equation}
+\mu_p = \frac{1}{|\mathcal{H}_p|} \sum_{q \in \mathcal{H}_p} \bar{S}_{p,q}, \quad \rho_p = \frac{\sum_{q \in \mathcal{H}_p} \mathbb{I}(p \in \mathcal{P}_{\text{top}, q})}{|\mathcal{H}_p|}
+\end{equation}
+where $\mu_p$ is persona $p$'s rolling average score, and $\rho_p$ is its top-$K$ selection frequency.
+
+\subsection{Underperformer Detection and Replacement Trigger}
+In \texttt{detector.py}, a persona is flagged for evolutionary replacement if and only if two empirical conditions are met:
+\begin{enumerate}
+    \item \textbf{Evaluation Maturity Threshold:} The persona has participated in at least $N_{\text{min}} = 10$ consensus queries ($|\mathcal{H}_p| \ge N_{\text{min}}$).
+    \item \textbf{Score Deficit Threshold:} Its rolling average peer score drops below the replacement threshold $\tau_{\text{replace}} = 7.0$:
+    \begin{equation}
+    \mu_p < \tau_{\text{replace}}
+    \end{equation}
+\end{enumerate}
+
+\subsection{Prompt Mutation and Hot-Swapping}
+When a persona is flagged, \texttt{mutator.py} analyzes its lowest-scoring evaluation dimension (e.g., deficient factual grounding or repetitive reasoning) and synthesizes a mutated persona prompt. The prompt mutation preserves the persona's core analytical archetype while injecting targeted behavioral constraints (e.g., explicit counter-factual analysis, strict citation mandates).
+
+In \texttt{replacer.py}, the active system prompt in \texttt{personas.py} is hot-swapped in memory at runtime. The replacement event is committed to \texttt{persona\_evolution/versions.json} along with pre-replacement performance metrics, the retiring prompt, and the new version identifier (e.g., \texttt{v2}), maintaining a complete evolutionary audit trail across system restarts.
+
+\section{Background Knowledge Ingestion and Orchestration}
+\label{sec:scheduler_orchestration}
+
+\subsection{APScheduler Implementation}
+In \texttt{knowledge_scheduler.py}, background knowledge base maintenance is handled using Python's \texttt{APScheduler} library via a \texttt{BlockingScheduler} configured on a 3-day interval:
+\begin{equation}
+\text{Trigger: } \texttt{IntervalTrigger(days=3)}
+\end{equation}
+
+When the scheduler executes, it queries the status file \texttt{index/ingestion_status.json}. If the elapsed time since the last successful ingestion satisfies:
+\begin{equation}
+\Delta t_{\text{update}} = t_{\text{current}} - t_{\text{last\_success}} < 3\text{ days}
+\end{equation}
+the scheduler logs an index-reuse confirmation and sleeps until the next scheduled interval, avoiding redundant network API requests and CPU utilization.
+
+\subsection{Automated Ingestion Pipeline Workflow}
+Algorithm~\ref{alg:scheduler_pipeline} details the complete operational workflow of the automated knowledge ingestion scheduler.
+
+\begin{algorithm}[H]
+\caption{Automated News Ingestion and Incremental Index Update}
+\label{alg:scheduler_pipeline}
+\small
+\SetAlgoLined
+\KwIn{Query topics $\mathcal{Q}$, update interval $T_{\text{interval}} = 3\text{ days}$}
+\KwOut{Updated FAISS index $\mathcal{I}$, updated metadata $\mathcal{M}$, status log}
+
+\BlankLine
+$status \leftarrow \text{LoadStatus}(\texttt{index/ingestion\_status.json})$\;
+\If{$\text{IndexExists}()$ \textbf{and} $(t_{\text{now}} - status.\text{last\_update} < T_{\text{interval}})$}{
+    \Return \textit{``Index fresh. Reusing existing FAISS vectors.''}\;
+}
+
+\BlankLine
+\tcp{Step 1: Multi-Source Harvesting}
+$chunks_{\text{raw}} \leftarrow \emptyset$\;
+\ForEach{$q \in \mathcal{Q}$}{
+    $chunks_{\text{raw}} \leftarrow chunks_{\text{raw}} \cup \text{FetchNewsAPI}(q) \cup \text{FetchGNews}(q) \cup \text{FetchRSS}(q)$\;
+}
+
+\BlankLine
+\tcp{Step 2: Cleaning and Signature Filtering}
+$\mathcal{S}_{\text{existing}} \leftarrow \text{ExtractSignatures}(\mathcal{M})$\;
+$chunks_{\text{new}} \leftarrow \emptyset$\;
+\ForEach{$c \in chunks_{\text{raw}}$}{
+    $c_{\text{clean}} \leftarrow \text{CleanAndSanitize}(c)$\;
+    $sig \leftarrow (\text{MD5}(c_{\text{clean}}.\text{url}),\ \text{SHA256}(c_{\text{clean}}.\text{text}))$\;
+    \If{$sig \notin \mathcal{S}_{\text{existing}}$}{
+        $chunks_{\text{new}} \leftarrow chunks_{\text{new}} \cup \{c_{\text{clean}}\}$\;
+        $\mathcal{S}_{\text{existing}} \leftarrow \mathcal{S}_{\text{existing}} \cup \{sig\}$\;
+    }
+}
+
+\BlankLine
+\tcp{Step 3: Incremental Embedding and Atomic Commit}
+\If{$chunks_{\text{new}} \neq \emptyset$}{
+    $\mathbf{V}_{\text{new}} \leftarrow \text{MiniLM\_Encode}(chunks_{\text{new}}.\text{text},\ \text{batch\_size}=64)$\;
+    $\mathcal{I}.\text{add}(\mathbf{V}_{\text{new}})$\;
+    $\mathcal{M}.\text{append}(chunks_{\text{new}}.\text{metadata})$\;
+    
+    $\text{WriteAtomic}(\texttt{evorag.faiss.tmp}, \mathcal{I})$\;
+    $\text{WriteAtomic}(\texttt{evorag\_meta.json.tmp}, \mathcal{M})$\;
+    $\text{AtomicSwap}(\texttt{.tmp} \rightarrow \texttt{production})$\;
+}
+
+$status.\text{last\_update} \leftarrow t_{\text{now}}$\;
+$status.\text{vector\_count} \leftarrow \mathcal{I}.\text{ntotal}$\;
+$\text{SaveStatus}(\texttt{index/ingestion\_status.json}, status)$\;
+\Return $status$\;
+\end{algorithm}
+
+\section{Web Client, Multi-Turn Chat, and Voice Modalities}
+\label{sec:web_interface}
+
+\subsection{FastAPI REST Architecture}
+The web application service is implemented in \texttt{api.py} using FastAPI and Uvicorn. The service exposes CORS-enabled JSON endpoints alongside static asset serving. The lifecycle context manager (\texttt{lifespan}) initializes the SQLite database tables on startup, verifies the FAISS index, and handles clean resource deallocation on shutdown.
+
+\subsection{Multi-Turn Conversation Persistence and User Isolation}
+To support longitudinal multi-session research, \texttt{conversations.py} implements conversation state management. Each authenticated user owns isolated conversation threads tracked in SQLite:
+\begin{itemize}
+    \item \textbf{Chat Session Auto-Naming:} The \texttt{clean\_title()} utility parses the first user query, stripping conversational lead-in prefixes (e.g., \emph{``what is'', ``explain to me'', ``can you tell me about''}), sanitizing punctuation, and truncating to a readable 40-character title.
+    \item \textbf{Chronological Thread Retrieval:} Previous conversations are loaded through \texttt{GET /conversations/\{id\}/messages}, restoring all user questions and consensus answers in sequence without crosstalk across user accounts.
+\end{itemize}
+
+\subsection{Browser-Native Speech-to-Text (STT)}
+Voice input is implemented directly in \texttt{frontend/index.html} using the browser's native Web Speech API (\texttt{webkitSpeechRecognition} / \texttt{SpeechRecognition}). The implementation avoids third-party paid audio APIs, operating locally within the browser engine:
+\begin{itemize}
+    \item \textbf{Continuous Dictation:} The recognizer operates with \texttt{continuous = false} and \texttt{interimResults = true}, displaying transcribed tokens inside the query textarea in real time.
+    \item \textbf{Multilingual Recognition:} A UI language selector allows users to toggle recognition across Indian regional and international languages: English (\texttt{en-IN}), Kannada (\texttt{kn-IN}), Hindi (\texttt{hi-IN}), Tamil (\texttt{ta-IN}), and Telugu (\texttt{te-IN}).
+    \item \textbf{Non-Destructive Review:} Speech input is populated directly into the textarea, allowing the user to inspect and edit recognized text before clicking Submit.
+\end{itemize}
+
+\subsection{Browser-Native Text-to-Speech (TTS)}
+Spoken response synthesis utilizes the browser's native \texttt{speechSynthesis} interface. Each consensus answer card features audio playback controls (Listen, Pause, Resume, Stop). The synthesis engine filters the operating system's installed voice inventory, selects a native voice matching the active language preference, and manages playback states across rapid user clicks to avoid overlapping audio streams.
+
+\section{Summary of Implementation}
+The implementation of EvoRAG realizes a fully functional, locally deployable multi-agent RAG system. By integrating dynamic data acquisition, sliding-window chunking, dense vector indexing via FAISS, eight-persona concurrent generation, peer-review consensus scoring, autonomous prompt evolution, and native browser speech interaction, the architecture eliminates single-pass retrieval bias and provides a grounded, verifiable framework for real-time information analysis.

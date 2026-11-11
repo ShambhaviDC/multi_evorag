@@ -418,3 +418,4 @@ Located in `frontend/`, this provides a responsive single-page web interface:
 | `run_app.ps1` | PowerShell launcher for FastAPI & Web Browser | Phase 6 |
 | `frontend/index.html` | Web UI with voice STT/TTS, persona cards, heatmap & chat | Phase 5 / Phase 6 |
 | `test_phase6_orchestration.py` | Automated test suite for Phase 6 features | Phase 6 |
+
