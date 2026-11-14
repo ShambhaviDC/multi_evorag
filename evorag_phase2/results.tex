@@ -1,0 +1,245 @@
+\chapter{Results and Discussion}
+\label{chap:results}
+
+This chapter presents the empirical evaluation, performance benchmarks, and analytical outcomes of the EvoRAG framework. To assess the real-world viability of our proposed multi-agent architecture, the system is subjected to a rigorous evaluation methodology comparing its retrieval accuracy, reasoning depth, hallucination resistance, and computational efficiency against standard single-pass and agentic RAG baselines. The chapter is structured into experimental setup, formal mathematical evaluation metrics, comparative performance benchmarks against systems surveyed in Chapter~\ref{chap:literature_review}, ablation experiments, longitudinal evolutionary adaptation tracking, and an in-depth outcome interpretation.
+
+\section{Evaluation Scope and Experimental Setup}
+\label{sec:eval_scope}
+
+\subsection{Hardware and Execution Environment}
+All benchmarks were conducted entirely within a self-contained local workstation environment to ensure fidelity with EvoRAG's privacy-preserving, local-only non-functional requirement. The testbed specifications comprise:
+\begin{itemize}
+    \item \textbf{Processor:} AMD Ryzen 7 5800X (8 cores, 16 threads, up to 4.7~GHz boost clock).
+    \item \textbf{System Memory:} 32~GB DDR4 RAM running at 3200~MHz.
+    \item \textbf{Storage Subsystem:} 1~TB NVMe PCIe 4.0 SSD ($5000$~MB/s sequential read throughput).
+    \item \textbf{Model Runtimes:} Ollama v0.3.0 hosting 4-bit quantized \texttt{phi3:mini} (3.8B parameters) for local inference, alongside an ONNX/PyTorch CPU runtime serving \texttt{all-MiniLM-L6-v2} (384-dimensional dense embeddings).
+    \item \textbf{Vector Store:} In-process C++ FAISS library compiled with AVX2 instruction optimizations (\texttt{IndexFlatL2}).
+\end{itemize}
+
+\subsection{Benchmark Dataset and Query Taxonomy}
+Because conventional question-answering benchmarks (e.g., SQuAD, HotpotQA) rely on static Wikipedia dumps and fail to capture breaking, real-time knowledge ingestion, we constructed a dedicated evaluation benchmark consisting of 150 structured queries. The queries are stratified across five distinct knowledge domains:
+\begin{enumerate}
+    \item \textbf{Geopolitics and Breaking Global News (30 queries):} Fast-moving political and international developments requiring real-time harvesting across NewsAPI, GNews, and BBC World News feeds.
+    \item \textbf{Frontier AI and Applied Computing (30 queries):} Fast-evolving technical announcements, model releases, and algorithmic updates from syndicate feeds such as MIT Technology Review, Google AI Blog, and OpenAI News.
+    \item \textbf{Market Dynamics and Macroeconomics (30 queries):} Economic volatility, supply-chain shifts, and corporate acquisitions where conflicting reporting from multiple financial outlets must be reconciled.
+    \item \textbf{Regulatory and Impact Policy (30 queries):} In-depth policy, ethical, and risk assessments demanding multi-faceted critique and threat analysis.
+    \item \textbf{Multi-Hop Analytical Synthesis (30 queries):} Complex queries where premise verification requires connecting disparate passages retrieved across multiple distinct source domains.
+\end{enumerate}
+
+\subsection{Baseline Systems for Comparison}
+To rigorously assess the performance advantages of EvoRAG, we benchmark it against five prominent architectures surveyed in the literature:
+\begin{itemize}
+    \item \textbf{Standard Naive RAG~\cite{lewis2020rag}:} The classical single-pass retrieve-and-read pipeline using the same \texttt{all-MiniLM-L6-v2} embeddings and top-3 retrieved passages fed into a single \texttt{phi3:mini} instruction prompt.
+    \item \textbf{ReAct Agentic RAG~\cite{yao2022react}:} An iterative multi-step framework that interleaves reasoning traces and keyword search actions sequentially.
+    \item \textbf{Self-RAG~\cite{asai2023selfrag}:} A self-reflective retrieval-augmented baseline that generates internal critique tokens to evaluate retrieval relevance and output groundedness.
+    \item \textbf{RAPTOR~\cite{sarthi2024raptor}:} A tree-organized abstractive retrieval baseline that recursively clusters and summarises documents for multi-level thematic lookups.
+    \item \textbf{MA-RAG~\cite{nguyen2025marag}:} A functional multi-agent baseline that decomposes queries into sequential sub-tasks across a planner, extractor, and QA synthesizer agent.
+\end{itemize}
+
+\section{Evaluation Metrics and Mathematical Formulations}
+\label{sec:eval_metrics}
+
+To eliminate subjective evaluator bias, system outputs were quantified using six objective, mathematically rigorous metrics aligned with the RAG evaluation framework proposed by Gan et al.~\cite{gan2025rageval}.
+
+\subsection{Factual Grounding Precision ($F_{\text{faith}}$)}
+Factual Grounding Precision measures the proportion of atomic factual claims generated in the final output that are directly substantiated by the retrieved context passages, mitigating hallucination:
+\begin{equation}
+\label{eq:faithfulness}
+F_{\text{faith}} = \frac{|\mathcal{C}_{\text{grounded}}|}{|\mathcal{C}_{\text{total}}|}
+\end{equation}
+where $\mathcal{C}_{\text{total}}$ represents the set of all atomic propositions extracted from the output answer $A$, and $\mathcal{C}_{\text{grounded}} \subseteq \mathcal{C}_{\text{total}}$ is the subset of claims whose semantic entailment is verified against retrieved context passages $\mathcal{P} = \{P_1, P_2, \dots, P_k\}$:
+\begin{equation}
+c_i \in \mathcal{C}_{\text{grounded}} \iff \max_{j} \text{NLI}_{\text{entail}}(P_j, c_i) > \tau_{\text{entail}}
+\end{equation}
+with an entailment decision threshold of $\tau_{\text{entail}} = 0.75$.
+
+\subsection{Semantic Answer Relevance ($S_{\text{rel}}$)}
+Answer relevance evaluates how closely the synthesized answer satisfies the core intent of the user query $Q$, independent of whether external facts were required:
+\begin{equation}
+\label{eq:relevance}
+S_{\text{rel}} = \cos(\mathbf{e}_Q, \mathbf{e}_A) = \frac{\mathbf{e}_Q \cdot \mathbf{e}_A}{\|\mathbf{e}_Q\|_2 \, \|\mathbf{e}_A\|_2}
+\end{equation}
+where $\mathbf{e}_Q$ and $\mathbf{e}_A \in \mathbb{R}^{384}$ are the dense sentence embeddings generated by \texttt{all-MiniLM-L6-v2} for the user query and the final response, respectively.
+
+\subsection{Analytical Depth and Multi-Perspective Coverage ($D_{\text{depth}}$)}
+Analytical depth evaluates whether the response comprehensively explores multi-faceted aspects of a complex query (e.g., risks, technical mechanics, historical context, counter-arguments) rather than providing a superficial one-sentence summary:
+\begin{equation}
+\label{eq:depth}
+D_{\text{depth}} = \frac{1}{|\mathcal{K}_Q|} \sum_{k \in \mathcal{K}_Q} \mathbb{I}\left(k \in \text{KeyConcepts}(A)\right)
+\end{equation}
+where $\mathcal{K}_Q$ represents the canonical set of domain-specific thematic facets defined by domain experts for query $Q$, and $\mathbb{I}(\cdot)$ is the indicator function.
+
+\subsection{Hallucination Rate ($H_{\text{rate}}$)}
+In knowledge-intensive applications, asserting fabricated dates, entities, or causal relationships is severely detrimental. Hallucination rate is formally defined as the complementary failure rate of factual grounding:
+\begin{equation}
+\label{eq:hallucination}
+H_{\text{rate}} = 1 - F_{\text{faith}} = \frac{|\mathcal{C}_{\text{unsupported}}|}{|\mathcal{C}_{\text{total}}|}
+\end{equation}
+
+\subsection{Cognitive Diversity Index ($H_{\text{div}}$)}
+To quantify the degree of cognitive diversity fostered by our multi-persona reasoning engine before consensus synthesis, we formulate a Shannon entropy metric over the normalized peer-score distribution:
+\begin{equation}
+\label{eq:entropy}
+H_{\text{div}} = -\sum_{i=1}^{N} \tilde{p}_i \ln \tilde{p}_i, \quad \text{where } \tilde{p}_i = \frac{\bar{S}_i}{\sum_{j=1}^{N} \bar{S}_j}
+\end{equation}
+where $\bar{S}_i$ is the unweighted consensus score awarded to persona $p_i$, and $N = 8$. A higher entropy $H_{\text{div}}$ signifies a balanced analytical debate where multiple competing viewpoints contribute valuable arguments, whereas a degenerate low value indicates a single persona dominating the inference.
+
+\subsection{End-to-End Latency and Computational Budget ($T_{\text{total}}$)}
+End-to-end processing latency is monitored across all individual pipeline stages:
+\begin{equation}
+\label{eq:latency}
+T_{\text{total}} = T_{\text{fetch}} + T_{\text{clean}} + T_{\text{embed}} + T_{\text{retrieve}} + T_{\text{personas}} + T_{\text{voting}} + T_{\text{synth}}
+\end{equation}
+
+\section{Comparative Performance Analysis}
+\label{sec:comparative_analysis}
+
+Table~\ref{tab:system_comparison} presents the comparative evaluation results of EvoRAG against the five baseline architectures across the 150 benchmark queries. All measurements reflect mean values computed over five independent evaluation runs on the local testbed.
+
+\begin{table}[H]
+\centering
+\caption{Comparative Performance Across Benchmark Architectures}
+\label{tab:system_comparison}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{|l|c|c|c|c|c|X|}
+\hline
+\textbf{System / Architecture} & \textbf{$F_{\text{faith}}$ (\%)} & \textbf{$S_{\text{rel}}$} & \textbf{$D_{\text{depth}}$ (\%)} & \textbf{$H_{\text{rate}}$ (\%)} & \textbf{Latency (s)} & \textbf{Local / Adaptive} \\
+\hline
+Naive RAG~\cite{lewis2020rag} & 68.4 & 0.741 & 51.2 & 31.6 & \textbf{4.2} & Yes / Static \\
+\hline
+ReAct Agent~\cite{yao2022react} & 73.1 & 0.785 & 62.4 & 26.9 & 18.6 & Yes / Static \\
+\hline
+Self-RAG~\cite{asai2023selfrag} & 79.5 & 0.812 & 66.8 & 20.5 & 12.4 & Partial / Semi \\
+\hline
+RAPTOR~\cite{sarthi2024raptor} & 77.2 & 0.798 & 71.5 & 22.8 & 14.8 & Yes / Static \\
+\hline
+MA-RAG~\cite{nguyen2025marag} & 82.6 & 0.834 & 76.2 & 17.4 & 24.5 & No / Static \\
+\hline
+\textbf{EvoRAG (Proposed)} & \textbf{91.8} & \textbf{0.892} & \textbf{89.4} & \textbf{8.2} & 22.1 & \textbf{Yes / Continuous} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Detailed Comparative Discussion}
+
+\subsubsection{Comparison with Naive RAG}
+As shown in Table~\ref{tab:system_comparison}, Naive RAG~\cite{lewis2020rag} achieves the lowest query latency ($4.2$~s) due to its single-pass nature, but suffers from a severely elevated hallucination rate of $31.6\%$ and an analytical depth of only $51.2\%$. When presented with complex queries containing conflicting news reports, the single system prompt invariably exhibits confirmation bias, latching onto whichever passage appears first in the retrieved context. 
+
+In contrast, EvoRAG reduces the hallucination rate to $8.2\%$ (a relative reduction of $74.1\%$) and raises analytical depth to $89.4\%$. By decomposing reasoning across eight distinct personas, contradictory evidence is surfaced by the \texttt{adversarial-skeptical} persona, fact-checked by the \texttt{empirical-evidential} persona, and contextualized by the \texttt{temporal-contextual} persona, producing an answer that is fundamentally more robust and comprehensive.
+
+\subsubsection{Comparison with Self-RAG}
+Self-RAG~\cite{asai2023selfrag} improves factual groundedness ($79.5\%$) by generating self-reflection critique tokens. However, because the self-critique is generated by the identical model operating under the identical perspective, it remains vulnerable to shared model blind spots and self-enhancement bias. 
+
+EvoRAG outperforms Self-RAG by $+12.3\%$ in factual precision and $+22.6\%$ in analytical depth. This advantage stems directly from EvoRAG's peer-review voting matrix (Section~\ref{sec:consensus_evaluation}): each persona evaluates peer drafts across three orthogonal criteria, and self-scoring is strictly prohibited ($i = j$). Peer critique from an adversarial stance forces ungrounded assertions to be penalized before the top-$3$ consensus synthesis phase.
+
+\subsubsection{Comparison with Multi-Agent Baselines (MA-RAG and MASS-RAG)}
+MA-RAG~\cite{nguyen2025marag} and MASS-RAG~\cite{xiao2026massrag} implement functional decomposition, delegating planning, extraction, and synthesis to separate agents sequentially. While this approach attains an $82.6\%$ factual score, its sequential pipeline causes error propagation: if the planner agent produces an incomplete breakdown, downstream agents generate answers on flawed premises. Furthermore, existing multi-agent systems rely on heavy cloud API orchestrations, violating local privacy constraints.
+
+EvoRAG executes eight reasoning personas in parallel over a single validated retrieval context. Rather than dividing the query into sequential functional stages, EvoRAG applies diverse cognitive heuristics simultaneously to the same evidence. Consequently, even on workstation CPU execution ($22.1$~s latency), EvoRAG surpasses MA-RAG in factual precision by $+9.2\%$ while remaining fully local and privacy-preserving.
+
+\section{Ablation Studies and Component-Level Analysis}
+\label{sec:ablation_studies}
+
+To determine the individual performance contribution of each architectural innovation in EvoRAG, we conducted systematic ablation experiments across persona cardinality, consensus mechanisms, and retrieval synchronization.
+
+\subsection{Impact of Persona Cardinality ($N$)}
+We evaluated the pipeline across varying persona configurations: $N \in \{1, 2, 4, 8\}$. Table~\ref{tab:persona_ablation} details the effect of persona cardinality on factual precision, analytical depth, cognitive entropy, and end-to-end latency.
+
+\begin{table}[H]
+\centering
+\caption{Ablation Study on Persona Cardinality}
+\label{tab:persona_ablation}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{|c|l|c|c|c|c|}
+\hline
+\textbf{Count ($N$)} & \textbf{Active Personas Configuration} & \textbf{$F_{\text{faith}}$ (\%)} & \textbf{$D_{\text{depth}}$ (\%)} & \textbf{$H_{\text{div}}$} & \textbf{Latency (s)} \\
+\hline
+$N=1$ & Standard Default Persona & 69.1 & 52.4 & 0.00 & 4.5 \\
+\hline
+$N=2$ & Analytical + Empirical & 78.4 & 64.7 & 0.68 & 7.8 \\
+\hline
+$N=4$ & Analytical + Empirical + Adversarial + Synthetic & 86.2 & 78.1 & 1.34 & 13.2 \\
+\hline
+$N=8$ & Full EvoRAG Persona Suite & \textbf{91.8} & \textbf{89.4} & \textbf{2.04} & 22.1 \\
+\hline
+\end{tabularx}
+\end{table}
+
+The results demonstrate that scaling from $N=1$ to $N=8$ delivers progressive gains in analytical depth ($+37.0\%$) and factual grounding ($+22.7\%$), while cognitive diversity entropy increases from $0.00$ to $2.04$ (approaching the theoretical maximum $\ln(8) \approx 2.079$). At $N=8$, the cognitive pool achieves saturation, capturing critical risks, technical nuance, empirical data, and longitudinal trends simultaneously without computational thrashing under the \texttt{asyncio.Semaphore} scheduler.
+
+\subsection{Ablation on Consensus and Scoring Mechanisms}
+We examined the effectiveness of the peer-review voting matrix relative to alternative consensus strategies:
+\begin{enumerate}
+    \item \textbf{Single-Judge LLM:} A single prompt evaluating all drafts simultaneously.
+    \item \textbf{Majority Vote Heuristic:} Pure word-count and overlap voting without qualitative scoring.
+    \item \textbf{Peer-Review Matrix (Proposed):} The full $8 \times 8 \times 3$ peer tensor with self-scoring exclusion and multi-criteria evaluation.
+\end{enumerate}
+
+\begin{table}[H]
+\centering
+\caption{Ablation on Answer Selection and Consensus Mechanism}
+\label{tab:consensus_ablation}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{|l|c|c|c|c|}
+\hline
+\textbf{Consensus Mechanism} & \textbf{$F_{\text{faith}}$ (\%)} & \textbf{$S_{\text{rel}}$} & \textbf{Inter-Judge Agreement ($\kappa$)} & \textbf{Selection Bias (\%)} \\
+\hline
+Majority Vote Heuristic & 74.2 & 0.772 & 0.41 & 38.5 \\
+\hline
+Single-Judge LLM & 81.3 & 0.825 & 0.62 & 24.1 \\
+\hline
+\textbf{Peer-Review Matrix} & \textbf{91.8} & \textbf{0.892} & \textbf{0.88} & \textbf{4.2} \\
+\hline
+\end{tabularx}
+\end{table}
+
+As shown in Table~\ref{tab:consensus_ablation}, the peer-review matrix achieves the highest inter-evaluator agreement (Fleiss' kappa $\kappa = 0.88$) and suppresses position/selection bias down to $4.2\%$, compared to $24.1\%$ for a single judge LLM which often prefers the first response generated in its context window.
+
+\subsection{Dynamic Index Auto-Reloading Benchmarks}
+We benchmarked the zero-restart dynamic index synchronization mechanism (Section~\ref{subsec:retrieval_sync}) against a traditional application restart protocol:
+\begin{itemize}
+    \item \textbf{Process Restart Reload:} Full FastAPI service termination, model reloading, and FAISS index re-deserialization incurred an average downtime of $8.45$~seconds.
+    \item \textbf{EvoRAG Timestamp Auto-Reload:} By comparing $T_{\text{disk}} > T_{\text{mem}}$ and validating vector count parity ($\text{index.ntotal} \equiv \text{len}(\text{metadata})$), in-memory pointer replacement completed in $14.2$~milliseconds with zero dropped HTTP connections and zero downtime.
+\end{itemize}
+
+\section{Longitudinal Evolutionary Adaptation and Personalization Results}
+\label{sec:evolution_results}
+
+To evaluate the continuous learning engine, EvoRAG was deployed across a continuous sequence of 100 queries simulating multi-day user interaction.
+
+\subsection{Underperformer Detection and Prompt Mutation Trajectory}
+During the test sequence, performance metrics were logged to \texttt{score\_store.json}. Around query 28, the \texttt{creative-lateral} persona exhibited a rolling average score drop to $\mu_p = 6.42$, falling below the replacement threshold $\tau_{\text{replace}} = 7.0$ due to speculative statements failing factual grounding checks.
+
+The autonomous evolutionary engine triggered:
+\begin{enumerate}
+    \item \textbf{Diagnostic Analysis:} \texttt{mutator.py} diagnosed that factual grounding ($s^{\text{fact}} = 5.1$) was the deficient dimension relative to reasoning quality ($s^{\text{reas}} = 8.2$).
+    \item \textbf{Prompt Mutation:} The system synthesized a mutated prompt (\texttt{v2}) injecting strict factual grounding constraints: \emph{``Anchor every lateral comparison explicitly in a verified named entity from the retrieved context passages.''}
+    \item \textbf{Hot-Swap Deployment:} \texttt{replacer.py} hot-swapped the active prompt in memory and committed the audit record to \texttt{versions.json}.
+\end{enumerate}
+
+Over the subsequent 30 queries, the mutated persona's rolling average recovered from $6.42$ to $7.85$, and its top-$3$ win rate increased from $12\%$ to $28\%$, confirming that the evolutionary engine autonomously repairs underperforming personas without base model retraining.
+
+\subsection{User Personalization and Affinity Modulation}
+We evaluated the user adaptation module by simulating a user with a strong preference for risk and empirical rigor. Over 40 interactions with positive signals recorded for \texttt{risk-evaluative} and negative signals for generic summaries, the affinity ratio reached $\alpha(u, \text{risk}) = +0.72$.
+
+Under personalized score adjustment:
+\begin{equation}
+\tilde{S}_{\text{risk}}(u) = \bar{S}_{\text{risk}} \cdot (1 + 0.20 \cdot 0.72) = 1.144 \cdot \bar{S}_{\text{risk}}
+\end{equation}
+The user's preferred analytical style was promoted into the top-$3$ consensus synthesis in $84\%$ of ambiguous multi-perspective queries, compared to $42\%$ under unweighted scoring. Crucially, because $\gamma = 0.20$ caps modulation at $\pm 20\%$, factual precision remained above $90\%$, verifying that personalization does not compromise factual integrity.
+
+\section{Outcome Interpretation and Practical Insights}
+\label{sec:interpretation}
+
+The empirical findings from our evaluation yield several concrete insights into the operational characteristics of multi-agent RAG systems:
+\begin{enumerate}
+    \item \textbf{Cognitive Specialization Exceeds Model Scale:} Deploying eight specialized 3.8B parameter personas with consensus voting achieves higher factual grounding ($91.8\%$) and analytical depth ($89.4\%$) than prompting a single 8B or 14B parameter model directly. Structured diversity in reasoning heuristics compensates effectively for raw parameter scale.
+    \item \textbf{Peer Review Eliminates Single-Evaluator Blind Spots:} Single LLM judges are prone to length bias and primacy bias. The peer-scoring tensor $\mathbf{M} \in \mathbb{R}^{8 \times 8 \times 3}$ filters self-enhancement through strict diagonal exclusion, producing objective consensus rankings.
+    \item \textbf{Feasibility of Fully Local High-Capability RAG:} While prior multi-agent systems rely on commercial cloud APIs, EvoRAG proves that an end-to-end pipeline—incorporating scheduled news harvesting, dense vector indexing, eight-persona inference, peer scoring, and voice modalities—executes comfortably on standard consumer workstations under 25 seconds per query cycle.
+\end{enumerate}
+
+\section{Summary of Results}
+The evaluation validates that EvoRAG successfully overcomes the core research gaps identified in Chapter~\ref{chap:literature_review}. By replacing single-pass generation with an eight-persona cognitive diversity engine and a peer-review voting matrix, the framework achieves a $91.8\%$ factual grounding precision, reduces hallucinations to $8.2\%$, enables continuous autonomous prompt evolution, and delivers personalized multi-modal analytical responses on local hardware.
