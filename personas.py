@@ -264,10 +264,11 @@ async def run_all_personas(
     chunks = pre_retrieved_chunks if pre_retrieved_chunks is not None else retrieve(query, top_k=top_k)
     sources = [
         {
-            "title":  c.get("title", ""),
-            "url":    c.get("url", ""),
-            "source": c.get("source", ""),
-            "score":  round(c.get("score", 0.0), 4),
+            "title":        c.get("title", ""),
+            "url":          c.get("url", ""),
+            "source":       c.get("source", ""),
+            "score":        round(c.get("score", 0.0), 4),
+            "published_at": c.get("published_at") or "",
         }
         for c in chunks
     ]

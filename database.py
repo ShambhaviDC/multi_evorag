@@ -33,6 +33,15 @@ def create_db_and_tables() -> None:
     table definitions from any imported ``SQLModel`` subclasses.
     """
     SQLModel.metadata.create_all(engine)
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            columns = [row[1] for row in conn.execute(text("PRAGMA table_info(message)")).fetchall()]
+            if columns and "sources_json" not in columns:
+                conn.execute(text("ALTER TABLE message ADD COLUMN sources_json TEXT"))
+                conn.commit()
+    except Exception:
+        pass
 
 
 def get_session() -> Session:

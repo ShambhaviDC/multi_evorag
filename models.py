@@ -51,4 +51,5 @@ class Message(SQLModel, table=True):
     conversation_id: int = Field(foreign_key="conversation.id", index=True)
     role: str = Field(index=True)  # "user" or "assistant"
     content: str
+    sources_json: Optional[str] = Field(default=None, nullable=True)
     timestamp: datetime = Field(default_factory=utc_now)

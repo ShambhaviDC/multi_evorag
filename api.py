@@ -111,10 +111,11 @@ class QueryRequest(BaseModel):
 
 
 class SourceItem(BaseModel):
-    title:  str
-    url:    str
-    source: str
-    score:  float
+    title:        str
+    url:          str
+    source:       str
+    score:        float
+    published_at: Optional[str] = None
 
 
 class QueryResponse(BaseModel):

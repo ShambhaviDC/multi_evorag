@@ -130,10 +130,11 @@ async def evorag_query(query: str, top_k: int = RETRIEVAL_TOP_K) -> dict[str, An
 
         sources = [
             {
-                "title": c.get("title", ""),
-                "url": c.get("url", ""),
-                "source": c.get("source", ""),
-                "score": round(c.get("score", 0.0), 4),
+                "title":        c.get("title", ""),
+                "url":          c.get("url", ""),
+                "source":       c.get("source", ""),
+                "score":        round(c.get("score", 0.0), 4),
+                "published_at": c.get("published_at") or "",
             }
             for c in chunks
         ]

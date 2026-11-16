@@ -6,6 +6,8 @@
   <title>EvoRAG — Evolutionary Multi-Persona Research Assistant</title>
   <meta name="description" content="EvoRAG is a research tool that uses multiple AI personas to generate, vote on, and synthesise answers to complex research questions." />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
   <style>
     /* ── Design tokens ──────────────────────────────────────────────── */
     :root {
@@ -819,10 +821,316 @@
       border-radius: var(--radius-sm);
       padding: 14px;
       transition: background .15s;
-      margin-bottom: 20px;
-      white-space: pre-wrap;
+      margin-bottom: 12px;
+      word-break: break-word;
     }
-    #answer-text:hover { background: rgba(108,99,255,.07); }
+    #answer-text:hover { background: rgba(108,99,255,.04); }
+
+    /* ── Markdown Content Typography (ChatGPT / Perplexity style) ───── */
+    .markdown-content {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--text);
+      word-break: break-word;
+    }
+    .markdown-content p {
+      margin: 0 0 14px 0;
+    }
+    .markdown-content p:last-child {
+      margin-bottom: 0;
+    }
+    .markdown-content h1,
+    .markdown-content h2,
+    .markdown-content h3,
+    .markdown-content h4 {
+      font-weight: 700;
+      color: var(--text);
+      margin: 20px 0 10px 0;
+      line-height: 1.35;
+    }
+    .markdown-content h1 { font-size: 20px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    .markdown-content h2 { font-size: 18px; }
+    .markdown-content h3 { font-size: 16px; }
+    .markdown-content h4 { font-size: 15px; }
+
+    .markdown-content ul,
+    .markdown-content ol {
+      margin: 0 0 14px 0;
+      padding-left: 24px;
+    }
+    .markdown-content li {
+      margin-bottom: 6px;
+      line-height: 1.65;
+    }
+    .markdown-content li:last-child {
+      margin-bottom: 0;
+    }
+
+    .markdown-content strong {
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .markdown-content em {
+      font-style: italic;
+    }
+
+    .markdown-content a {
+      color: var(--accent2);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      transition: color 0.15s;
+    }
+    .markdown-content a:hover {
+      color: #fff;
+    }
+
+    .markdown-content blockquote {
+      border-left: 3px solid var(--accent);
+      margin: 12px 0 16px 0;
+      padding: 6px 16px;
+      color: var(--muted);
+      background: rgba(108, 99, 255, 0.05);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+
+    .markdown-content code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+      font-size: 0.88em;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #e2e8f0;
+    }
+    .markdown-content pre {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      overflow-x: auto;
+      margin: 14px 0;
+    }
+    .markdown-content pre code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      font-size: 13px;
+      color: inherit;
+    }
+
+    .markdown-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+    .markdown-content th,
+    .markdown-content td {
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .markdown-content th {
+      background: var(--surface2);
+      font-weight: 600;
+      color: var(--text);
+    }
+    .markdown-content tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* ── Inline Clickable Citations ──────────────────────────────────── */
+    .citation-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      padding: 2px 6px;
+      margin: 0 2px;
+      background: rgba(108, 99, 255, 0.16);
+      border: 1px solid rgba(108, 99, 255, 0.4);
+      color: var(--accent2);
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      vertical-align: baseline;
+      position: relative;
+      top: -1px;
+      transition: all 0.2s ease;
+      user-select: none;
+      font-family: var(--font);
+    }
+    .citation-badge:hover {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(108, 99, 255, 0.4);
+    }
+    .citation-badge:active {
+      transform: translateY(0);
+    }
+
+    /* ── Sources & Evidence Section ──────────────────────────────────── */
+    .sources-evidence-container {
+      margin-top: 18px;
+      margin-bottom: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .sources-evidence-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .sources-evidence-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .sources-header-icon {
+      color: var(--accent2);
+      font-size: 14px;
+    }
+    .sources-count-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      background: var(--surface2);
+      padding: 2px 8px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      text-transform: none;
+    }
+
+    .sources-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .source-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+    .source-card:hover {
+      border-color: var(--accent);
+      background: rgba(108, 99, 255, 0.08);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    }
+
+    .source-card-highlight {
+      border-color: var(--accent) !important;
+      background: rgba(108, 99, 255, 0.25) !important;
+      box-shadow: 0 0 16px rgba(108, 99, 255, 0.6) !important;
+      transform: scale(1.02);
+    }
+
+    .source-card-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      flex-wrap: wrap;
+    }
+    .source-card-num {
+      font-weight: 800;
+      color: var(--accent2);
+      background: rgba(108, 99, 255, 0.15);
+      border: 1px solid rgba(108, 99, 255, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .source-card-publisher {
+      font-weight: 600;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 8px;
+      border-radius: 100px;
+    }
+    .source-card-date {
+      color: var(--muted);
+      margin-left: auto;
+      font-size: 10.5px;
+    }
+
+    .source-card-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1.45;
+      color: var(--text);
+    }
+    .source-title-link {
+      color: var(--text);
+      text-decoration: none;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      transition: color 0.15s;
+    }
+    .source-title-link:hover {
+      color: var(--accent2);
+      text-decoration: underline;
+    }
+    .ext-link-icon {
+      font-size: 11px;
+      color: var(--muted);
+      margin-left: 2px;
+    }
+
+    .source-card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      margin-top: 4px;
+    }
+    .source-domain-link {
+      color: var(--accent2);
+      text-decoration: none;
+      font-size: 11.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 500;
+    }
+    .source-domain-link:hover {
+      text-decoration: underline;
+    }
+    .source-no-url {
+      color: var(--muted);
+      font-style: italic;
+      font-size: 11px;
+    }
+    .sources-empty-state {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 10px 14px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      border: 1px dashed var(--border);
+    }
 
     /* Personas pills */
     .top-personas-label {
@@ -1240,7 +1548,20 @@
         </div>
       </div>
       <div id="answer-text" title="Click to copy" role="button" tabindex="0" aria-label="Consensus answer — click to copy"></div>
-      <div class="top-personas-label">Top Personas</div>
+      
+      <!-- Sources & Evidence Section (Consensus Answer) -->
+      <div id="consensus-sources-section" class="sources-evidence-container" style="display:none;">
+        <div class="sources-evidence-header">
+          <div class="sources-evidence-title">
+            <span class="sources-header-icon">📚</span>
+            <span>Sources &amp; Evidence</span>
+            <span id="consensus-source-count" class="sources-count-badge">0 sources</span>
+          </div>
+        </div>
+        <div id="consensus-sources-list" class="sources-cards-grid"></div>
+      </div>
+
+      <div class="top-personas-label" style="margin-top:22px;">Top Personas</div>
       <div id="top-personas-row"></div>
     </div>
   </section>
@@ -1351,6 +1672,9 @@ const bannerWarn   = $('banner-warn');
 const secConsensus = $('section-consensus');
 const secPersonas  = $('section-personas');
 const answerText   = $('answer-text');
+const consensusSourcesSec  = $('consensus-sources-section');
+const consensusSourcesList = $('consensus-sources-list');
+const consensusSourceCount = $('consensus-source-count');
 const qIdDisplay   = $('query-id-display');
 const topPersonRow = $('top-personas-row');
 const pcGrid       = $('persona-cards-grid');
@@ -1536,6 +1860,247 @@ function formatRelativeTime(dateStr) {
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   } catch (e) {
     return '';
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   MARKDOWN RENDERING, INLINE CITATIONS & SOURCES & EVIDENCE ENGINE
+   ════════════════════════════════════════════════════════════════════ */
+
+// Configure marked options if available
+if (typeof window.marked !== 'undefined' && typeof window.marked.setOptions === 'function') {
+  window.marked.setOptions({
+    gfm: true,
+    breaks: true,
+  });
+}
+
+/**
+ * Built-in fallback Markdown parser when offline or when marked.js is not loaded.
+ */
+function fallbackMarkdown(str) {
+  if (!str) return '';
+  let out = escHtml(str);
+
+  // Fenced code blocks ```lang ... ```
+  out = out.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+    return `<pre><code class="language-${lang}">${code}</code></pre>`;
+  });
+
+  // Inline code `code`
+  out = out.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+
+  // Headers # to ####
+  out = out.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+  out = out.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  out = out.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+  out = out.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+  // Blockquotes
+  out = out.replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+  // Bold & Italic
+  out = out.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  out = out.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  out = out.replace(/__(.*?)__/g, '<strong>$1</strong>');
+  out = out.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  out = out.replace(/_([^_]+)_/g, '<em>$1</em>');
+
+  // Tables
+  out = out.replace(/^(\|.+?\|)\n(\|[-: |]+\|)\n((?:\|.+?\|\n?)+)/gm, (match, header, divider, rows) => {
+    const parseRow = (r, isTh) => {
+      const tag = isTh ? 'th' : 'td';
+      const cells = r.split('|').slice(1, -1).map(c => `<${tag}>${c.trim()}</${tag}>`).join('');
+      return `<tr>${cells}</tr>`;
+    };
+    const headHtml = parseRow(header, true);
+    const bodyHtml = rows.trim().split('\n').map(r => parseRow(r, false)).join('');
+    return `<table><thead>${headHtml}</thead><tbody>${bodyHtml}</tbody></table>`;
+  });
+
+  // Unordered lists (- or *)
+  out = out.replace(/^\s*[-*]\s+(.*$)/gim, '<li>$1</li>');
+  out = out.replace(/(<li>.*<\/li>)/gims, (match) => `<ul>${match}</ul>`);
+  out = out.replace(/<\/ul>\s*<ul>/g, '');
+
+  // Ordered lists (1. )
+  out = out.replace(/^\s*\d+\.\s+(.*$)/gim, '<oli>$1</oli>');
+  out = out.replace(/(<oli>.*<\/oli>)/gims, (match) => `<ol>${match.replace(/<\/?oli>/g, (m) => m === '<oli>' ? '<li>' : '</li>')}</ol>`);
+  out = out.replace(/<\/ol>\s*<ol>/g, '');
+
+  // Links [text](url)
+  out = out.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+  // Paragraphs
+  const paras = out.split(/\n{2,}/);
+  out = paras.map(p => {
+    p = p.trim();
+    if (!p) return '';
+    if (/^<(h[1-4]|pre|ul|ol|table|blockquote)/i.test(p)) return p;
+    return `<p>${p.replace(/\n/g, '<br/>')}</p>`;
+  }).join('\n');
+
+  return out;
+}
+
+/**
+ * Render Markdown using marked.js (with DOMPurify sanitization) or fallback parser.
+ */
+function renderMarkdown(text) {
+  if (!text) return '';
+  if (typeof window.marked !== 'undefined' && typeof window.marked.parse === 'function') {
+    try {
+      const rawHtml = window.marked.parse(text);
+      if (typeof window.DOMPurify !== 'undefined' && typeof window.DOMPurify.sanitize === 'function') {
+        return window.DOMPurify.sanitize(rawHtml, {
+          ADD_ATTR: ['target', 'rel', 'class', 'data-source-num', 'data-target-prefix']
+        });
+      }
+      return rawHtml;
+    } catch (e) {
+      console.warn('marked.parse error, using fallback:', e);
+    }
+  }
+  return fallbackMarkdown(text);
+}
+
+/**
+ * Render Markdown and convert inline citation markers like [1], [2] to interactive badges.
+ */
+function renderMarkdownWithCitations(rawText, sources = [], targetPrefix = 'consensus') {
+  if (!rawText) return '';
+  
+  // Render Markdown first
+  let html = renderMarkdown(rawText);
+
+  // Convert inline citations [1], [2], [1, 2] to interactive clickable badges
+  // Matches [1], [2], etc., ensuring they are not part of a markdown link [text](url)
+  html = html.replace(/\[(\d+)\](?!\()/g, (match, p1) => {
+    const idx = parseInt(p1, 10);
+    const sourceObj = (sources && sources[idx - 1]) || null;
+    let tooltip = `Source [${idx}]`;
+    if (sourceObj) {
+      const pub = sourceObj.source || 'News Source';
+      const title = sourceObj.title || 'Referenced Article';
+      tooltip = `[${idx}] ${pub}: ${title}`;
+    } else {
+      tooltip = `Source [${idx}] (Evidence context passage #${idx})`;
+    }
+    return `<button type="button" class="citation-badge" data-source-num="${idx}" data-target-prefix="${targetPrefix}" title="${escHtml(tooltip)}" aria-label="Jump to Source ${idx}">[${idx}]</button>`;
+  });
+
+  return html;
+}
+
+/**
+ * Format timestamp into readable localized date and time.
+ */
+function formatSourceDate(isoDateStr) {
+  if (!isoDateStr) return 'Recent Publication';
+  try {
+    const d = new Date(isoDateStr);
+    if (isNaN(d.getTime())) return 'Recent Publication';
+    const datePart = d.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+    const timePart = d.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    return `${datePart} • ${timePart}`;
+  } catch (e) {
+    return 'Recent Publication';
+  }
+}
+
+/**
+ * Render single Source Card HTML.
+ */
+function renderSourceCardHtml(source, idx, prefix = 'consensus') {
+  const hasUrl = Boolean(source.url && String(source.url).trim().startsWith('http'));
+  const title = source.title && String(source.title).trim() ? String(source.title).trim() : 'Untitled Article';
+  const publisher = source.source && String(source.source).trim() ? String(source.source).trim() : 'News Source';
+  const dateFormatted = formatSourceDate(source.published_at);
+
+  let domain = '';
+  if (hasUrl) {
+    try {
+      domain = new URL(source.url).hostname.replace(/^www\./, '');
+    } catch (e) {
+      domain = publisher;
+    }
+  }
+
+  return `
+    <div class="source-card" id="${prefix}-source-card-${idx}">
+      <div class="source-card-top">
+        <span class="source-card-num" title="Evidence Citation [${idx}]">[${idx}]</span>
+        <span class="source-card-publisher" title="Publisher">${escHtml(publisher)}</span>
+        <span class="source-card-date" title="Published Date">${escHtml(dateFormatted)}</span>
+      </div>
+      <div class="source-card-title">
+        ${hasUrl
+          ? `<a href="${escHtml(source.url)}" target="_blank" rel="noopener noreferrer" class="source-title-link" title="Open full article: ${escHtml(title)}">${escHtml(title)} <span class="ext-link-icon">↗</span></a>`
+          : `<span class="source-title-static">${escHtml(title)}</span>`
+        }
+      </div>
+      <div class="source-card-bottom">
+        ${hasUrl
+          ? `<a href="${escHtml(source.url)}" target="_blank" rel="noopener noreferrer" class="source-domain-link"><span class="source-domain-icon">🌐</span> ${escHtml(domain)} ↗</a>`
+          : `<span class="source-no-url">Source URL not available</span>`
+        }
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Render full Sources & Evidence section HTML for any assistant turn.
+ */
+function renderSourcesSectionHtml(sources, prefix = 'consensus') {
+  if (!sources || !sources.length) return '';
+  const countStr = `${sources.length} ${sources.length === 1 ? 'article' : 'articles'}`;
+  const cardsHtml = sources.map((s, i) => renderSourceCardHtml(s, i + 1, prefix)).join('');
+  return `
+    <div class="sources-evidence-container" id="${prefix}-sources-container">
+      <div class="sources-evidence-header">
+        <div class="sources-evidence-title">
+          <span class="sources-header-icon">📚</span>
+          <span>Sources &amp; Evidence</span>
+          <span class="sources-count-badge">${countStr}</span>
+        </div>
+      </div>
+      <div class="sources-cards-grid">
+        ${cardsHtml}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Smoothly scroll to and highlight a referenced source card when its citation badge is clicked.
+ */
+function jumpToSource(num, prefix = 'consensus') {
+  const cardId = `${prefix}-source-card-${num}`;
+  const card = document.getElementById(cardId);
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    card.classList.add('source-card-highlight');
+    setTimeout(() => {
+      card.classList.remove('source-card-highlight');
+    }, 2000);
+  } else {
+    // Also check consensus card as fallback if not in current thread container
+    const fallbackCard = document.getElementById(`consensus-source-card-${num}`);
+    if (fallbackCard) {
+      fallbackCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      fallbackCard.classList.add('source-card-highlight');
+      setTimeout(() => fallbackCard.classList.remove('source-card-highlight'), 2000);
+    } else {
+      showToast(`Source [${num}] metadata was not retrieved in top results.`);
+    }
   }
 }
 
@@ -1828,7 +2393,7 @@ function resumePlayback(containerEl) {
 
 // Wire consensus audio controls
 consensusSpeakBtn.addEventListener('click', () => {
-  const text = answerText.textContent;
+  const text = answerText.dataset.rawAnswer || answerText.textContent;
   if (!text) {
     showToast('Run an analysis first to hear the consensus answer.');
     return;
@@ -1946,7 +2511,11 @@ function renderThread(messages) {
         <div class="chat-msg-content">${escHtml(msg.content)}</div>
       `;
     } else {
-      // Assistant message with speaker controls
+      // Assistant message with speaker controls and supporting sources
+      const sources = Array.isArray(msg.sources) ? msg.sources : [];
+      const contentHtml = renderMarkdownWithCitations(msg.content, sources, `thread-${idx}`);
+      const sourcesHtml = sources.length ? renderSourcesSectionHtml(sources, `thread-${idx}`) : '';
+
       msgEl.innerHTML = `
         <div class="chat-msg-header">
           <span class="chat-msg-author">🤖 EvoRAG Synthesis</span>
@@ -1960,7 +2529,8 @@ function renderThread(messages) {
             <span class="audio-badge" style="display:none;">Playing...</span>
           </div>
         </div>
-        <div class="chat-msg-content">${escHtml(msg.content)}</div>
+        <div class="chat-msg-content markdown-content">${contentHtml}</div>
+        ${sourcesHtml}
       `;
 
       // Wire copy button
@@ -2170,7 +2740,19 @@ async function openConversation(id, closeDrawerOnDone = true) {
     const assistantMessages = activeMessages.filter(m => m.role === 'assistant');
     if (assistantMessages.length) {
       const latestAssistant = assistantMessages[assistantMessages.length - 1];
-      answerText.textContent = latestAssistant.content;
+      const sources = Array.isArray(latestAssistant.sources) ? latestAssistant.sources : [];
+      answerText.dataset.rawAnswer = latestAssistant.content;
+      answerText.className = 'markdown-content';
+      answerText.innerHTML = renderMarkdownWithCitations(latestAssistant.content, sources, 'consensus');
+      if (consensusSourcesSec && consensusSourcesList) {
+        if (sources.length) {
+          consensusSourceCount.textContent = `${sources.length} ${sources.length === 1 ? 'article' : 'articles'}`;
+          consensusSourcesList.innerHTML = sources.map((s, idx) => renderSourceCardHtml(s, idx + 1, 'consensus')).join('');
+          consensusSourcesSec.style.display = 'block';
+        } else {
+          consensusSourcesSec.style.display = 'none';
+        }
+      }
       qIdDisplay.textContent = `Conversation #${convo.id}`;
       secConsensus.classList.add('visible');
     }
@@ -2228,8 +2810,26 @@ async function clearAllConversations() {
 /* Section 2 — Consensus */
 function renderConsensus(data) {
   const answer = data.final_answer || '';
-  answerText.textContent = answer;
+  const sources = Array.isArray(data.sources) ? data.sources : [];
+
+  answerText.dataset.rawAnswer = answer;
+  answerText.className = 'markdown-content';
+  answerText.innerHTML = renderMarkdownWithCitations(answer, sources, 'consensus');
+  
   qIdDisplay.textContent = data.query_id ? `Query ID: ${data.query_id}` : (activeConversationId ? `Chat #${activeConversationId}` : '');
+
+  // Render Sources & Evidence directly below the answer
+  if (consensusSourcesSec && consensusSourcesList) {
+    if (sources.length) {
+      consensusSourceCount.textContent = `${sources.length} ${sources.length === 1 ? 'article' : 'articles'}`;
+      consensusSourcesList.innerHTML = sources.map((s, idx) => renderSourceCardHtml(s, idx + 1, 'consensus')).join('');
+      consensusSourcesSec.style.display = 'block';
+    } else {
+      consensusSourceCount.textContent = '0 articles';
+      consensusSourcesList.innerHTML = '<div class="sources-empty-state"><span>ℹ️</span><span>No external news sources were retrieved for this query.</span></div>';
+      consensusSourcesSec.style.display = 'block';
+    }
+  }
 
   topPersonRow.innerHTML = '';
   const top = Array.isArray(data.top_personas) ? data.top_personas : [];
@@ -2573,6 +3173,7 @@ async function runQuery() {
     const assistantMsgObj = {
       role: 'assistant',
       content: data.final_answer || '',
+      sources: data.sources || [],
       timestamp: new Date().toISOString()
     };
     activeMessages.push(assistantMsgObj);
@@ -2586,7 +3187,11 @@ async function runQuery() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ role: 'assistant', content: data.final_answer })
+        body: JSON.stringify({
+          role: 'assistant',
+          content: data.final_answer,
+          sources: data.sources || []
+        })
       }).catch(e => console.warn('Error saving assistant message:', e));
 
       // Refresh list to update message counts & timestamps
@@ -2624,14 +3229,29 @@ qInput.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runQuery();
 });
 
-// Copy consensus answer on click
-answerText.addEventListener('click', () => {
-  const text = answerText.textContent;
+// Copy consensus answer on click (ignores clicks on links, citation badges or buttons)
+answerText.addEventListener('click', (e) => {
+  if (e.target.closest('a, button, .citation-badge')) return;
+  const text = answerText.dataset.rawAnswer || answerText.textContent;
   if (!text) return;
   navigator.clipboard.writeText(text).then(() => showToast('Copied answer!')).catch(() => showToast('Select + copy manually'));
 });
 answerText.addEventListener('keydown', e => {
-  if (e.key === 'Enter' || e.key === ' ') answerText.click();
+  if (e.key === 'Enter' || e.key === ' ') {
+    if (e.target.closest('a, button, .citation-badge')) return;
+    answerText.click();
+  }
+});
+
+// Global click delegation for interactive citation badges across both thread and consensus card
+document.addEventListener('click', (e) => {
+  const badge = e.target.closest('.citation-badge');
+  if (!badge) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const num = badge.getAttribute('data-source-num');
+  const prefix = badge.getAttribute('data-target-prefix') || 'consensus';
+  jumpToSource(num, prefix);
 });
 
 // Toggle visibility

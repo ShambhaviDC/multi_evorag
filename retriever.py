@@ -506,10 +506,11 @@ def answer(query: str, top_k: int = RETRIEVAL_TOP_K) -> Dict:
 
     sources = [
         {
-            "title":  c.get("title", ""),
-            "url":    c.get("url", ""),
-            "source": c.get("source", ""),
-            "score":  round(c.get("score", 0.0), 4),
+            "title":        c.get("title", ""),
+            "url":          c.get("url", ""),
+            "source":       c.get("source", ""),
+            "score":        round(c.get("score", 0.0), 4),
+            "published_at": c.get("published_at") or "",
         }
         for c in chunks
     ]
@@ -544,10 +545,11 @@ async def answer_async(query: str, top_k: int = RETRIEVAL_TOP_K) -> Dict:
 
     sources = [
         {
-            "title":  c.get("title", ""),
-            "url":    c.get("url", ""),
-            "source": c.get("source", ""),
-            "score":  round(c.get("score", 0.0), 4),
+            "title":        c.get("title", ""),
+            "url":          c.get("url", ""),
+            "source":       c.get("source", ""),
+            "score":        round(c.get("score", 0.0), 4),
+            "published_at": c.get("published_at") or "",
         }
         for c in chunks
     ]

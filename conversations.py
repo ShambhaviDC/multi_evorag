@@ -96,7 +96,20 @@ def get_conversation(conv_id: int, current_user: User = Depends(get_current_user
     stmt = select(Message).where(Message.conversation_id == conv_id).order_by(Message.timestamp)
     messages = session.exec(stmt).all()
     convo_dict = convo.model_dump() if hasattr(convo, "model_dump") else convo.dict()
-    convo_dict["messages"] = [m.model_dump() if hasattr(m, "model_dump") else m.dict() for m in messages]
+    
+    msg_list = []
+    for m in messages:
+        m_dict = m.model_dump() if hasattr(m, "model_dump") else m.dict()
+        if m_dict.get("sources_json"):
+            try:
+                import json
+                m_dict["sources"] = json.loads(m_dict["sources_json"])
+            except Exception:
+                m_dict["sources"] = []
+        else:
+            m_dict["sources"] = []
+        msg_list.append(m_dict)
+    convo_dict["messages"] = msg_list
     return convo_dict
 
 
@@ -175,6 +188,7 @@ async def update_conversation(
 class MessageCreate(BaseModel):
     role: str  # "user" or "assistant"
     content: str
+    sources: Optional[List[dict]] = None
 
 
 @router.post("/{conv_id}/messages", response_model=Message, status_code=status.HTTP_201_CREATED)
@@ -185,7 +199,9 @@ def add_message(conv_id: int, msg: MessageCreate, current_user: User = Depends(g
     verify_ownership(current_user, convo)
     if msg.role not in {"user", "assistant"}:
         raise HTTPException(status_code=400, detail="Invalid role")
-    message = Message(conversation_id=conv_id, role=msg.role, content=msg.content)
+    import json
+    sources_json = json.dumps(msg.sources) if msg.sources else None
+    message = Message(conversation_id=conv_id, role=msg.role, content=msg.content, sources_json=sources_json)
     session.add(message)
     convo.updated_at = datetime.now(timezone.utc)
     session.add(convo)
