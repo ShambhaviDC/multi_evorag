@@ -14,9 +14,9 @@ Run:
 
 import logging
 from contextlib import asynccontextmanager
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -27,6 +27,7 @@ from config import (
     RETRIEVAL_TOP_K,
 )
 from embedder import load_index
+from file_processor import ProcessedFile, get_cached_file, process_uploaded_file
 from retriever import answer_async
 from personas import run_all_personas
 from pipeline import evorag_query
@@ -150,6 +151,7 @@ class PersonaQueryResponse(BaseModel):
 class ConsensusQueryRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=1000)
     top_k: int = Field(RETRIEVAL_TOP_K, ge=1, le=20)
+    attachment_hashes: Optional[List[str]] = Field(default=None, description="SHA256 hashes of pre-uploaded files")
 
 
 class ConsensusQueryResponse(BaseModel):
@@ -160,6 +162,10 @@ class ConsensusQueryResponse(BaseModel):
     score_matrix:  Dict[str, Dict[str, Optional[Dict[str, float]]]]
     query_id:      str
     sources:       List[SourceItem]
+    components:    List[Dict[str, Any]] = Field(default_factory=list)
+    structured_query: Optional[Dict[str, Any]] = None
+    attachments_processed: List[Dict[str, Any]] = Field(default_factory=list)
+    retrieval_status: Optional[Dict[str, Any]] = None
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -361,23 +367,43 @@ async def personas_endpoint(req: PersonaQueryRequest):
     )
 
 
+@app.post("/upload", summary="Upload and extract multimodal files (PDF, DOCX, TXT, CSV, XLSX, PNG, JPG)")
+async def upload_files_endpoint(files: List[UploadFile] = File(...)):
+    """Validate, extract, and cache uploaded documents/images for subsequent queries."""
+    uploaded_results = []
+    for f in files:
+        content = await f.read()
+        processed = process_uploaded_file(f.filename or "unnamed", content)
+        uploaded_results.append(processed.to_dict())
+    return {"files": uploaded_results}
+
+
 @app.post("/query/consensus", response_model=ConsensusQueryResponse, summary="EvoRAG consensus query")
 async def consensus_endpoint(req: ConsensusQueryRequest, background_tasks: BackgroundTasks):
     """
-    Phase 5 — Consensus Voting:
-      1. Run all 8 personas on shared retrieved context
-      2. Ask personas to score peer responses
-      3. Select the top 3 personas by peer score
-      4. Synthesize a final answer and append score_store.json
-      5. Trigger evolutionary persona check in background (zero latency)
+    Phase 5 & 7 — Consensus Voting & Adaptive Multimodal Response:
+      1. Run Input Understanding Agent & Routing
+      2. Run all 8 personas or multimodal structured engine
+      3. Ask personas to score peer responses
+      4. Select the top 3 personas by peer score
+      5. Formulate adaptive visualizations (charts, tables, timelines)
+      6. Synthesize a final answer and append score_store.json
+      7. Trigger evolutionary persona check in background (zero latency)
     """
     if _state.get("index") is None:
         raise HTTPException(status_code=503, detail="Index not loaded.")
 
     log.info(f"POST /query/consensus — '{req.query[:60]}' (top_k={req.top_k})")
 
+    attachments: List[ProcessedFile] = []
+    if req.attachment_hashes:
+        for h in req.attachment_hashes:
+            cached = get_cached_file(h)
+            if cached:
+                attachments.append(cached)
+
     try:
-        result = await evorag_query(req.query, top_k=req.top_k)
+        result = await evorag_query(req.query, top_k=req.top_k, attachments=attachments)
     except ConnectionError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
@@ -387,6 +413,39 @@ async def consensus_endpoint(req: ConsensusQueryRequest, background_tasks: Backg
     # Run evolution check AFTER the response is built — adds zero latency
     background_tasks.add_task(_run_evolution_check)
 
+    return ConsensusQueryResponse(**result)
+
+
+@app.post("/query/consensus/multimodal", response_model=ConsensusQueryResponse, summary="Multimodal consensus query with direct attachments")
+async def consensus_multimodal_endpoint(
+    background_tasks: BackgroundTasks,
+    query: str = Form(...),
+    top_k: int = Form(RETRIEVAL_TOP_K),
+    files: Optional[List[UploadFile]] = File(default=None),
+):
+    """Accept multipart form data with query and file attachments in a single request."""
+    if _state.get("index") is None:
+        raise HTTPException(status_code=503, detail="Index not loaded.")
+
+    processed_files: List[ProcessedFile] = []
+    if files:
+        for f in files:
+            if f.filename:
+                content = await f.read()
+                proc = process_uploaded_file(f.filename, content)
+                processed_files.append(proc)
+
+    log.info("POST /query/consensus/multimodal — '%s' (files=%d)", query[:60], len(processed_files))
+
+    try:
+        result = await evorag_query(query, top_k=top_k, attachments=processed_files)
+    except ConnectionError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        log.exception("Unexpected error during multimodal consensus processing")
+        raise HTTPException(status_code=500, detail=f"Internal error: {e}")
+
+    background_tasks.add_task(_run_evolution_check)
     return ConsensusQueryResponse(**result)
 
 

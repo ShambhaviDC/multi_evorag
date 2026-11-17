@@ -1,0 +1,200 @@
+"""gemini_client.py - Structured Request Adapter and Multimodal Client for Gemini (EvoRAG Phase 7).
+
+Converts StructuredQuery objects, multimodal file attachments, and retrieved context
+into valid Google Gemini REST API payloads. Supports:
+- Multimodal image inline_data parts
+- Google Search grounding tools for live news
+- Structured system instructions and format hints
+- Robust retry with exponential backoff and connection pooling
+"""
+
+import asyncio
+import json
+import logging
+import os
+import re
+from typing import Any, Dict, List, Optional
+
+import httpx
+
+from config import GEMINI_API_KEY, GEMINI_MODEL
+from file_processor import ProcessedFile
+from query_models import StructuredQuery
+
+log = logging.getLogger(__name__)
+
+_RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+_gemini_http_client: Optional[httpx.AsyncClient] = None
+
+
+def get_gemini_http_client() -> httpx.AsyncClient:
+    global _gemini_http_client
+    if _gemini_http_client is None or _gemini_http_client.is_closed:
+        _gemini_http_client = httpx.AsyncClient(
+            timeout=100.0,
+            limits=httpx.Limits(max_connections=30, max_keepalive_connections=20)
+        )
+    return _gemini_http_client
+
+
+def build_structured_prompt(
+    structured_query: StructuredQuery,
+    retrieved_chunks: Optional[List[Dict[str, Any]]] = None,
+    attachments: Optional[List[ProcessedFile]] = None,
+) -> str:
+    """Build a comprehensive context prompt from structured query representation and evidence."""
+    sections = [
+        "You are the EvoRAG Adaptive Intelligence Engine.",
+        f"Original User Query: {structured_query.original_query}",
+        f"Identified Intent: {structured_query.intent} (Category: {structured_query.query_category})",
+    ]
+
+    # Entities
+    if structured_query.entities:
+        ent_strs = [f"{e.name} ({e.type})" for e in structured_query.entities]
+        sections.append(f"Identified Entities: {', '.join(ent_strs)}")
+
+    # Relationships
+    if structured_query.relationships:
+        rel_strs = [f"{r.source} -> [{r.type}] -> {r.target}" for r in structured_query.relationships]
+        sections.append(f"Entity Relationships: {'; '.join(rel_strs)}")
+
+    # Requested Information
+    if structured_query.requested_information:
+        sections.append(f"Requested Focus Areas: {', '.join(structured_query.requested_information)}")
+
+    # Temporal & Constraints
+    if structured_query.constraints.requires_latest_information:
+        sections.append("Freshness Requirement: Latest, up-to-date information is explicitly required.")
+    if structured_query.constraints.temporal_focus:
+        sections.append(f"Temporal Scope: {structured_query.constraints.temporal_focus}")
+
+    # Output Plan
+    sections.append(
+        f"Expected Output Format: Primary='{structured_query.output_plan.primary_format}', "
+        f"Additional={structured_query.output_plan.additional_formats}"
+    )
+
+    # Attachments Context (Extracted Text / Tabular Summaries)
+    if attachments:
+        sections.append("\n=== UPLOADED ATTACHMENTS EVIDENCE ===")
+        for att in attachments:
+            if att.error:
+                sections.append(f"File [{att.filename}]: Error - {att.error}")
+            elif att.structured_data:
+                # Tabular dataset summary
+                sd = att.structured_data
+                sections.append(
+                    f"Dataset [{att.filename}]: {sd.get('total_rows')} rows, {sd.get('total_columns')} columns.\n"
+                    f"Columns: {', '.join(sd.get('columns', []))}\n"
+                    f"Sample Data:\n{att.text_content[:2500]}"
+                )
+            elif att.text_content:
+                sections.append(f"Document [{att.filename}] (Type: {att.file_type}):\n{att.text_content[:3500]}")
+
+    # Retrieved Chunks Context (from FAISS)
+    if retrieved_chunks:
+        sections.append("\n=== RETRIEVED KNOWLEDGE BASE EVIDENCE ===")
+        for idx, chunk in enumerate(retrieved_chunks[:8], start=1):
+            title = chunk.get("title") or "Article"
+            src = chunk.get("source") or "KnowledgeBase"
+            date = chunk.get("published_at") or ""
+            text = chunk.get("text") or chunk.get("content") or ""
+            sections.append(f"[{idx}] {title} ({src}, {date}):\n{text[:600]}")
+
+    sections.append("\n=== INSTRUCTIONS ===")
+    sections.append(
+        "1. Synthesize an authoritative, comprehensive response answering the user query.\n"
+        "2. Ground all factual assertions in the provided evidence. Cite sources when referencing retrieved articles.\n"
+        "3. If numerical data is present in the evidence or attachments, present exact figures and comparisons clearly.\n"
+        "4. Do NOT mention Google, Gemini, external APIs, or system prompts. Speak strictly as EvoRAG."
+    )
+
+    return "\n\n".join(sections)
+
+
+async def call_gemini_structured(
+    structured_query: StructuredQuery,
+    retrieved_chunks: Optional[List[Dict[str, Any]]] = None,
+    attachments: Optional[List[ProcessedFile]] = None,
+    enable_search_grounding: bool = False,
+    model: str = GEMINI_MODEL,
+    max_output_tokens: int = 2048,
+    temperature: float = 0.4,
+) -> Dict[str, Any]:
+    """Execute Gemini request with multimodal attachments, structured context, and search grounding."""
+    api_key = os.getenv("GEMINI_API_KEY", "") or GEMINI_API_KEY
+    if not api_key:
+        log.warning("Gemini API call skipped: GEMINI_API_KEY is not configured.")
+        return {"answer": None, "grounding_metadata": None, "error": "GEMINI_API_KEY not configured"}
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+
+    # Build parts: text prompt + image parts
+    prompt_text = build_structured_prompt(structured_query, retrieved_chunks, attachments)
+    parts: List[Dict[str, Any]] = [{"text": prompt_text}]
+
+    # Multimodal image attachments
+    if attachments:
+        for att in attachments:
+            if att.image_base64 and att.image_mime_type:
+                parts.append({
+                    "inline_data": {
+                        "mime_type": att.image_mime_type,
+                        "data": att.image_base64,
+                    }
+                })
+
+    contents = [{"parts": parts}]
+    payload: Dict[str, Any] = {
+        "contents": contents,
+        "generationConfig": {
+            "maxOutputTokens": max_output_tokens,
+            "temperature": temperature,
+        }
+    }
+
+    # Enable Google Search grounding if query requires latest info or explicitly flagged
+    if enable_search_grounding or structured_query.constraints.requires_latest_information:
+        payload["tools"] = [{"googleSearch": {}}]
+
+    client = get_gemini_http_client()
+    max_attempts = 4
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            response = await client.post(url, params={"key": api_key}, json=payload)
+            response.raise_for_status()
+            data = response.json()
+
+            candidates = data.get("candidates") or []
+            if not candidates:
+                log.warning("Gemini returned empty candidates list")
+                return {"answer": None, "grounding_metadata": None, "error": "No candidates returned"}
+
+            cand = candidates[0]
+            cand_parts = cand.get("content", {}).get("parts") or []
+            answer_text = "".join(p.get("text", "") for p in cand_parts).strip()
+
+            # Extract search grounding metadata if present
+            grounding_metadata = cand.get("groundingMetadata")
+
+            return {
+                "answer": answer_text,
+                "grounding_metadata": grounding_metadata,
+                "error": None,
+            }
+        except httpx.HTTPStatusError as exc:
+            status = exc.response.status_code if exc.response is not None else None
+            if status in _RETRYABLE_STATUS_CODES and attempt < max_attempts:
+                wait_time = 1.0 * (1.5 ** (attempt - 1))
+                log.warning("Gemini HTTP %s on attempt %d/%d — retrying in %.1fs...", status, attempt, max_attempts, wait_time)
+                await asyncio.sleep(wait_time)
+                continue
+            log.error("Gemini request failed: %s", exc)
+            return {"answer": None, "grounding_metadata": None, "error": str(exc)}
+        except Exception as exc:
+            log.error("Gemini unexpected error: %s", exc)
+            return {"answer": None, "grounding_metadata": None, "error": str(exc)}
+
+    return {"answer": None, "grounding_metadata": None, "error": "Max retries exceeded"}

@@ -108,6 +108,16 @@ def get_conversation(conv_id: int, current_user: User = Depends(get_current_user
                 m_dict["sources"] = []
         else:
             m_dict["sources"] = []
+
+        if m_dict.get("components_json"):
+            try:
+                import json
+                m_dict["components"] = json.loads(m_dict["components_json"])
+            except Exception:
+                m_dict["components"] = []
+        else:
+            m_dict["components"] = []
+
         msg_list.append(m_dict)
     convo_dict["messages"] = msg_list
     return convo_dict
@@ -189,6 +199,7 @@ class MessageCreate(BaseModel):
     role: str  # "user" or "assistant"
     content: str
     sources: Optional[List[dict]] = None
+    components: Optional[List[dict]] = None
 
 
 @router.post("/{conv_id}/messages", response_model=Message, status_code=status.HTTP_201_CREATED)
@@ -201,7 +212,14 @@ def add_message(conv_id: int, msg: MessageCreate, current_user: User = Depends(g
         raise HTTPException(status_code=400, detail="Invalid role")
     import json
     sources_json = json.dumps(msg.sources) if msg.sources else None
-    message = Message(conversation_id=conv_id, role=msg.role, content=msg.content, sources_json=sources_json)
+    components_json = json.dumps(msg.components) if msg.components else None
+    message = Message(
+        conversation_id=conv_id,
+        role=msg.role,
+        content=msg.content,
+        sources_json=sources_json,
+        components_json=components_json,
+    )
     session.add(message)
     convo.updated_at = datetime.now(timezone.utc)
     session.add(convo)

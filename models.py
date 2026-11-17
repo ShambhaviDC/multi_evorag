@@ -3,12 +3,23 @@
 This module defines the database tables used for user authentication,
 user preferences, conversations, and messages. It uses SQLModel, which
 combines Pydantic models with SQLAlchemy core for easy ORM operations.
-''' 
+'''
 
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from sqlmodel import Field, SQLModel
+
+# Re-export Phase 7 query and adaptive models for unified access
+from query_models import (
+    EntityItem,
+    RelationshipItem,
+    QueryConstraints,
+    OutputPlan,
+    StructuredQuery,
+    UIComponent,
+    AdaptiveConsensusResponse,
+)
 
 
 def utc_now() -> datetime:
@@ -52,4 +63,5 @@ class Message(SQLModel, table=True):
     role: str = Field(index=True)  # "user" or "assistant"
     content: str
     sources_json: Optional[str] = Field(default=None, nullable=True)
+    components_json: Optional[str] = Field(default=None, nullable=True)
     timestamp: datetime = Field(default_factory=utc_now)

@@ -1,15 +1,20 @@
-"""Full EvoRAG consensus pipeline orchestration."""
+"""Full EvoRAG consensus pipeline orchestration with Phase 7 Multimodal and Adaptive Response extensions."""
 
 import json
 import logging
 import re
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from config import PERSONAS, RETRIEVAL_TOP_K
+from file_processor import ProcessedFile
+from gemini_client import call_gemini_structured
+from input_understanding_agent import understand_user_query
 from personas import run_all_personas
-from retriever import retrieve, evaluate_retrieval
+from query_models import StructuredQuery, UIComponent
+from response_planner import plan_adaptive_response
+from retriever import evaluate_retrieval, retrieve
 from score_store import append_score_entry
 from synthesis import select_top_personas, synthesize_top_k
 from utils import call_gemini_async, word_count
@@ -18,37 +23,84 @@ from voting import build_score_matrix, compute_final_scores, summarize_received_
 log = logging.getLogger(__name__)
 
 
-async def evorag_query(query: str, top_k: int = RETRIEVAL_TOP_K) -> dict[str, Any]:
-    """Run retrieval, relevance/sufficiency evaluation, persona generation, peer voting, and synthesis.
+async def evorag_query(
+    query: str,
+    top_k: int = RETRIEVAL_TOP_K,
+    attachments: Optional[List[ProcessedFile]] = None,
+) -> dict[str, Any]:
+    """Run Phase 7 multimodal input understanding, routing, multi-persona consensus, and adaptive response generation.
 
     Workflow:
-      1. Search the latest local FAISS index.
-      2. Evaluate relevance, freshness, and sufficiency of retrieved results.
-      3. If sufficient: execute the 8-persona consensus pipeline and final synthesis.
-      4. If insufficient or outdated: invoke the Gemini API fallback.
+      1. Analyze query & attachments with the Input Understanding Agent.
+      2. Route query to appropriate document, image, tabular, or news retrieval path.
+      3. For comparative queries, expand retrieval across all target entities.
+      4. If local context is sufficient and no complex multimodal inputs exist: run 8-persona local consensus.
+      5. If attachments, image inputs, or insufficient/outdated local evidence exist: run structured synthesis.
+      6. Formulate adaptive UI components (tables, Chart.js charts, timelines, graphs).
     """
     query_id = str(uuid4())
+    attachments = attachments or []
 
-    # Step 1: Search the latest local FAISS index (auto-synchronized with disk)
+    # Step 1: Input Understanding Agent extracts structured intent, entities, and output plan
+    structured_query: StructuredQuery = await understand_user_query(query, attachments)
+    log.info(
+        "Structured query understanding: intent=%s, category=%s, entities=%s, primary_format=%s",
+        structured_query.intent,
+        structured_query.query_category,
+        [e.name for e in structured_query.entities],
+        structured_query.output_plan.primary_format,
+    )
+
+    # Step 2: Intelligent Retrieval Routing
+    # Base retrieval against FAISS
     chunks = retrieve(query, top_k=top_k)
 
-    # Step 2: Evaluate retrieval relevance, freshness, and sufficiency
+    # If comparative query with multiple entities: retrieve entity-specific evidence
+    if structured_query.query_category == "comparative" and len(structured_query.entities) >= 2:
+        for ent in structured_query.entities[:2]:
+            ent_chunks = retrieve(ent.name, top_k=3)
+            for ec in ent_chunks:
+                if not any(c.get("url") == ec.get("url") for c in chunks):
+                    chunks.append(ec)
+
+    # Check sufficiency of retrieved chunks
     is_sufficient, reason = evaluate_retrieval(query, chunks)
 
-    # Step 3: Handle insufficient local information via multi-persona synthesis
-    if not is_sufficient:
+    # Multimodal conditions
+    has_image = any(a.file_type == "image" for a in attachments)
+    has_tabular = any(a.file_type in ("csv", "xlsx") for a in attachments)
+    has_doc = any(a.file_type in ("pdf", "docx", "txt") for a in attachments)
+    requires_gemini = (
+        not is_sufficient
+        or has_image
+        or has_tabular
+        or has_doc
+        or structured_query.constraints.requires_latest_information
+    )
+
+    # Step 3: Handle Multimodal / Insufficient context via Structured Multi-Persona Consensus
+    if requires_gemini:
         log.info(
-            "Local index context insufficient for '%s' (%s). Synthesizing multi-persona consensus.",
-            query[:60],
-            reason,
+            "Routing to structured multi-persona engine (sufficient=%s, has_image=%s, has_tabular=%s, has_doc=%s, latest=%s)",
+            is_sufficient,
+            has_image,
+            has_tabular,
+            has_doc,
+            structured_query.constraints.requires_latest_information,
         )
+
         persona_guide = "\n".join([f"- {p['id']}: {p['name']} ({p['system_prompt'][:100]}...)" for p in PERSONAS])
-        prompt = (
-            "You are the EvoRAG Multi-Persona Consensus Engine.\n"
-            f"User Question: {query}\n\n"
-            "Provide an authoritative, detailed consensus answer along with 8 distinct analytical perspectives corresponding to each of the 8 EvoRAG personas:\n"
+        
+        # Build prompt instructing Gemini to provide both consensus and 8 persona viewpoints
+        multimodal_instruction = (
+            "You are the EvoRAG Multi-Persona Consensus and Adaptive Response Engine.\n\n"
+            f"User Question: {query}\n"
+            f"Identified Intent: {structured_query.intent}\n"
+            f"Identified Entities: {[e.name for e in structured_query.entities]}\n\n"
+            "Provide an authoritative, highly detailed consensus answer along with 8 distinct analytical perspectives corresponding to each of the 8 EvoRAG personas:\n"
             f"{persona_guide}\n\n"
             "STRICT RULES:\n"
+            "- Ground all assertions in the provided evidence, document text, and visual image inputs.\n"
             "- Do NOT mention Gemini, Google, APIs, fallbacks, or external sources anywhere in the output.\n"
             "- Speak strictly as the EvoRAG Consensus Engine.\n"
             "- Ensure each persona provides a unique, high-quality perspective tailored to the question.\n\n"
@@ -69,8 +121,17 @@ async def evorag_query(query: str, top_k: int = RETRIEVAL_TOP_K) -> dict[str, An
             "Output ONLY raw valid JSON, no surrounding markdown backticks or commentary."
         )
 
+        # Execute structured call passing multimodal attachments and retrieved chunks
+        gemini_result = await call_gemini_structured(
+            structured_query=structured_query,
+            retrieved_chunks=chunks,
+            attachments=attachments,
+            enable_search_grounding=structured_query.constraints.requires_latest_information,
+            max_output_tokens=2500,
+        )
+        raw_response = gemini_result.get("answer") or ""
+
         parsed_data = None
-        raw_response = await call_gemini_async(prompt, max_output_tokens=1800, temperature=0.7)
         if raw_response:
             try:
                 clean_json = raw_response.strip()
@@ -130,10 +191,10 @@ async def evorag_query(query: str, top_k: int = RETRIEVAL_TOP_K) -> dict[str, An
 
         sources = [
             {
-                "title":        c.get("title", ""),
-                "url":          c.get("url", ""),
-                "source":       c.get("source", ""),
-                "score":        round(c.get("score", 0.0), 4),
+                "title": c.get("title", ""),
+                "url": c.get("url", ""),
+                "source": c.get("source", ""),
+                "score": round(c.get("score", 0.0), 4),
                 "published_at": c.get("published_at") or "",
             }
             for c in chunks
@@ -158,19 +219,34 @@ async def evorag_query(query: str, top_k: int = RETRIEVAL_TOP_K) -> dict[str, An
             "user_signal": None,
         }
         append_score_entry(score_entry)
-        log.info("Multi-persona consensus complete for query_id=%s. top_personas=%s", query_id, top_personas)
+
+        # Plan adaptive UI components (tables, Chart.js visualizations, timelines)
+        components = plan_adaptive_response(
+            structured_query=structured_query,
+            final_answer=final_answer,
+            retrieved_chunks=chunks,
+            attachments=attachments,
+        )
 
         return {
             "final_answer": final_answer,
+            "components": [c.model_dump() for c in components],
+            "structured_query": structured_query.model_dump(),
             "top_personas": top_personas,
             "scores": final_scores,
             "all_responses": all_responses,
             "score_matrix": score_matrix,
             "query_id": query_id,
             "sources": sources,
+            "attachments_processed": [a.to_dict() for a in attachments],
+            "retrieval_status": {
+                "sufficient": is_sufficient,
+                "reason": reason,
+                "fallback_used": requires_gemini,
+            },
         }
 
-    # Step 4: Context is sufficient — run 8-persona generation on retrieved chunks
+    # Step 4: Pure Local Pipeline when context is sufficient and no attachments exist
     persona_result = await run_all_personas(
         query=query,
         top_k=top_k,
@@ -207,16 +283,25 @@ async def evorag_query(query: str, top_k: int = RETRIEVAL_TOP_K) -> dict[str, An
         "user_signal": None,
     }
     append_score_entry(score_entry)
-    log.info("Consensus complete. winner=%s top_k=%s", winner, top_personas)
+
+    components = plan_adaptive_response(
+        structured_query=structured_query,
+        final_answer=final_answer,
+        retrieved_chunks=chunks,
+        attachments=attachments,
+    )
 
     return {
         "final_answer": final_answer,
+        "components": [c.model_dump() for c in components],
+        "structured_query": structured_query.model_dump(),
         "top_personas": top_personas,
         "scores": final_scores,
         "all_responses": responses,
         "score_matrix": score_matrix,
         "query_id": query_id,
         "sources": persona_result["sources"],
+        "attachments_processed": [a.to_dict() for a in attachments],
         "retrieval_status": {
             "sufficient": True,
             "reason": reason,

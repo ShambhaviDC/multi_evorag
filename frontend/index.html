@@ -860,6 +860,266 @@
       50% { opacity: 1; }
     }
 
+    /* ── Phase 7: Multimodal Uploads & Composer Attachments ── */
+    .dock-attach-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .dock-attach-btn:hover {
+      color: var(--accent2);
+      background: rgba(108, 99, 255, 0.15);
+    }
+    .attachment-previews-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 6px 12px;
+      margin-bottom: 6px;
+      background: rgba(15, 18, 30, 0.7);
+      border: 1px dashed rgba(108, 99, 255, 0.35);
+      border-radius: var(--radius-sm);
+    }
+    .attachment-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(25, 30, 52, 0.95);
+      border: 1px solid rgba(108, 99, 255, 0.3);
+      border-radius: 16px;
+      padding: 3px 10px;
+      font-size: 11.5px;
+      color: var(--text);
+      animation: fadeIn 0.2s ease-in;
+    }
+    .attachment-pill .att-icon { font-size: 13px; }
+    .attachment-pill .att-name { font-weight: 600; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .attachment-pill .att-size { color: var(--muted); font-size: 10px; }
+    .attachment-pill .att-remove {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0 2px;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    .attachment-pill .att-remove:hover { color: var(--error); }
+    
+    /* Drag and Drop Overlay */
+    .drag-drop-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(10, 14, 28, 0.85);
+      border: 3px dashed var(--accent);
+      z-index: 9999;
+      pointer-events: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
+      gap: 12px;
+    }
+    .drag-drop-overlay.active { display: flex; }
+
+    /* ── Phase 7: Adaptive Response Components ── */
+    .adaptive-components-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin: 16px 0;
+    }
+    .adaptive-card {
+      background: #141829;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+    .adaptive-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .adaptive-card-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    /* Tables */
+    .adaptive-table-scroll {
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    .adaptive-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      color: #cbd5e1;
+    }
+    .adaptive-table th {
+      background: rgba(30, 36, 62, 0.85);
+      color: #fff;
+      font-weight: 600;
+      text-align: left;
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      white-space: nowrap;
+    }
+    .adaptive-table td {
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(20, 24, 41, 0.6);
+    }
+    .adaptive-table tr:nth-child(even) td {
+      background: rgba(26, 32, 54, 0.5);
+    }
+
+    /* Timelines */
+    .adaptive-timeline {
+      position: relative;
+      padding-left: 20px;
+      margin-left: 8px;
+      border-left: 2px solid var(--accent);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .timeline-item {
+      position: relative;
+    }
+    .timeline-dot {
+      position: absolute;
+      left: -27px;
+      top: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent2);
+      box-shadow: 0 0 8px var(--accent2);
+    }
+    .timeline-date {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent2);
+      background: rgba(0, 210, 255, 0.12);
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-bottom: 4px;
+    }
+    .timeline-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+    .timeline-desc {
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    /* Entity Relationship Graph Cards */
+    .rel-graph-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .rel-edge-card {
+      background: rgba(26, 32, 55, 0.8);
+      border: 1px solid rgba(108, 99, 255, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .rel-node {
+      font-weight: 600;
+      font-size: 12.5px;
+      color: #fff;
+      background: rgba(108, 99, 255, 0.2);
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .rel-badge {
+      font-size: 11px;
+      color: var(--accent2);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Numerical Stats Grid */
+    .stats-metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .stats-metric-box {
+      background: rgba(26, 32, 55, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .stats-metric-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .stats-metric-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .stats-metric-sub {
+      font-size: 10.5px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    /* User attachment bubbles */
+    .user-attachment-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+      justify-content: flex-end;
+    }
+    .user-att-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 2px 8px;
+      font-size: 11px;
+      color: #fff;
+    }
+
     /* ── Microphone button & Recording Indicator ────────────────────── */
     .mic-btn {
       background: var(--surface2);
@@ -1792,6 +2052,9 @@
         <button id="stop-recording-btn" type="button" class="stop-rec-btn">⏹ Stop</button>
       </div>
 
+      <!-- Attachment Previews Container (Phase 7 Multimodal) -->
+      <div id="attachment-previews-container" class="attachment-previews-container" style="display:none;"></div>
+
       <!-- Progress Bar -->
       <div id="progress-wrap" aria-live="polite">
         <div class="progress-track"><div class="progress-fill"></div></div>
@@ -1799,8 +2062,23 @@
       </div>
     </div>
 
+    <!-- Drag & Drop Visual Overlay -->
+    <div id="drag-drop-overlay" class="drag-drop-overlay">
+      <div style="font-size:38px;">📎</div>
+      <div>Drop files to attach to query</div>
+      <div style="font-size:12px; color:#cbd5e1;">Supports PDF, DOCX, TXT, CSV, XLSX, PNG, JPG (max 25MB each)</div>
+    </div>
+
     <!-- Input Capsule -->
     <div class="chat-input-capsule">
+      <!-- Paperclip File Attachment Button (Phase 7) -->
+      <input type="file" id="file-picker" multiple style="display:none;" accept=".pdf,.docx,.txt,.md,.csv,.xlsx,.png,.jpg,.jpeg">
+      <button id="attach-btn" type="button" class="dock-attach-btn" title="Attach files (PDF, DOCX, TXT, CSV, XLSX, Images)" aria-label="Attach files">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+        </svg>
+      </button>
+
       <button id="mic-btn" type="button" class="dock-mic-btn" title="Click to speak your question (Voice Input)" aria-label="Microphone input">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
@@ -1813,7 +2091,7 @@
 
       <textarea
         id="query-input"
-        placeholder="Ask EvoRAG a research or follow-up question..."
+        placeholder="Ask EvoRAG a research or follow-up question (or drop files)..."
         rows="1"
         aria-label="Research query input"
       ></textarea>
@@ -2759,7 +3037,248 @@ function scrollToBottom() {
   }, 60);
 }
 
-/* Render Chat Thread View (ChatGPT style: right blue user bubble, left assistant with sources) */
+/* ════════════════════════════════════════════════════════════════════
+   Phase 7: Multimodal Attachment State & Adaptive Component Helpers
+   ════════════════════════════════════════════════════════════════════ */
+let pendingAttachments = [];
+
+function formatFileSize(bytes) {
+  if (!bytes || bytes <= 0) return '0 B';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function getFileIcon(filename) {
+  const ext = (filename.split('.').pop() || '').toLowerCase();
+  if (ext === 'pdf') return '📄';
+  if (ext === 'docx') return '📝';
+  if (ext === 'csv' || ext === 'xlsx') return '📊';
+  if (['png', 'jpg', 'jpeg'].includes(ext)) return '🖼️';
+  return '📃';
+}
+
+function renderAttachmentPreviews() {
+  const container = $('attachment-previews-container');
+  if (!container) return;
+  if (!pendingAttachments || !pendingAttachments.length) {
+    container.style.display = 'none';
+    container.innerHTML = '';
+    return;
+  }
+  container.style.display = 'flex';
+  container.innerHTML = pendingAttachments.map((file, idx) => `
+    <div class="attachment-pill">
+      <span class="att-icon">${getFileIcon(file.name)}</span>
+      <span class="att-name" title="${escHtml(file.name)}">${escHtml(file.name)}</span>
+      <span class="att-size">(${formatFileSize(file.size)})</span>
+      <button type="button" class="att-remove" onclick="removeAttachment(${idx})" title="Remove attachment">&times;</button>
+    </div>
+  `).join('');
+}
+
+window.removeAttachment = function(idx) {
+  pendingAttachments.splice(idx, 1);
+  renderAttachmentPreviews();
+};
+
+function addAttachmentFiles(filesList) {
+  const allowed = ['pdf', 'docx', 'txt', 'md', 'csv', 'xlsx', 'png', 'jpg', 'jpeg'];
+  const maxPerFile = 25 * 1024 * 1024;
+  let added = 0;
+
+  for (let i = 0; i < filesList.length; i++) {
+    const file = filesList[i];
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!allowed.includes(ext)) {
+      showToast(`Unsupported format .${ext}: ${file.name}`);
+      continue;
+    }
+    if (file.size > maxPerFile) {
+      showToast(`File exceeds 25MB limit: ${file.name}`);
+      continue;
+    }
+    if (pendingAttachments.some(f => f.name === file.name && f.size === file.size)) {
+      continue;
+    }
+    pendingAttachments.push(file);
+    added++;
+  }
+  if (added > 0) {
+    renderAttachmentPreviews();
+    showToast(`Attached ${added} file${added === 1 ? '' : 's'}`);
+  }
+}
+
+function renderAdaptiveComponentsHtml(components, turnIdx) {
+  if (!components || !components.length) return '';
+  let html = '<div class="adaptive-components-section">';
+  components.forEach((comp, cIdx) => {
+    const title = escHtml(comp.title || comp.type);
+    if (comp.type === 'comparison_table') {
+      const headers = comp.data?.headers || [];
+      const rows = comp.data?.rows || [];
+      html += `
+        <div class="adaptive-card">
+          <div class="adaptive-card-header">
+            <div class="adaptive-card-title">📊 ${title}</div>
+          </div>
+          <div class="adaptive-table-scroll">
+            <table class="adaptive-table">
+              <thead><tr>${headers.map(h => `<th>${escHtml(h)}</th>`).join('')}</tr></thead>
+              <tbody>${rows.map(r => `<tr>${r.map(c => `<td>${escHtml(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    } else if (comp.type.endsWith('_chart')) {
+      html += `
+        <div class="adaptive-card">
+          <div class="adaptive-card-header">
+            <div class="adaptive-card-title">📈 ${title}</div>
+          </div>
+          <div style="height: 280px; position: relative;">
+            <canvas id="chart-canvas-${turnIdx}-${cIdx}"></canvas>
+          </div>
+        </div>
+      `;
+    } else if (comp.type === 'timeline') {
+      const events = comp.data?.events || [];
+      html += `
+        <div class="adaptive-card">
+          <div class="adaptive-card-header">
+            <div class="adaptive-card-title">⏳ ${title}</div>
+          </div>
+          <div class="adaptive-timeline">
+            ${events.map(ev => `
+              <div class="timeline-item">
+                <span class="timeline-dot"></span>
+                <span class="timeline-date">${escHtml(ev.date || '')}</span>
+                <div class="timeline-title">${escHtml(ev.title || '')}</div>
+                <div class="timeline-desc">${escHtml(ev.description || '')}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    } else if (comp.type === 'relationship_graph') {
+      const edges = comp.data?.edges || [];
+      html += `
+        <div class="adaptive-card">
+          <div class="adaptive-card-header">
+            <div class="adaptive-card-title">🕸️ ${title}</div>
+          </div>
+          <div class="rel-graph-grid">
+            ${edges.map(e => `
+              <div class="rel-edge-card">
+                <span class="rel-node">${escHtml(e.source)}</span>
+                <span class="rel-badge">⚡ ${escHtml(e.label)} ➔</span>
+                <span class="rel-node">${escHtml(e.target)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    } else if (comp.type === 'numerical_summary') {
+      const metrics = comp.data?.metrics || [];
+      html += `
+        <div class="adaptive-card">
+          <div class="adaptive-card-header">
+            <div class="adaptive-card-title">🔢 ${title}</div>
+          </div>
+          <div class="stats-metric-grid">
+            ${metrics.map(m => `
+              <div class="stats-metric-box">
+                <div class="stats-metric-label">${escHtml(m.column)}</div>
+                <div class="stats-metric-value">Avg: ${m.mean}</div>
+                <div class="stats-metric-sub">Min: ${m.min} | Max: ${m.max} (N=${m.count})</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    } else if (comp.type === 'file_summary') {
+      const files = comp.data?.files || [];
+      html += `
+        <div class="adaptive-card">
+          <div class="adaptive-card-header">
+            <div class="adaptive-card-title">📎 ${title}</div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            ${files.map(f => `
+              <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); padding:8px 12px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong>${escHtml(f.filename)}</strong> <span style="font-size:11px; color:var(--muted);">(${f.size_kb} KB)</span>
+                  ${f.summary ? `<div style="font-size:11.5px; color:#94a3b8; margin-top:2px;">${escHtml(f.summary)}</div>` : ''}
+                </div>
+                ${f.error ? `<span style="color:var(--error); font-size:11px;">⚠️ ${escHtml(f.error)}</span>` : '<span style="color:#2ecc71; font-size:11px;">✓ Extracted</span>'}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    } else if (comp.type === 'image_analysis') {
+      const imgData = comp.data || {};
+      html += `
+        <div class="adaptive-card">
+          <div class="adaptive-card-header">
+            <div class="adaptive-card-title">🖼️ ${title}</div>
+          </div>
+          <div>
+            ${imgData.ocr_text ? `<div style="background:rgba(0,0,0,0.3); padding:8px 12px; border-radius:6px; font-family:monospace; font-size:12px; color:#e2e8f0; margin-top:6px;"><strong>Detected OCR Text:</strong><br>${escHtml(imgData.ocr_text)}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }
+  });
+  html += '</div>';
+  return html;
+}
+
+function mountAdaptiveCharts(components, turnIdx) {
+  if (!components || !components.length || typeof Chart === 'undefined') return;
+  window._evoragChartInstances = window._evoragChartInstances || {};
+
+  components.forEach((comp, cIdx) => {
+    if (comp.type.endsWith('_chart') && comp.data) {
+      const canvasId = `chart-canvas-${turnIdx}-${cIdx}`;
+      const canvasEl = document.getElementById(canvasId);
+      if (!canvasEl) return;
+
+      if (window._evoragChartInstances[canvasId]) {
+        try { window._evoragChartInstances[canvasId].destroy(); } catch (e) {}
+      }
+
+      const chartType = comp.data.chartType || (comp.type === 'line_chart' ? 'line' : (comp.type === 'pie_chart' ? 'pie' : 'bar'));
+      const ctx = canvasEl.getContext('2d');
+      try {
+        window._evoragChartInstances[canvasId] = new Chart(ctx, {
+          type: chartType,
+          data: {
+            labels: comp.data.labels || [],
+            datasets: comp.data.datasets || []
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: '#e2e8f0', font: { size: 11 } } },
+              tooltip: { backgroundColor: '#1e243e' }
+            },
+            scales: chartType !== 'pie' ? {
+              x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+              y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.06)' } }
+            } : {}
+          }
+        });
+      } catch (err) {
+        console.warn('Failed to initialize Chart.js for', canvasId, err);
+      }
+    }
+  });
+}
+
+/* Render Chat Thread View (ChatGPT style: right blue user bubble, left assistant with sources & adaptive visual components) */
 function renderThread(messages) {
   chatThreadContainer.innerHTML = '';
   const welcomeHero = $('chat-welcome-hero');
@@ -2784,16 +3303,24 @@ function renderThread(messages) {
     const timeStr = formatRelativeTime(msg.timestamp);
 
     if (isUser) {
-      // ChatGPT style user bubble: right-aligned blue rounded pill, white text
+      // ChatGPT style user bubble with optional file attachment chips
       msgEl.className = 'chat-turn-user';
+      let attHtml = '';
+      if (Array.isArray(msg.attachments) && msg.attachments.length) {
+        attHtml = `<div class="user-attachment-chips">` +
+          msg.attachments.map(a => `<span class="user-att-chip">📎 ${escHtml(a.name || 'file')} (${formatFileSize(a.size)})</span>`).join('') +
+          `</div>`;
+      }
       msgEl.innerHTML = `
-        <div class="chat-user-bubble">${escHtml(msg.content)}</div>
+        <div class="chat-user-bubble">${attHtml}${escHtml(msg.content)}</div>
       `;
     } else {
-      // Assistant message: left-aligned clean typography, actions, top personas, and sources & evidence cards
+      // Assistant message: left-aligned clean typography, adaptive visual components, toolbar, and sources
       msgEl.className = 'chat-turn-assistant';
       const sources = Array.isArray(msg.sources) ? msg.sources : [];
+      const components = Array.isArray(msg.components) ? msg.components : [];
       const contentHtml = renderMarkdownWithCitations(msg.content, sources, `thread-${idx}`);
+      const componentsHtml = renderAdaptiveComponentsHtml(components, idx);
       const sourcesHtml = sources.length ? renderSourcesSectionHtml(sources, `thread-${idx}`) : '';
 
       let topPersonasHtml = '';
@@ -2812,6 +3339,7 @@ function renderThread(messages) {
           <span class="chat-assistant-time">${escHtml(timeStr)}</span>
         </div>
         <div class="chat-assistant-body markdown-content">${contentHtml}</div>
+        ${componentsHtml}
         <div class="chat-assistant-toolbar" id="msg-audio-${idx}">
           <button class="chat-tool-btn copy-msg-btn" title="Copy response text">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -2852,6 +3380,11 @@ function renderThread(messages) {
     }
 
     chatThreadContainer.appendChild(msgEl);
+
+    // Mount any charts present in this turn
+    if (!isUser && msg.components) {
+      mountAdaptiveCharts(msg.components, idx);
+    }
   });
 }
 
@@ -3347,6 +3880,7 @@ async function runQuery() {
     }
 
     // 2. Persist user message to active conversation
+    const sentAttachments = pendingAttachments.map(f => ({ name: f.name, size: f.size }));
     if (token && activeConversationId) {
       fetch(`/conversations/${activeConversationId}/messages`, {
         method: 'POST',
@@ -3358,12 +3892,29 @@ async function runQuery() {
       }).catch(e => console.warn('Error saving user message:', e));
     }
 
-    // 3. Run EvoRAG 8-persona Consensus pipeline
-    const response = await fetch(`${API_BASE}/query/consensus`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: queryText }),
-    });
+    // 3. Run EvoRAG 8-persona Consensus pipeline (JSON or Multipart with attachments)
+    let response;
+    if (pendingAttachments.length > 0) {
+      const formData = new FormData();
+      formData.append('query', queryText);
+      formData.append('top_k', 5);
+      pendingAttachments.forEach(f => formData.append('files', f));
+
+      response = await fetch(`${API_BASE}/query/consensus/multimodal`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      // Clear pending attachments
+      pendingAttachments = [];
+      renderAttachmentPreviews();
+    } else {
+      response = await fetch(`${API_BASE}/query/consensus`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: queryText }),
+      });
+    }
 
     if (!response.ok) {
       const errText = await response.text().catch(() => '');
@@ -3420,6 +3971,8 @@ async function runQuery() {
       content: data.final_answer || '',
       sources: data.sources || [],
       top_personas: data.top_personas || [],
+      components: data.components || [],
+      structured_query: data.structured_query || null,
       timestamp: new Date().toISOString()
     };
     activeMessages.push(assistantMsgObj);
@@ -3437,7 +3990,8 @@ async function runQuery() {
         body: JSON.stringify({
           role: 'assistant',
           content: data.final_answer,
-          sources: data.sources || []
+          sources: data.sources || [],
+          components: data.components || []
         })
       }).catch(e => console.warn('Error saving assistant message:', e));
 
@@ -3566,6 +4120,47 @@ function applyToggle() {
 togglePersonas.addEventListener('change', applyToggle);
 toggleScores.addEventListener('change',   applyToggle);
 toggleSources.addEventListener('change',  applyToggle);
+
+// Paperclip file attachment button & file picker (Phase 7)
+const attachBtn = $('attach-btn');
+const filePicker = $('file-picker');
+if (attachBtn && filePicker) {
+  attachBtn.addEventListener('click', () => filePicker.click());
+  filePicker.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files.length) {
+      addAttachmentFiles(e.target.files);
+      filePicker.value = '';
+    }
+  });
+}
+
+// Drag & drop support
+const dragOverlay = $('drag-drop-overlay');
+let dragCounter = 0;
+window.addEventListener('dragenter', (e) => {
+  e.preventDefault();
+  dragCounter++;
+  if (dragOverlay) dragOverlay.classList.add('active');
+});
+window.addEventListener('dragover', (e) => {
+  e.preventDefault();
+});
+window.addEventListener('dragleave', (e) => {
+  e.preventDefault();
+  dragCounter--;
+  if (dragCounter <= 0 && dragOverlay) {
+    dragOverlay.classList.remove('active');
+    dragCounter = 0;
+  }
+});
+window.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dragCounter = 0;
+  if (dragOverlay) dragOverlay.classList.remove('active');
+  if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+    addAttachmentFiles(e.dataTransfer.files);
+  }
+});
 
 // Initialize chat view, authentication & history on page load
 renderThread(activeMessages);
