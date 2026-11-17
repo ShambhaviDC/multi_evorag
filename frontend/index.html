@@ -44,17 +44,19 @@
 
     /* ── Layout ─────────────────────────────────────────────────────── */
     .app {
-      max-width: 1280px;
+      max-width: 960px;
       margin: 0 auto;
-      padding: 0 24px 80px;
+      padding: 0 20px 220px; /* generous bottom padding for fixed bottom dock */
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    /* ── Header ─────────────────────────────────────────────────────── */
+    /* ── Header / Welcome Hero ──────────────────────────────────────── */
     .header {
-      padding: 32px 0 28px;
+      padding: 28px 0 20px;
       text-align: center;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 32px;
+      margin-bottom: 20px;
     }
     .header-badge {
       display: inline-block;
@@ -66,22 +68,22 @@
       text-transform: uppercase;
       padding: 4px 14px;
       border-radius: 100px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
     .header h1 {
-      font-size: clamp(28px, 5vw, 46px);
+      font-size: clamp(26px, 4.5vw, 42px);
       font-weight: 800;
       letter-spacing: -1px;
       background: linear-gradient(135deg, #fff 40%, var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .header p {
       color: var(--muted);
-      font-size: 15px;
-      max-width: 620px;
+      font-size: 14.5px;
+      max-width: 580px;
       margin: 0 auto;
     }
 
@@ -258,83 +260,107 @@
       gap: 8px;
     }
 
-    /* ── Conversation Thread Section ────────────────────────────────── */
+    /* ── Conversation Thread Section (ChatGPT Style) ────────────────── */
     #chat-thread-section {
-      margin-bottom: 32px;
+      margin-bottom: 24px;
+      width: 100%;
     }
     .chat-thread-container {
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      margin-top: 12px;
+      gap: 28px;
+      margin-top: 10px;
+      width: 100%;
     }
-    .chat-msg {
-      border-radius: var(--radius);
-      padding: 16px 20px;
-      border: 1px solid var(--border);
-      transition: border-color 0.2s;
-    }
-    .chat-msg-user {
-      background: var(--surface2);
-      border-left: 4px solid var(--accent);
-      margin-left: 40px;
-    }
-    .chat-msg-assistant {
-      background: var(--surface);
-      border-left: 4px solid var(--success);
-      margin-right: 40px;
-      box-shadow: var(--shadow);
-    }
-    .chat-msg-header {
+
+    /* User Turn: Right-aligned blue rounded pill bubble */
+    .chat-turn-user {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
+      width: 100%;
+      margin: 4px 0;
+    }
+    .chat-user-bubble {
+      background: #1d4ed8; /* Vibrant ChatGPT deep blue */
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: 20px 20px 4px 20px;
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 78%;
+      word-break: break-word;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+      white-space: pre-wrap;
+    }
+
+    /* Assistant Turn: Left-aligned clean typography directly on dark canvas */
+    .chat-turn-assistant {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+      margin: 4px 0 16px 0;
+    }
+    .chat-assistant-meta {
+      display: flex;
       align-items: center;
-      margin-bottom: 10px;
-      font-size: 12px;
-      color: var(--muted);
-      flex-wrap: wrap;
       gap: 8px;
-    }
-    .chat-msg-author {
+      font-size: 13px;
       font-weight: 700;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      color: var(--accent2);
+      margin-bottom: 10px;
     }
-    .chat-msg-time {
+    .chat-assistant-avatar {
+      font-size: 18px;
+    }
+    .chat-assistant-time {
       font-size: 11px;
       color: var(--muted);
+      font-weight: normal;
+      margin-left: 4px;
     }
-    .chat-msg-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .chat-msg-content {
-      font-size: 15px;
-      line-height: 1.75;
-      color: var(--text);
-      white-space: pre-wrap;
+    .chat-assistant-body {
+      width: 100%;
+      font-size: 15.5px;
+      line-height: 1.8;
+      color: #ececf1;
       word-break: break-word;
     }
-    .msg-action-btn {
+
+    /* Assistant Action Toolbar (Copy, Listen, Top Personas) */
+    .chat-assistant-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .chat-tool-btn {
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text);
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       transition: all 0.15s;
     }
-    .msg-action-btn:hover {
+    .chat-tool-btn:hover {
       border-color: var(--accent);
-      background: rgba(108, 99, 255, 0.15);
+      background: rgba(108, 99, 255, 0.2);
       color: #fff;
+    }
+    .chat-top-personas-pills {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 6px;
+      flex-wrap: wrap;
     }
     .msg-audio-badge {
       font-size: 11px;
@@ -563,55 +589,271 @@
       gap: 4px;
     }
 
-    /* ── Query section ──────────────────────────────────────────────── */
-    #section-query { margin-bottom: 32px; }
-    .query-inner {
+    /* ── Welcome Hero (when thread is empty) ────────────────────────── */
+    .chat-welcome-hero {
+      text-align: center;
+      padding: 40px 16px 24px;
+      max-width: 760px;
+      margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-    }
-    #query-input {
+      align-items: center;
       width: 100%;
+    }
+    .welcome-hero-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--accent), #a18cd1);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+    .chat-welcome-hero h1 {
+      font-size: clamp(26px, 4.5vw, 38px);
+      font-weight: 800;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #fff 40%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .chat-welcome-hero p {
+      color: var(--muted);
+      font-size: 15px;
+      margin-bottom: 28px;
+      max-width: 580px;
+      line-height: 1.6;
+    }
+    .welcome-chips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+      width: 100%;
+    }
+    .welcome-chip-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      text-align: left;
+      font-family: var(--font);
+    }
+    .welcome-chip-btn:hover {
+      background: var(--surface2);
+      border-color: var(--accent);
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    }
+    .chip-btn-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    /* ── Technical Inspection Accordion ────────────────────────────── */
+    .technical-accordion-wrap {
+      width: 100%;
+      margin: 28px 0 16px 0;
+    }
+    .tech-accordion {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .tech-accordion summary {
+      padding: 14px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      background: var(--surface2);
+      border-bottom: 1px solid transparent;
+      transition: background 0.2s;
+    }
+    .tech-accordion summary:hover {
+      background: rgba(108, 99, 255, 0.12);
+    }
+    .tech-accordion[open] summary {
+      border-bottom-color: var(--border);
+    }
+    .tech-accordion-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ── Fixed Bottom Query Bar (ChatGPT style) ─────────────────────── */
+    .chat-bottom-dock {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(180deg, rgba(15, 15, 19, 0) 0%, rgba(15, 15, 19, 0.88) 22%, #0f0f13 100%);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 10px 20px 18px;
+      z-index: 900;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .chat-dock-container {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    /* Progress and Recording Floating Indicators */
+    .dock-banner-wrap {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* Input Capsule */
+    .chat-input-capsule {
       background: var(--surface2);
       border: 1.5px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 26px;
+      padding: 6px 10px 6px 14px;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .chat-input-capsule:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 4px 24px rgba(108, 99, 255, 0.28);
+    }
+
+    #query-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
       color: var(--text);
       font-family: var(--font);
       font-size: 15px;
-      line-height: 1.6;
-      padding: 16px 20px;
-      resize: vertical;
-      min-height: 90px;
-      transition: border-color .2s;
-      outline: none;
+      line-height: 1.5;
+      padding: 8px 4px;
+      resize: none;
+      min-height: 24px;
+      max-height: 160px;
+      overflow-y: auto;
     }
-    #query-input:focus { border-color: var(--accent); }
-    #query-input::placeholder { color: var(--muted); }
+    #query-input::placeholder {
+      color: var(--muted);
+    }
 
-    .query-actions {
+    .dock-mic-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    #analyse-btn {
-      background: linear-gradient(135deg, var(--accent), #8b85ff);
-      border: none;
-      border-radius: var(--radius-sm);
-      color: #fff;
-      cursor: pointer;
-      font-family: var(--font);
-      font-size: 14px;
-      font-weight: 700;
-      padding: 11px 28px;
-      letter-spacing: .3px;
-      transition: opacity .2s, transform .15s;
+      justify-content: center;
+      transition: all 0.2s;
       flex-shrink: 0;
     }
-    #analyse-btn:hover:not(:disabled) { opacity: .88; transform: translateY(-1px); }
-    #analyse-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-    #analyse-btn.loading { animation: pulse-btn 1.4s ease-in-out infinite; }
+    .dock-mic-btn:hover {
+      color: var(--accent2);
+      background: rgba(108, 99, 255, 0.15);
+    }
+    .dock-mic-btn.recording {
+      color: #fff;
+      background: var(--error);
+      animation: pulse-mic 1.2s infinite;
+    }
+
+    .dock-send-btn {
+      background: linear-gradient(135deg, var(--accent), #8b85ff);
+      border: none;
+      color: #fff;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      min-height: 36px;
+    }
+    .dock-send-btn:hover:not(:disabled) {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    .dock-send-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .dock-send-btn.loading {
+      animation: pulse-btn 1.4s infinite;
+    }
+
+    /* Sub-bar below capsule */
+    .dock-subbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+      font-size: 11.5px;
+      color: var(--muted);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .dock-subbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .dock-subbar-right {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .dock-options-popover {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      margin-top: 4px;
+    }
+    .dock-options-popover.open {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
     @keyframes pulse-btn {
       0%, 100% { opacity: .5; }
@@ -1396,13 +1638,6 @@
     </div>
   </aside>
 
-  <!-- ── Header ──────────────────────────────────────────────────── -->
-  <header class="header">
-    <div class="header-badge">Evolutionary RAG</div>
-    <h1>EvoRAG Research Assistant</h1>
-    <p>Multi-persona AI synthesis with peer consensus voting — powered by local Ollama + FAISS</p>
-  </header>
-
   <!-- ── Banners ─────────────────────────────────────────────────── -->
   <div id="banner-error" class="banner banner-error" role="alert"></div>
   <div id="banner-warn"  class="banner banner-warn"  role="alert"></div>
@@ -1421,204 +1656,236 @@
     </div>
   </div>
 
-  <!-- ── Conversation Thread Section (Multi-Turn History) ────────── -->
+  <!-- ── Welcome Hero (Shown when conversation is empty) ─────────── -->
+  <div id="chat-welcome-hero" class="chat-welcome-hero">
+    <div class="welcome-hero-badge">Evolutionary Multi-Persona RAG</div>
+    <h1>EvoRAG Research Assistant</h1>
+    <p>Synthesizing diverse perspectives from 8 specialized AI personas with peer-reviewed consensus voting — powered by local Ollama &amp; FAISS.</p>
+    
+    <!-- Personalized Prompt Recommendations (if logged in) -->
+    <div id="recommendations-container" class="recommendations-box" style="display:none; width:100%; margin-bottom:16px;">
+      <span class="rec-label">Personalized Suggested Prompts</span>
+      <div id="rec-chips" class="rec-chips-wrap" style="justify-content:center;"></div>
+    </div>
+
+    <div class="welcome-chips-grid">
+      <button class="welcome-chip-btn" data-prompt="Explain the latest developments in AI Safety.">
+        <span class="chip-btn-icon">🛡️</span>
+        <span>Explain the latest developments in AI Safety</span>
+      </button>
+      <button class="welcome-chip-btn" data-prompt="What are the key ethical challenges of synthetic biology?">
+        <span class="chip-btn-icon">🧪</span>
+        <span>Key challenges in synthetic biology</span>
+      </button>
+      <button class="welcome-chip-btn" data-prompt="Compare agentic multi-persona RAG versus standard retrieval-augmented generation.">
+        <span class="chip-btn-icon">🤖</span>
+        <span>Multi-persona RAG vs standard RAG</span>
+      </button>
+      <button class="welcome-chip-btn" data-prompt="Summarize recent breakthroughs in quantum error correction.">
+        <span class="chip-btn-icon">⚛️</span>
+        <span>Recent breakthroughs in quantum error correction</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Conversation Thread Section (ChatGPT Stream) ─────────────── -->
   <section id="chat-thread-section" style="display:none;">
-    <div class="section-title">
-      <span>Conversation Thread</span>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <span style="font-size:12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:1px;">Chat Stream</span>
       <span id="thread-count-badge" style="font-size:11px; color:var(--muted); font-weight:600;">0 messages</span>
     </div>
     <div id="chat-thread-container" class="chat-thread-container"></div>
   </section>
 
-  <!-- ── Section 1: Query ────────────────────────────────────────── -->
-  <section id="section-query">
-    <div class="section-title">Research Query</div>
-    <div class="card query-inner">
-      <!-- Personalized Prompt Recommendations -->
-      <div id="recommendations-container" class="recommendations-box" style="display:none;">
-        <span class="rec-label">Personalized Suggested Prompts</span>
-        <div id="rec-chips" class="rec-chips-wrap"></div>
+  <!-- ── Technical Inspection Accordion (8 Personas & Evolution) ──── -->
+  <div id="tech-inspection-wrap" class="technical-accordion-wrap" style="display:none;">
+    <details id="tech-accordion" class="tech-accordion">
+      <summary>
+        <span>🔬 <strong>Technical Inspection:</strong> 8-Persona Matrix &amp; Longitudinal Evolution</span>
+        <span style="font-size:12px; color:var(--muted);">Click to toggle ▾</span>
+      </summary>
+      <div class="tech-accordion-body">
+        
+        <!-- Section 3: Persona Breakdown -->
+        <section id="section-personas">
+          <div class="section-title">Persona Breakdown</div>
+          <div class="panels-grid">
+            <!-- Panel A -->
+            <div class="card" id="panel-a">
+              <div class="panel-title">Persona Responses</div>
+              <div id="persona-cards-grid"></div>
+            </div>
+            <!-- Panel B -->
+            <div class="card" id="panel-b">
+              <div class="panel-title">Score Matrix</div>
+              <div class="matrix-wrap">
+                <table id="score-matrix-table" aria-label="Peer scoring matrix"></table>
+              </div>
+            </div>
+            <!-- Panel C -->
+            <div class="card" id="panel-c">
+              <div class="panel-title">Sources</div>
+              <div class="source-list" id="source-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 4: Evolution -->
+        <section id="section-evolution">
+          <div class="section-title">Persona Performance Over Time</div>
+          <div class="card">
+            <canvas id="chart-canvas" aria-label="Score evolution chart"></canvas>
+            <div class="stats-table-wrap">
+              <div id="stats-empty" class="stats-empty">Run a query to see performance stats.</div>
+              <table id="stats-table" style="display:none" aria-label="Session statistics">
+                <thead>
+                  <tr>
+                    <th>Persona</th>
+                    <th>Queries Run</th>
+                    <th>Avg Score</th>
+                    <th>Best</th>
+                    <th>Worst</th>
+                    <th>Times in Top-K</th>
+                  </tr>
+                </thead>
+                <tbody id="stats-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
       </div>
+    </details>
+  </div>
 
-      <!-- Voice Preferences Toolbar -->
-      <div class="voice-toolbar">
-        <div class="voice-selector-group">
-          <label for="voice-input-lang">
-            <span>🎤</span> Voice Input:
-          </label>
-          <select id="voice-input-lang" class="voice-select" title="Language used for browser Speech Recognition">
-            <option value="en-IN" selected>English (India)</option>
-            <option value="kn-IN">Kannada (kn-IN)</option>
-            <option value="hi-IN">Hindi (hi-IN)</option>
-            <option value="ta-IN">Tamil (ta-IN)</option>
-            <option value="te-IN">Telugu (te-IN)</option>
-          </select>
-        </div>
+  <!-- ── Hidden Legacy Consensus Section (Maintains DOM refs safely) ── -->
+  <div id="section-consensus" style="display:none !important;" aria-hidden="true">
+    <div id="query-id-display"></div>
+    <div id="answer-text"></div>
+    <div id="consensus-sources-section">
+      <span id="consensus-source-count"></span>
+      <div id="consensus-sources-list"></div>
+    </div>
+    <div id="top-personas-row"></div>
+    <div id="consensus-tts-toolbar">
+      <button id="consensus-speak-btn"></button>
+      <button id="consensus-pause-btn"></button>
+      <button id="consensus-resume-btn"></button>
+      <button id="consensus-stop-btn"></button>
+      <span id="consensus-audio-badge"></span>
+    </div>
+  </div>
 
-        <div class="voice-selector-group">
-          <label for="voice-output-lang">
-            <span>🔊</span> Voice Output:
-          </label>
-          <select id="voice-output-lang" class="voice-select" title="Voice language used for browser Speech Synthesis">
-            <option value="en-IN" selected>English (India)</option>
-            <option value="kn-IN">Kannada (kn-IN)</option>
-            <option value="hi-IN">Hindi (hi-IN)</option>
-            <option value="ta-IN">Tamil (ta-IN)</option>
-            <option value="te-IN">Telugu (te-IN)</option>
-          </select>
-        </div>
+</div><!-- /.app -->
 
-        <div class="voice-info-note" title="Free native browser speech features">
-          ℹ️ <span>Browser voice: transcribes and speaks in chosen language (no translation).</span>
-        </div>
-      </div>
-
-      <textarea
-        id="query-input"
-        placeholder="Type a research question or click Voice Input… e.g. What are the key ethical challenges of synthetic biology?"
-        rows="4"
-        aria-label="Research query input"
-      ></textarea>
-
-      <!-- Recording indicator banner -->
+<!-- ── Fixed Bottom Query Bar (ChatGPT style) ─────────────────────── -->
+<div class="chat-bottom-dock">
+  <div class="chat-dock-container">
+    
+    <div class="dock-banner-wrap">
+      <!-- Voice Recording Indicator -->
       <div id="recording-indicator" class="recording-indicator" style="display:none;">
         <div class="pulse-indicator"><span class="pulse-dot"></span></div>
         <div class="recording-text">
-          <strong>Listening...</strong> Speak clearly in <span id="recording-lang-label">English (India)</span>. Your speech will stream into the box above.
+          <strong>Listening...</strong> Speak clearly in <span id="recording-lang-label">English (India)</span>. Your speech will stream into the box below.
         </div>
         <button id="stop-recording-btn" type="button" class="stop-rec-btn">⏹ Stop</button>
       </div>
 
-      <div class="query-actions">
-        <button id="analyse-btn" aria-label="Analyse query">Analyse</button>
-        <button id="mic-btn" type="button" class="mic-btn" title="Click to speak your question" aria-label="Microphone input">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-            <line x1="12" y1="19" x2="12" y2="23"></line>
-            <line x1="8" y1="23" x2="16" y2="23"></line>
-          </svg>
-          <span id="mic-btn-label">Voice Input</span>
-        </button>
-
-        <div class="toggle-row">
-          <label for="toggle-personas">
-            <input type="checkbox" id="toggle-personas" checked /> Show persona responses
-          </label>
-          <label for="toggle-scores">
-            <input type="checkbox" id="toggle-scores" checked /> Show scores
-          </label>
-          <label for="toggle-sources">
-            <input type="checkbox" id="toggle-sources" checked /> Show sources
-          </label>
-        </div>
-      </div>
-
+      <!-- Progress Bar -->
       <div id="progress-wrap" aria-live="polite">
         <div class="progress-track"><div class="progress-fill"></div></div>
         <div id="progress-msg">Retrieving relevant context...</div>
       </div>
     </div>
-  </section>
 
-  <!-- ── Section 2: Consensus ────────────────────────────────────── -->
-  <section id="section-consensus" aria-label="Consensus answer">
-    <div class="section-title">Latest Synthesis Result</div>
-    <div class="card">
-      <div class="consensus-header">
-        <div class="consensus-header-left">
-          <h2>Consensus Answer</h2>
-          <div class="query-id" id="query-id-display"></div>
-        </div>
-        <!-- Consensus Audio Playback Toolbar -->
-        <div class="tts-toolbar" id="consensus-tts-toolbar">
-          <button id="consensus-speak-btn" class="audio-btn" title="Read consensus response aloud">
-            🔊 <span>Listen</span>
-          </button>
-          <button id="consensus-pause-btn" class="audio-btn" style="display:none;" title="Pause audio playback">
-            ⏸️ <span>Pause</span>
-          </button>
-          <button id="consensus-resume-btn" class="audio-btn" style="display:none;" title="Resume audio playback">
-            ▶️ <span>Resume</span>
-          </button>
-          <button id="consensus-stop-btn" class="audio-btn" style="display:none;" title="Stop audio playback">
-            ⏹️ <span>Stop</span>
-          </button>
-          <span id="consensus-audio-badge" class="audio-badge" style="display:none;">Playing...</span>
-        </div>
+    <!-- Input Capsule -->
+    <div class="chat-input-capsule">
+      <button id="mic-btn" type="button" class="dock-mic-btn" title="Click to speak your question (Voice Input)" aria-label="Microphone input">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+          <line x1="8" y1="23" x2="16" y2="23"></line>
+        </svg>
+        <span id="mic-btn-label" style="display:none;">Voice Input</span>
+      </button>
+
+      <textarea
+        id="query-input"
+        placeholder="Ask EvoRAG a research or follow-up question..."
+        rows="1"
+        aria-label="Research query input"
+      ></textarea>
+
+      <button id="analyse-btn" class="dock-send-btn" title="Send question (Enter)" aria-label="Send query">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="19" x2="12" y2="5"></line>
+          <polyline points="5 12 12 5 19 12"></polyline>
+        </svg>
+        <span>Analyse</span>
+      </button>
+    </div>
+
+    <!-- Options & Subbar -->
+    <div class="dock-subbar">
+      <div class="dock-subbar-left">
+        <button id="toggle-options-btn" type="button" class="chat-tool-btn" style="padding:2px 8px; font-size:11px;" title="Configure voice languages and breakdown panels">
+          ⚙️ Options ▾
+        </button>
+        <span id="subbar-voice-label" style="font-size:11px; color:var(--muted);">🎙️ Voice: English (India)</span>
       </div>
-      <div id="answer-text" title="Click to copy" role="button" tabindex="0" aria-label="Consensus answer — click to copy"></div>
+      <div class="dock-subbar-right">
+        <span>EvoRAG 8-Persona Consensus RAG • Powered by Ollama + FAISS</span>
+      </div>
+    </div>
+
+    <!-- Options Popover Card -->
+    <div id="dock-options-popover" class="dock-options-popover">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <strong style="font-size:12px; color:var(--text);">Voice Languages &amp; Technical Breakdown</strong>
+        <button id="close-options-btn" type="button" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px;">&times;</button>
+      </div>
       
-      <!-- Sources & Evidence Section (Consensus Answer) -->
-      <div id="consensus-sources-section" class="sources-evidence-container" style="display:none;">
-        <div class="sources-evidence-header">
-          <div class="sources-evidence-title">
-            <span class="sources-header-icon">📚</span>
-            <span>Sources &amp; Evidence</span>
-            <span id="consensus-source-count" class="sources-count-badge">0 sources</span>
-          </div>
+      <!-- Voice Preferences Toolbar -->
+      <div class="voice-toolbar" style="margin-bottom:8px;">
+        <div class="voice-selector-group">
+          <label for="voice-input-lang"><span>🎤</span> Voice Input:</label>
+          <select id="voice-input-lang" class="voice-select">
+            <option value="en-IN" selected>English (India)</option>
+            <option value="kn-IN">Kannada (kn-IN)</option>
+            <option value="hi-IN">Hindi (hi-IN)</option>
+            <option value="ta-IN">Tamil (ta-IN)</option>
+            <option value="te-IN">Telugu (te-IN)</option>
+          </select>
         </div>
-        <div id="consensus-sources-list" class="sources-cards-grid"></div>
-      </div>
-
-      <div class="top-personas-label" style="margin-top:22px;">Top Personas</div>
-      <div id="top-personas-row"></div>
-    </div>
-  </section>
-
-  <!-- ── Section 3: Persona Breakdown ───────────────────────────── -->
-  <section id="section-personas" aria-label="Persona breakdown">
-    <div class="section-title">Persona Breakdown</div>
-    <div class="panels-grid">
-
-      <!-- Panel A -->
-      <div class="card" id="panel-a">
-        <div class="panel-title">Persona Responses</div>
-        <div id="persona-cards-grid"></div>
-      </div>
-
-      <!-- Panel B -->
-      <div class="card" id="panel-b">
-        <div class="panel-title">Score Matrix</div>
-        <div class="matrix-wrap">
-          <table id="score-matrix-table" aria-label="Peer scoring matrix"></table>
+        <div class="voice-selector-group">
+          <label for="voice-output-lang"><span>🔊</span> Voice Output:</label>
+          <select id="voice-output-lang" class="voice-select">
+            <option value="en-IN" selected>English (India)</option>
+            <option value="kn-IN">Kannada (kn-IN)</option>
+            <option value="hi-IN">Hindi (hi-IN)</option>
+            <option value="ta-IN">Tamil (ta-IN)</option>
+            <option value="te-IN">Telugu (te-IN)</option>
+          </select>
         </div>
       </div>
 
-      <!-- Panel C -->
-      <div class="card" id="panel-c">
-        <div class="panel-title">Sources</div>
-        <div class="source-list" id="source-list"></div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ── Section 4: Evolution ────────────────────────────────────── -->
-  <section id="section-evolution">
-    <div class="section-title">Persona Performance Over Time</div>
-    <div class="card">
-      <canvas id="chart-canvas" aria-label="Score evolution chart"></canvas>
-      <div class="stats-table-wrap">
-        <div id="stats-empty" class="stats-empty">Run a query to see performance stats.</div>
-        <table id="stats-table" style="display:none" aria-label="Session statistics">
-          <thead>
-            <tr>
-              <th>Persona</th>
-              <th>Queries Run</th>
-              <th>Avg Score</th>
-              <th>Best</th>
-              <th>Worst</th>
-              <th>Times in Top-K</th>
-            </tr>
-          </thead>
-          <tbody id="stats-body"></tbody>
-        </table>
+      <div class="toggle-row" style="margin:0;">
+        <label for="toggle-personas">
+          <input type="checkbox" id="toggle-personas" checked /> Show persona responses
+        </label>
+        <label for="toggle-scores">
+          <input type="checkbox" id="toggle-scores" checked /> Show scores
+        </label>
+        <label for="toggle-sources">
+          <input type="checkbox" id="toggle-sources" checked /> Show sources
+        </label>
       </div>
     </div>
-  </section>
 
-</div><!-- /.app -->
+  </div>
+</div>
 
 <!-- ── Toast ────────────────────────────────────────────────────── -->
 <div id="toast" role="status" aria-live="polite">Copied!</div>
@@ -2439,9 +2706,9 @@ function startNewChat() {
 
   updateActiveChatBar('New Research Chat', 0, null);
   chatThreadContainer.innerHTML = '';
-  chatThreadSection.style.display = 'none';
-  threadCountBadge.textContent = '0 messages';
+  renderThread([]);
   qInput.value = '';
+  qInput.style.height = 'auto';
   renderConversationsList();
   showToast('Started new conversation session');
 }
@@ -2483,53 +2750,83 @@ toggleHistoryBtn.addEventListener('click', openHistoryDrawer);
 closeHistoryBtn.addEventListener('click', closeHistoryDrawer);
 historyOverlay.addEventListener('click', closeHistoryDrawer);
 
-/* Render Chat Thread View (All past turns in order) */
+function scrollToBottom() {
+  setTimeout(() => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight || document.body.scrollHeight,
+      behavior: 'smooth'
+    });
+  }, 60);
+}
+
+/* Render Chat Thread View (ChatGPT style: right blue user bubble, left assistant with sources) */
 function renderThread(messages) {
   chatThreadContainer.innerHTML = '';
+  const welcomeHero = $('chat-welcome-hero');
+  const techWrap = $('tech-inspection-wrap');
+
   if (!messages || !messages.length) {
+    if (welcomeHero) welcomeHero.style.display = 'flex';
     chatThreadSection.style.display = 'none';
+    if (techWrap) techWrap.style.display = 'none';
     threadCountBadge.textContent = '0 messages';
     return;
   }
 
+  if (welcomeHero) welcomeHero.style.display = 'none';
   threadCountBadge.textContent = `${messages.length} message${messages.length === 1 ? '' : 's'}`;
   chatThreadSection.style.display = 'block';
+  if (techWrap) techWrap.style.display = 'block';
 
   messages.forEach((msg, idx) => {
     const isUser = msg.role === 'user';
     const msgEl = document.createElement('div');
-    msgEl.className = `chat-msg ${isUser ? 'chat-msg-user' : 'chat-msg-assistant'}`;
-
     const timeStr = formatRelativeTime(msg.timestamp);
 
     if (isUser) {
+      // ChatGPT style user bubble: right-aligned blue rounded pill, white text
+      msgEl.className = 'chat-turn-user';
       msgEl.innerHTML = `
-        <div class="chat-msg-header">
-          <span class="chat-msg-author">👤 You</span>
-          <span class="chat-msg-time">${escHtml(timeStr)}</span>
-        </div>
-        <div class="chat-msg-content">${escHtml(msg.content)}</div>
+        <div class="chat-user-bubble">${escHtml(msg.content)}</div>
       `;
     } else {
-      // Assistant message with speaker controls and supporting sources
+      // Assistant message: left-aligned clean typography, actions, top personas, and sources & evidence cards
+      msgEl.className = 'chat-turn-assistant';
       const sources = Array.isArray(msg.sources) ? msg.sources : [];
       const contentHtml = renderMarkdownWithCitations(msg.content, sources, `thread-${idx}`);
       const sourcesHtml = sources.length ? renderSourcesSectionHtml(sources, `thread-${idx}`) : '';
 
+      let topPersonasHtml = '';
+      if (Array.isArray(msg.top_personas) && msg.top_personas.length) {
+        const pills = msg.top_personas.map(pid => {
+          const col = state.personaColors[pid] || '#6c63ff';
+          return `<span class="persona-pill" style="background:${col}22; border-color:${col}; color:${col}; font-size:11px; padding:2px 10px;">${escHtml(personaDisplay(pid))}</span>`;
+        }).join('');
+        topPersonasHtml = `<div class="chat-top-personas-pills" title="Top scoring personas for this response">${pills}</div>`;
+      }
+
       msgEl.innerHTML = `
-        <div class="chat-msg-header">
-          <span class="chat-msg-author">🤖 EvoRAG Synthesis</span>
-          <span class="chat-msg-time">${escHtml(timeStr)}</span>
-          <div class="chat-msg-actions msg-audio-controls" id="msg-audio-${idx}">
-            <button class="msg-action-btn copy-msg-btn" title="Copy response text">📋 Copy</button>
-            <button class="msg-action-btn speak-btn" title="Listen to this response">🔊 Listen</button>
-            <button class="msg-action-btn pause-btn" style="display:none;" title="Pause audio">⏸️ Pause</button>
-            <button class="msg-action-btn resume-btn" style="display:none;" title="Resume audio">▶️ Resume</button>
-            <button class="msg-action-btn stop-btn" style="display:none;" title="Stop audio">⏹️ Stop</button>
-            <span class="audio-badge" style="display:none;">Playing...</span>
-          </div>
+        <div class="chat-assistant-meta">
+          <span class="chat-assistant-avatar">🤖</span>
+          <span>EvoRAG Synthesis</span>
+          <span class="chat-assistant-time">${escHtml(timeStr)}</span>
         </div>
-        <div class="chat-msg-content markdown-content">${contentHtml}</div>
+        <div class="chat-assistant-body markdown-content">${contentHtml}</div>
+        <div class="chat-assistant-toolbar" id="msg-audio-${idx}">
+          <button class="chat-tool-btn copy-msg-btn" title="Copy response text">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy</span>
+          </button>
+          <button class="chat-tool-btn speak-btn" title="Listen to this response">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            <span>Listen</span>
+          </button>
+          <button class="chat-tool-btn pause-btn" style="display:none;" title="Pause audio">⏸️ Pause</button>
+          <button class="chat-tool-btn resume-btn" style="display:none;" title="Resume audio">▶️ Resume</button>
+          <button class="chat-tool-btn stop-btn" style="display:none;" title="Stop audio">⏹️ Stop</button>
+          <span class="msg-audio-badge" style="display:none;">Playing...</span>
+          ${topPersonasHtml}
+        </div>
         ${sourcesHtml}
       `;
 
@@ -2611,7 +2908,8 @@ async function loadAuthAndHistory() {
           chip.textContent = prompt;
           chip.addEventListener('click', () => {
             qInput.value = prompt;
-            qInput.focus();
+            autoResizeInput();
+            runQuery();
           });
           recChips.appendChild(chip);
         });
@@ -2735,27 +3033,7 @@ async function openConversation(id, closeDrawerOnDone = true) {
 
     // Render full chronological conversation thread
     renderThread(activeMessages);
-
-    // If there is an assistant response, also present it in consensus section
-    const assistantMessages = activeMessages.filter(m => m.role === 'assistant');
-    if (assistantMessages.length) {
-      const latestAssistant = assistantMessages[assistantMessages.length - 1];
-      const sources = Array.isArray(latestAssistant.sources) ? latestAssistant.sources : [];
-      answerText.dataset.rawAnswer = latestAssistant.content;
-      answerText.className = 'markdown-content';
-      answerText.innerHTML = renderMarkdownWithCitations(latestAssistant.content, sources, 'consensus');
-      if (consensusSourcesSec && consensusSourcesList) {
-        if (sources.length) {
-          consensusSourceCount.textContent = `${sources.length} ${sources.length === 1 ? 'article' : 'articles'}`;
-          consensusSourcesList.innerHTML = sources.map((s, idx) => renderSourceCardHtml(s, idx + 1, 'consensus')).join('');
-          consensusSourcesSec.style.display = 'block';
-        } else {
-          consensusSourcesSec.style.display = 'none';
-        }
-      }
-      qIdDisplay.textContent = `Conversation #${convo.id}`;
-      secConsensus.classList.add('visible');
-    }
+    scrollToBottom();
 
     showToast(`Loaded "${convo.title || 'Conversation #' + id}"`);
   } catch (e) {
@@ -2807,44 +3085,9 @@ async function clearAllConversations() {
    RENDERING CONSENSUS, PERSONAS & EVOLUTION
    ════════════════════════════════════════════════════════════════════ */
 
-/* Section 2 — Consensus */
+/* Section 2 — Consensus State Handler (Keeps state without duplicating UI) */
 function renderConsensus(data) {
-  const answer = data.final_answer || '';
-  const sources = Array.isArray(data.sources) ? data.sources : [];
-
-  answerText.dataset.rawAnswer = answer;
-  answerText.className = 'markdown-content';
-  answerText.innerHTML = renderMarkdownWithCitations(answer, sources, 'consensus');
-  
-  qIdDisplay.textContent = data.query_id ? `Query ID: ${data.query_id}` : (activeConversationId ? `Chat #${activeConversationId}` : '');
-
-  // Render Sources & Evidence directly below the answer
-  if (consensusSourcesSec && consensusSourcesList) {
-    if (sources.length) {
-      consensusSourceCount.textContent = `${sources.length} ${sources.length === 1 ? 'article' : 'articles'}`;
-      consensusSourcesList.innerHTML = sources.map((s, idx) => renderSourceCardHtml(s, idx + 1, 'consensus')).join('');
-      consensusSourcesSec.style.display = 'block';
-    } else {
-      consensusSourceCount.textContent = '0 articles';
-      consensusSourcesList.innerHTML = '<div class="sources-empty-state"><span>ℹ️</span><span>No external news sources were retrieved for this query.</span></div>';
-      consensusSourcesSec.style.display = 'block';
-    }
-  }
-
-  topPersonRow.innerHTML = '';
-  const top = Array.isArray(data.top_personas) ? data.top_personas : [];
-  top.forEach(pid => {
-    const pill = document.createElement('span');
-    pill.className = 'persona-pill';
-    const col = state.personaColors[pid] || '#6c63ff';
-    pill.style.backgroundColor = col + '22';
-    pill.style.borderColor = col;
-    pill.style.color = col;
-    pill.textContent = personaDisplay(pid);
-    topPersonRow.appendChild(pill);
-  });
-
-  secConsensus.classList.add('visible');
+  state.currentResult = data;
 }
 
 /* Section 3 Panel A — Persona cards */
@@ -3072,9 +3315,11 @@ async function runQuery() {
   };
   activeMessages.push(userMsgObj);
   renderThread(activeMessages);
+  scrollToBottom();
 
-  // Clear input box
+  // Clear input box and reset auto-height
   qInput.value = '';
+  qInput.style.height = 'auto';
 
   try {
     // 1. If user is authenticated and this is a new conversation session, create session first
@@ -3174,10 +3419,12 @@ async function runQuery() {
       role: 'assistant',
       content: data.final_answer || '',
       sources: data.sources || [],
+      top_personas: data.top_personas || [],
       timestamp: new Date().toISOString()
     };
     activeMessages.push(assistantMsgObj);
     renderThread(activeMessages);
+    scrollToBottom();
 
     // 4. Persist assistant message to active conversation
     if (token && activeConversationId && data.final_answer) {
@@ -3224,10 +3471,63 @@ async function runQuery() {
 // Analyse button
 analyseBtn.addEventListener('click', runQuery);
 
-// Enter key (Ctrl/Cmd+Enter in textarea)
+// Auto-expand textarea on typing
+function autoResizeInput() {
+  qInput.style.height = 'auto';
+  qInput.style.height = Math.min(qInput.scrollHeight, 160) + 'px';
+}
+qInput.addEventListener('input', autoResizeInput);
+
+// Enter key: Enter to send immediately (ChatGPT style), Shift+Enter for newline
 qInput.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runQuery();
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    runQuery();
+  }
 });
+
+// Welcome suggestion chips click handler
+document.querySelectorAll('.welcome-chip-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const prompt = btn.getAttribute('data-prompt');
+    if (prompt) {
+      qInput.value = prompt;
+      autoResizeInput();
+      runQuery();
+    }
+  });
+});
+
+// Options popover toggle & dismiss
+const toggleOptionsBtn = $('toggle-options-btn');
+const dockOptionsPopover = $('dock-options-popover');
+const closeOptionsBtn = $('close-options-btn');
+if (toggleOptionsBtn && dockOptionsPopover) {
+  toggleOptionsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dockOptionsPopover.classList.toggle('open');
+  });
+  if (closeOptionsBtn) {
+    closeOptionsBtn.addEventListener('click', () => {
+      dockOptionsPopover.classList.remove('open');
+    });
+  }
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#dock-options-popover') && !e.target.closest('#toggle-options-btn')) {
+      dockOptionsPopover.classList.remove('open');
+    }
+  });
+}
+
+// Update subbar voice label on language dropdown change
+if (voiceInputLang) {
+  voiceInputLang.addEventListener('change', () => {
+    const subbarLabel = $('subbar-voice-label');
+    if (subbarLabel) {
+      subbarLabel.textContent = `🎙️ Voice: ${voiceInputLang.options[voiceInputLang.selectedIndex].text}`;
+    }
+  });
+}
 
 // Copy consensus answer on click (ignores clicks on links, citation badges or buttons)
 answerText.addEventListener('click', (e) => {
@@ -3267,7 +3567,8 @@ togglePersonas.addEventListener('change', applyToggle);
 toggleScores.addEventListener('change',   applyToggle);
 toggleSources.addEventListener('change',  applyToggle);
 
-// Initialize authentication & history on page load
+// Initialize chat view, authentication & history on page load
+renderThread(activeMessages);
 loadAuthAndHistory();
 
 </script>
