@@ -40,6 +40,9 @@ def create_db_and_tables() -> None:
             if columns and "sources_json" not in columns:
                 conn.execute(text("ALTER TABLE message ADD COLUMN sources_json TEXT"))
                 conn.commit()
+            if columns and "components_json" not in columns:
+                conn.execute(text("ALTER TABLE message ADD COLUMN components_json TEXT"))
+                conn.commit()
     except Exception:
         pass
 

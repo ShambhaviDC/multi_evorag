@@ -16,7 +16,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional
 
-from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -368,13 +368,20 @@ async def personas_endpoint(req: PersonaQueryRequest):
 
 
 @app.post("/upload", summary="Upload and extract multimodal files (PDF, DOCX, TXT, CSV, XLSX, PNG, JPG)")
-async def upload_files_endpoint(files: List[UploadFile] = File(...)):
+async def upload_files_endpoint(request: Request):
     """Validate, extract, and cache uploaded documents/images for subsequent queries."""
+    form = await request.form()
+    raw_files = form.getlist("files") + form.getlist("file")
     uploaded_results = []
-    for f in files:
-        content = await f.read()
-        processed = process_uploaded_file(f.filename or "unnamed", content)
-        uploaded_results.append(processed.to_dict())
+    seen_hashes = set()
+    for f in raw_files:
+        if hasattr(f, "filename") and f.filename:
+            content = await f.read()
+            if content:
+                processed = process_uploaded_file(f.filename, content)
+                if processed.file_hash not in seen_hashes:
+                    seen_hashes.add(processed.file_hash)
+                    uploaded_results.append(processed.to_dict())
     return {"files": uploaded_results}
 
 
@@ -418,27 +425,43 @@ async def consensus_endpoint(req: ConsensusQueryRequest, background_tasks: Backg
 
 @app.post("/query/consensus/multimodal", response_model=ConsensusQueryResponse, summary="Multimodal consensus query with direct attachments")
 async def consensus_multimodal_endpoint(
+    request: Request,
     background_tasks: BackgroundTasks,
-    query: str = Form(...),
+    query: Optional[str] = Form(None),
     top_k: int = Form(RETRIEVAL_TOP_K),
-    files: Optional[List[UploadFile]] = File(default=None),
 ):
     """Accept multipart form data with query and file attachments in a single request."""
     if _state.get("index") is None:
         raise HTTPException(status_code=503, detail="Index not loaded.")
 
-    processed_files: List[ProcessedFile] = []
-    if files:
-        for f in files:
-            if f.filename:
-                content = await f.read()
-                proc = process_uploaded_file(f.filename, content)
-                processed_files.append(proc)
+    form = await request.form()
+    actual_query = (form.get("query") or query or "").strip()
+    if not actual_query:
+        actual_query = "Analyze and summarize the attached document or image in detail."
 
-    log.info("POST /query/consensus/multimodal — '%s' (files=%d)", query[:60], len(processed_files))
+    top_k_val = top_k
+    try:
+        if form.get("top_k"):
+            top_k_val = int(form.get("top_k"))
+    except Exception:
+        top_k_val = RETRIEVAL_TOP_K
+
+    raw_files = form.getlist("files") + form.getlist("file")
+    processed_files: List[ProcessedFile] = []
+    seen_hashes = set()
+    for f in raw_files:
+        if hasattr(f, "filename") and f.filename:
+            content = await f.read()
+            if content:
+                proc = process_uploaded_file(f.filename, content)
+                if proc.file_hash not in seen_hashes:
+                    seen_hashes.add(proc.file_hash)
+                    processed_files.append(proc)
+
+    log.info("POST /query/consensus/multimodal — '%s' (files=%d)", actual_query[:60], len(processed_files))
 
     try:
-        result = await evorag_query(query, top_k=top_k, attachments=processed_files)
+        result = await evorag_query(actual_query, top_k=top_k_val, attachments=processed_files)
     except ConnectionError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:

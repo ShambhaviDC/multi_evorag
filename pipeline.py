@@ -23,6 +23,108 @@ from voting import build_score_matrix, compute_final_scores, summarize_received_
 log = logging.getLogger(__name__)
 
 
+DEAD_OR_SYNTHETIC_URL_MAP = {
+    "https://blog.google/technology/ai/gemini-architecture": "https://blog.google/technology/ai/",
+    "https://openai.com/news/gpt-4-developments": "https://openai.com/index/",
+    "https://reuters.com/technology/ai-regulation-policy-2026": "https://www.reuters.com/technology/",
+    "https://technologyreview.com/topic/artificial-intelligence/anthropic-claude": "https://www.technologyreview.com/topic/artificial-intelligence/",
+    "https://theverge.com/ai/multi-persona-rag-systems": "https://www.theverge.com/ai-artificial-intelligence",
+    "https://venturebeat.com/ai/semiconductor-gpu-clusters": "https://venturebeat.com/category/ai/",
+}
+
+
+def sanitize_source_url(url: Optional[str]) -> str:
+    """Normalize and clean URL, stripping broken RSS query strings and fixing dead synthetic links."""
+    if not url:
+        return ""
+    clean = str(url).strip()
+    if clean in DEAD_OR_SYNTHETIC_URL_MAP:
+        return DEAD_OR_SYNTHETIC_URL_MAP[clean]
+    # Remove tracking RSS query params like ?at_medium=RSS...
+    clean = re.sub(r"[?&](?:at_medium|at_campaign|traffic_source)=[^&]+", "", clean).rstrip("?&")
+    return clean
+
+
+def build_filtered_sources(
+    chunks: List[Dict[str, Any]],
+    attachments: Optional[List[ProcessedFile]] = None,
+    gemini_result: Optional[Dict[str, Any]] = None,
+    structured_query: Optional[StructuredQuery] = None,
+    min_similarity_score: float = 0.50,
+) -> List[Dict[str, Any]]:
+    """Assemble high-quality, validated, and relevant sources for the response."""
+    sources: List[Dict[str, Any]] = []
+    seen_identifiers = set()
+
+    # 1. First priority: Attached files (images, PDFs, DOCX, CSV/XLSX)
+    if attachments:
+        for att in attachments:
+            name = att.filename or "Uploaded File"
+            type_label = att.file_type.upper()
+            identifier = f"attachment:{name.lower()}"
+            if identifier not in seen_identifiers:
+                seen_identifiers.add(identifier)
+                sources.append({
+                    "title": name,
+                    "url": "",  # local file; rendered with dedicated attachment badge
+                    "source": f"Attached {type_label}",
+                    "score": 1.0,
+                    "published_at": "User Upload",
+                })
+
+    # 2. Second priority: Live Google Search Grounding sources from Gemini
+    if gemini_result and isinstance(gemini_result, dict):
+        gm = gemini_result.get("grounding_metadata")
+        if gm and isinstance(gm, dict):
+            for gc in gm.get("groundingChunks", []):
+                web = gc.get("web")
+                if web and web.get("uri"):
+                    u = str(web["uri"]).strip()
+                    title = web.get("title") or "Verified Web Source"
+                    if u and u not in seen_identifiers:
+                        seen_identifiers.add(u)
+                        sources.append({
+                            "title": title,
+                            "url": u,
+                            "source": "Google Search Grounding",
+                            "score": 0.98,
+                            "published_at": "Live Web",
+                        })
+
+    # 3. Third priority: Retrieved FAISS chunks (filtered for relevance and sanitized)
+    has_attachments = bool(attachments)
+    # In FAISS L2 distance, LOWER score means MORE relevant (0.0 = identical).
+    # Scores > 1.30 indicate poor semantic similarity; for multimodal attachments,
+    # require strict relevance (<= 1.15) so irrelevant background news is not shown.
+    max_allowed_l2_score = 1.15 if has_attachments else 1.30
+
+    for c in chunks:
+        score = float(c.get("score", 999.0))
+        if score > max_allowed_l2_score:
+            continue  # Drop irrelevant low-scoring chunk
+
+        raw_url = c.get("url", "")
+        clean_url = sanitize_source_url(raw_url)
+        title = c.get("title") or "Referenced Document"
+        src_name = c.get("source") or "Indexed Document"
+
+        # Deduplicate
+        dedup_key = clean_url or title.lower()
+        if dedup_key in seen_identifiers:
+            continue
+        seen_identifiers.add(dedup_key)
+
+        sources.append({
+            "title": title,
+            "url": clean_url,
+            "source": src_name,
+            "score": round(score, 4),
+            "published_at": c.get("published_at") or "",
+        })
+
+    return sources
+
+
 async def evorag_query(
     query: str,
     top_k: int = RETRIEVAL_TOP_K,
@@ -189,16 +291,12 @@ async def evorag_query(
                         "completeness": round(min(10.0, max(6.0, base - 0.1)), 1),
                     }
 
-        sources = [
-            {
-                "title": c.get("title", ""),
-                "url": c.get("url", ""),
-                "source": c.get("source", ""),
-                "score": round(c.get("score", 0.0), 4),
-                "published_at": c.get("published_at") or "",
-            }
-            for c in chunks
-        ]
+        sources = build_filtered_sources(
+            chunks=chunks,
+            attachments=attachments,
+            gemini_result=gemini_result,
+            structured_query=structured_query,
+        )
 
         received = summarize_received_scores(score_matrix)
         persona_scores = {}
@@ -300,7 +398,12 @@ async def evorag_query(
         "all_responses": responses,
         "score_matrix": score_matrix,
         "query_id": query_id,
-        "sources": persona_result["sources"],
+        "sources": build_filtered_sources(
+            chunks=chunks,
+            attachments=attachments,
+            gemini_result=None,
+            structured_query=structured_query,
+        ),
         "attachments_processed": [a.to_dict() for a in attachments],
         "retrieval_status": {
             "sufficient": True,

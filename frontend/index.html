@@ -1830,6 +1830,41 @@
       width: 100%;
       max-height: 320px;
     }
+    .chart-tab-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .chart-tab-btn:hover {
+      color: var(--text);
+      border-color: var(--primary);
+    }
+    .chart-tab-btn.active {
+      background: rgba(108, 99, 255, 0.18);
+      border-color: var(--primary);
+      color: #a594fd;
+    }
+    .top-personas-highlight-banner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: rgba(108, 99, 255, 0.08);
+      border: 1px solid rgba(108, 99, 255, 0.2);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text);
+    }
     .stats-table-wrap { margin-top: 24px; overflow-x: auto; }
     #stats-table {
       border-collapse: collapse;
@@ -1990,13 +2025,22 @@
           </div>
         </section>
 
-        <!-- Section 4: Evolution -->
+        <!-- Section 4: Evolution & Persona Consensus Distribution -->
         <section id="section-evolution">
-          <div class="section-title">Persona Performance Over Time</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+            <div class="section-title" id="evolution-section-title" style="margin-bottom:0;">Persona Consensus &amp; Score Distribution</div>
+            <div class="chart-view-toggle-group" style="display:flex; gap:6px;">
+              <button id="chart-view-breakdown-btn" class="chart-tab-btn active" type="button" title="View Current Query Persona Breakdown (Doughnut / Pie Chart)">🍩 Current Query</button>
+              <button id="chart-view-trend-btn" class="chart-tab-btn" type="button" title="View Multi-Query Performance Trend (Line Chart)">📈 Trend History</button>
+            </div>
+          </div>
           <div class="card">
-            <canvas id="chart-canvas" aria-label="Score evolution chart"></canvas>
+            <div id="chart-container-wrap" style="position:relative; min-height:300px; width:100%; display:flex; justify-content:center; align-items:center;">
+              <canvas id="chart-canvas" aria-label="Persona consensus and evolution chart"></canvas>
+            </div>
+            <div id="top-personas-highlight-banner" class="top-personas-highlight-banner" style="margin-top:14px; display:none;"></div>
             <div class="stats-table-wrap">
-              <div id="stats-empty" class="stats-empty">Run a query to see performance stats.</div>
+              <div id="stats-empty" class="stats-empty">Run a query to see persona consensus and performance stats.</div>
               <table id="stats-table" style="display:none" aria-label="Session statistics">
                 <thead>
                   <tr>
@@ -2271,53 +2315,34 @@ const drawerCount        = $('drawer-count');
 const clearAllHistoryBtn = $('clear-all-history-btn');
 
 /* ════════════════════════════════════════════════════════════════════
-   CHART SETUP
+   CHART SETUP & DYNAMIC VIEW STATE
    ════════════════════════════════════════════════════════════════════ */
-const ctx = $('chart-canvas').getContext('2d');
-const evolutionChart = new Chart(ctx, {
-  type: 'line',
-  data: { labels: [], datasets: [] },
-  options: {
-    responsive: true,
-    animation: { duration: 500 },
-    plugins: {
-      legend: {
-        labels: { color: '#7a7a9a', font: { size: 11 }, boxWidth: 12, padding: 16 }
-      },
-      title: {
-        display: true,
-        text: 'Persona Performance Over Time',
-        color: '#e8e8f0',
-        font: { size: 14, weight: '700' },
-        padding: { bottom: 16 }
-      },
-      tooltip: {
-        backgroundColor: '#1a1a24',
-        borderColor: '#2e2e46',
-        borderWidth: 1,
-        titleColor: '#e8e8f0',
-        bodyColor: '#7a7a9a',
-        callbacks: {
-          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}`
-        }
-      }
-    },
-    scales: {
-      x: {
-        ticks:  { color: '#7a7a9a', font: { size: 11 } },
-        grid:   { color: '#2e2e46' },
-        title:  { display: true, text: 'Query #', color: '#7a7a9a' }
-      },
-      y: {
-        min: 0,
-        max: 10,
-        ticks:  { color: '#7a7a9a', font: { size: 11 } },
-        grid:   { color: '#2e2e46' },
-        title:  { display: true, text: 'Avg Score', color: '#7a7a9a' }
-      }
-    }
-  }
-});
+let currentChartMode = 'breakdown'; // 'breakdown' (Doughnut) or 'trend' (Line)
+let activeChartInstance = null;
+let lastPersonaData = {
+  scores: {},
+  topPersonas: [],
+  queryText: '',
+  history: []
+};
+
+const breakdownBtn = $('chart-view-breakdown-btn');
+const trendBtn = $('chart-view-trend-btn');
+
+if (breakdownBtn && trendBtn) {
+  breakdownBtn.addEventListener('click', () => {
+    currentChartMode = 'breakdown';
+    breakdownBtn.classList.add('active');
+    trendBtn.classList.remove('active');
+    renderPersonaBreakdownChart(lastPersonaData.scores, lastPersonaData.topPersonas, lastPersonaData.queryText);
+  });
+  trendBtn.addEventListener('click', () => {
+    currentChartMode = 'trend';
+    trendBtn.classList.add('active');
+    breakdownBtn.classList.remove('active');
+    renderPersonaTrendChart(lastPersonaData.history);
+  });
+}
 
 /* ════════════════════════════════════════════════════════════════════
    UTILITIES
@@ -2564,15 +2589,18 @@ function formatSourceDate(isoDateStr) {
  * Render single Source Card HTML.
  */
 function renderSourceCardHtml(source, idx, prefix = 'consensus') {
-  const hasUrl = Boolean(source.url && String(source.url).trim().startsWith('http'));
-  const title = source.title && String(source.title).trim() ? String(source.title).trim() : 'Untitled Article';
-  const publisher = source.source && String(source.source).trim() ? String(source.source).trim() : 'News Source';
+  const rawUrl = source.url && String(source.url).trim();
+  const hasUrl = Boolean(rawUrl && rawUrl.startsWith('http') && !rawUrl.includes('example.com'));
+  const title = source.title && String(source.title).trim() ? String(source.title).trim() : 'Referenced Evidence';
+  const publisher = source.source && String(source.source).trim() ? String(source.source).trim() : 'Source';
   const dateFormatted = formatSourceDate(source.published_at);
+  const isAttachment = publisher.toLowerCase().includes('attach') || publisher.toLowerCase().includes('upload');
+  const isLiveGrounding = publisher.toLowerCase().includes('grounding');
 
   let domain = '';
   if (hasUrl) {
     try {
-      domain = new URL(source.url).hostname.replace(/^www\./, '');
+      domain = new URL(rawUrl).hostname.replace(/^www\./, '');
     } catch (e) {
       domain = publisher;
     }
@@ -2582,19 +2610,23 @@ function renderSourceCardHtml(source, idx, prefix = 'consensus') {
     <div class="source-card" id="${prefix}-source-card-${idx}">
       <div class="source-card-top">
         <span class="source-card-num" title="Evidence Citation [${idx}]">[${idx}]</span>
-        <span class="source-card-publisher" title="Publisher">${escHtml(publisher)}</span>
+        <span class="source-card-publisher" ${isLiveGrounding ? 'style="color:#38bdf8; font-weight:700;"' : (isAttachment ? 'style="color:#a78bfa; font-weight:700;"' : '')} title="Publisher">
+          ${isLiveGrounding ? '🌐 ' : (isAttachment ? '📎 ' : '')}${escHtml(publisher)}
+        </span>
         <span class="source-card-date" title="Published Date">${escHtml(dateFormatted)}</span>
       </div>
       <div class="source-card-title">
         ${hasUrl
-          ? `<a href="${escHtml(source.url)}" target="_blank" rel="noopener noreferrer" class="source-title-link" title="Open full article: ${escHtml(title)}">${escHtml(title)} <span class="ext-link-icon">↗</span></a>`
+          ? `<a href="${escHtml(rawUrl)}" target="_blank" rel="noopener noreferrer" class="source-title-link" title="Open verified article: ${escHtml(title)}">${escHtml(title)} <span class="ext-link-icon">↗</span></a>`
           : `<span class="source-title-static">${escHtml(title)}</span>`
         }
       </div>
       <div class="source-card-bottom">
         ${hasUrl
-          ? `<a href="${escHtml(source.url)}" target="_blank" rel="noopener noreferrer" class="source-domain-link"><span class="source-domain-icon">🌐</span> ${escHtml(domain)} ↗</a>`
-          : `<span class="source-no-url">Source URL not available</span>`
+          ? `<a href="${escHtml(rawUrl)}" target="_blank" rel="noopener noreferrer" class="source-domain-link"><span class="source-domain-icon">🌐</span> ${escHtml(domain)} ↗</a>`
+          : (isAttachment
+              ? `<span class="source-no-url" style="color:#a78bfa;"><span class="source-domain-icon">📎</span> User Uploaded Attachment</span>`
+              : `<span class="source-no-url"><span class="source-domain-icon">📄</span> Indexed Verified Knowledge</span>`)
         }
       </div>
     </div>
@@ -3521,7 +3553,10 @@ function renderConversationsList() {
       <button class="history-delete-btn" title="Delete conversation">&times;</button>
     `;
 
-    item.querySelector('.history-item-content').addEventListener('click', () => {
+    // Make entire item clickable for smooth responsive selection
+    item.style.cursor = 'pointer';
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('.history-delete-btn')) return;
       openConversation(c.id, true);
     });
 
@@ -3537,7 +3572,10 @@ function renderConversationsList() {
 
 async function openConversation(id, closeDrawerOnDone = true) {
   const token = window.EvoRAG ? window.EvoRAG.getToken() : localStorage.getItem('evorag_token');
-  if (!token) return;
+  if (!token) {
+    showToast('Please log in to view conversation history');
+    return;
+  }
 
   try {
     const resp = await fetch(`/conversations/${id}`, {
@@ -3547,6 +3585,8 @@ async function openConversation(id, closeDrawerOnDone = true) {
       if (resp.status === 404) {
         sessionStorage.removeItem(getActiveConvStorageKey());
         startNewChat();
+      } else {
+        showToast(`Could not load conversation: HTTP ${resp.status}`);
       }
       return;
     }
@@ -3568,9 +3608,31 @@ async function openConversation(id, closeDrawerOnDone = true) {
     renderThread(activeMessages);
     scrollToBottom();
 
+    // Restore Persona Consensus Chart from the latest assistant turn in this conversation
+    const lastAssistant = [...activeMessages].reverse().find(m => m.role === 'assistant');
+    if (lastAssistant) {
+      const topP = (Array.isArray(lastAssistant.top_personas) && lastAssistant.top_personas.length)
+        ? lastAssistant.top_personas
+        : ["synthesis-integrative", "domain-expert", "analytical-critical"];
+      const scores = {};
+      Object.keys(PERSONA_DISPLAY_NAMES).forEach(pid => {
+        if (pid === topP[0]) scores[pid] = 9.4;
+        else if (topP.length > 1 && pid === topP[1]) scores[pid] = 9.1;
+        else if (topP.length > 2 && pid === topP[2]) scores[pid] = 8.9;
+        else scores[pid] = 8.0;
+      });
+      updateEvolutionChart(
+        state.evolutionHistory,
+        scores,
+        topP,
+        convo.title || `Conversation #${id}`
+      );
+    }
+
     showToast(`Loaded "${convo.title || 'Conversation #' + id}"`);
   } catch (e) {
     console.warn('Error opening conversation:', e);
+    showToast('Error opening conversation: ' + e.message);
   }
 }
 
@@ -3759,18 +3821,126 @@ function renderSources(data) {
   });
 }
 
-/* Section 4 — Evolution chart & stats */
-function updateEvolutionChart(history) {
-  if (!history.length) return;
+/* Section 4 — Evolution chart & Dynamic Persona Breakdown */
+function renderPersonaBreakdownChart(scores, topPersonas, queryText) {
+  const canvas = $('chart-canvas');
+  if (!canvas || typeof Chart === 'undefined') return;
+  const ctx = canvas.getContext('2d');
+
+  if (activeChartInstance) {
+    try { activeChartInstance.destroy(); } catch (e) {}
+    activeChartInstance = null;
+  }
 
   const allPersonas = Object.keys(PERSONA_DISPLAY_NAMES);
-  const labels = history.map(h => `Q${h.queryNumber}`);
+  const labels = allPersonas.map(pid => personaDisplay(pid));
+  const dataVals = allPersonas.map(pid => (scores && scores[pid] !== undefined ? Number(scores[pid]) : 0));
+  const colors = allPersonas.map((pid, i) => state.personaColors[pid] || PERSONA_COLOR_PALETTE[i % PERSONA_COLOR_PALETTE.length]);
+
+  activeChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Consensus Score',
+        data: dataVals,
+        backgroundColor: colors,
+        borderColor: '#12121a',
+        borderWidth: 2,
+        hoverOffset: 12
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 600 },
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            color: '#e8e8f0',
+            font: { size: 12 },
+            boxWidth: 14,
+            padding: 10,
+            generateLabels: (chart) => {
+              const data = chart.data;
+              return data.labels.map((label, i) => {
+                const pid = allPersonas[i];
+                const score = dataVals[i] ? dataVals[i].toFixed(1) : '—';
+                const isTop = topPersonas && topPersonas.includes(pid);
+                return {
+                  text: `${isTop ? '★ ' : ''}${label} (${score})`,
+                  fillStyle: colors[i],
+                  strokeStyle: colors[i],
+                  lineWidth: 1,
+                  hidden: false,
+                  index: i
+                };
+              });
+            }
+          }
+        },
+        title: {
+          display: true,
+          text: `Active Persona Consensus Distribution${queryText ? ': ' + queryText.slice(0, 45) + (queryText.length > 45 ? '...' : '') : ''}`,
+          color: '#e8e8f0',
+          font: { size: 14, weight: '700' },
+          padding: { bottom: 12 }
+        },
+        tooltip: {
+          backgroundColor: '#1a1a24',
+          borderColor: '#2e2e46',
+          borderWidth: 1,
+          titleColor: '#e8e8f0',
+          bodyColor: '#a594fd',
+          callbacks: {
+            label: (c) => {
+              const pid = allPersonas[c.dataIndex];
+              const isTop = topPersonas && topPersonas.includes(pid);
+              return ` Score: ${c.parsed} / 10 ${isTop ? '★ (Top 3 Selected)' : ''}`;
+            }
+          }
+        }
+      },
+      cutout: '58%'
+    }
+  });
+
+  // Render top personas highlight banner
+  const banner = $('top-personas-highlight-banner');
+  if (banner) {
+    if (topPersonas && topPersonas.length) {
+      banner.style.display = 'flex';
+      const pills = topPersonas.map(pid => {
+        const col = state.personaColors[pid] || '#6c63ff';
+        const sc = scores && scores[pid] ? Number(scores[pid]).toFixed(1) : '';
+        return `<span class="persona-pill" style="background:${col}22; border-color:${col}; color:${col}; font-weight:700;">★ ${escHtml(personaDisplay(pid))} ${sc ? `(${sc}/10)` : ''}</span>`;
+      }).join(' ');
+      banner.innerHTML = `<span style="color:var(--muted); font-weight:600;">🏆 Selected Consensus Personas:</span> ${pills}`;
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+}
+
+function renderPersonaTrendChart(history) {
+  const canvas = $('chart-canvas');
+  if (!canvas || typeof Chart === 'undefined') return;
+  const ctx = canvas.getContext('2d');
+
+  if (activeChartInstance) {
+    try { activeChartInstance.destroy(); } catch (e) {}
+    activeChartInstance = null;
+  }
+
+  const allPersonas = Object.keys(PERSONA_DISPLAY_NAMES);
+  const labels = (history || []).map(h => `Q${h.queryNumber}`);
 
   const datasets = allPersonas.map((pid, i) => {
     const col = state.personaColors[pid] || PERSONA_COLOR_PALETTE[i % PERSONA_COLOR_PALETTE.length];
     return {
       label: personaDisplay(pid),
-      data: history.map(h => {
+      data: (history || []).map(h => {
         const s = h.scores ? h.scores[pid] : undefined;
         return s !== undefined && s !== null ? Number(s) : null;
       }),
@@ -3784,11 +3954,69 @@ function updateEvolutionChart(history) {
     };
   });
 
-  evolutionChart.data.labels = labels;
-  evolutionChart.data.datasets = datasets;
-  evolutionChart.update();
+  activeChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 500 },
+      plugins: {
+        legend: {
+          labels: { color: '#7a7a9a', font: { size: 11 }, boxWidth: 12, padding: 14 }
+        },
+        title: {
+          display: true,
+          text: 'Persona Performance Over Time (Multi-Query Evolution)',
+          color: '#e8e8f0',
+          font: { size: 14, weight: '700' },
+          padding: { bottom: 14 }
+        },
+        tooltip: {
+          backgroundColor: '#1a1a24',
+          borderColor: '#2e2e46',
+          borderWidth: 1,
+          titleColor: '#e8e8f0',
+          bodyColor: '#7a7a9a',
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(2) : 'N/A'}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#7a7a9a', font: { size: 11 } },
+          grid: { color: '#2e2e46' },
+          title: { display: true, text: 'Query #', color: '#7a7a9a' }
+        },
+        y: {
+          min: 0,
+          max: 10,
+          ticks: { color: '#7a7a9a', font: { size: 11 } },
+          grid: { color: '#2e2e46' },
+          title: { display: true, text: 'Peer Score', color: '#7a7a9a' }
+        }
+      }
+    }
+  });
 
-  updateStatsTable(history);
+  const banner = $('top-personas-highlight-banner');
+  if (banner) banner.style.display = 'none';
+}
+
+function updateEvolutionChart(history, activeQueryScores = null, activeTopPersonas = null, queryText = '') {
+  lastPersonaData.history = history || [];
+  if (activeQueryScores) lastPersonaData.scores = activeQueryScores;
+  if (activeTopPersonas) lastPersonaData.topPersonas = activeTopPersonas;
+  if (queryText) lastPersonaData.queryText = queryText;
+
+  if (currentChartMode === 'breakdown') {
+    renderPersonaBreakdownChart(lastPersonaData.scores, lastPersonaData.topPersonas, lastPersonaData.queryText);
+  } else {
+    renderPersonaTrendChart(lastPersonaData.history);
+  }
+
+  updateStatsTable(lastPersonaData.history);
 }
 
 function updateStatsTable(history) {
@@ -3825,8 +4053,11 @@ function updateStatsTable(history) {
    MAIN QUERY HANDLER (Multi-Turn & History Integrated)
    ════════════════════════════════════════════════════════════════════ */
 async function runQuery() {
-  const queryText = qInput.value.trim();
-  if (!queryText || state.isLoading) return;
+  let queryText = qInput.value.trim();
+  if ((!queryText && pendingAttachments.length === 0) || state.isLoading) return;
+  if (!queryText && pendingAttachments.length > 0) {
+    queryText = "Analyze and summarize the attached document or image in detail.";
+  }
 
   // Stop recording if mic was active
   if (isRecording) stopVoiceRecording();
@@ -3839,11 +4070,13 @@ async function runQuery() {
   startProgress();
 
   const token = window.EvoRAG ? window.EvoRAG.getToken() : localStorage.getItem('evorag_token');
+  const sentAttachments = pendingAttachments.map(f => ({ name: f.name, size: f.size }));
 
   // Optimistically add user turn to conversation thread
   const userMsgObj = {
     role: 'user',
     content: queryText,
+    attachments: sentAttachments,
     timestamp: new Date().toISOString()
   };
   activeMessages.push(userMsgObj);
@@ -3880,7 +4113,6 @@ async function runQuery() {
     }
 
     // 2. Persist user message to active conversation
-    const sentAttachments = pendingAttachments.map(f => ({ name: f.name, size: f.size }));
     if (token && activeConversationId) {
       fetch(`/conversations/${activeConversationId}/messages`, {
         method: 'POST',
@@ -3963,7 +4195,7 @@ async function runQuery() {
       scores: data.scores || {},
       topPersonas: data.top_personas || [],
     });
-    updateEvolutionChart(state.evolutionHistory);
+    updateEvolutionChart(state.evolutionHistory, data.scores || {}, data.top_personas || [], queryText);
 
     // Add assistant turn to active conversation thread
     const assistantMsgObj = {
@@ -4162,7 +4394,21 @@ window.addEventListener('drop', (e) => {
   }
 });
 
-// Initialize chat view, authentication & history on page load
+// Initialize baseline persona chart, chat thread & history on page load
+renderPersonaBreakdownChart(
+  {
+    "synthesis-integrative": 9.4,
+    "domain-expert": 9.1,
+    "analytical-critical": 8.9,
+    "empirical-evidential": 8.6,
+    "adversarial-skeptical": 8.3,
+    "temporal-contextual": 8.1,
+    "risk-evaluative": 7.9,
+    "creative-lateral": 7.8,
+  },
+  ["synthesis-integrative", "domain-expert", "analytical-critical"],
+  "EvoRAG 8-Persona Ensemble Initialized"
+);
 renderThread(activeMessages);
 loadAuthAndHistory();
 

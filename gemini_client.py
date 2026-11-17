@@ -155,7 +155,9 @@ async def call_gemini_structured(
     }
 
     # Enable Google Search grounding if query requires latest info or explicitly flagged
-    if enable_search_grounding or structured_query.constraints.requires_latest_information:
+    # Note: Gemini rejects search grounding when image inline_data is present, so disable tools for image attachments.
+    has_image_attachments = bool(attachments and any(att.image_base64 for att in attachments))
+    if (enable_search_grounding or structured_query.constraints.requires_latest_information) and not has_image_attachments:
         payload["tools"] = [{"googleSearch": {}}]
 
     client = get_gemini_http_client()
@@ -186,13 +188,18 @@ async def call_gemini_structured(
             }
         except httpx.HTTPStatusError as exc:
             status = exc.response.status_code if exc.response is not None else None
+            err_body = exc.response.text[:200] if exc.response is not None else ""
+            if status == 400 and "tools" in payload and attempt < max_attempts:
+                log.warning("Gemini HTTP 400 with tools ('%s'); retrying without search tools...", err_body)
+                payload.pop("tools", None)
+                continue
             if status in _RETRYABLE_STATUS_CODES and attempt < max_attempts:
                 wait_time = 1.0 * (1.5 ** (attempt - 1))
                 log.warning("Gemini HTTP %s on attempt %d/%d — retrying in %.1fs...", status, attempt, max_attempts, wait_time)
                 await asyncio.sleep(wait_time)
                 continue
-            log.error("Gemini request failed: %s", exc)
-            return {"answer": None, "grounding_metadata": None, "error": str(exc)}
+            log.error("Gemini request failed (status %s): %s | %s", status, exc, err_body)
+            return {"answer": None, "grounding_metadata": None, "error": f"{exc} - {err_body}"}
         except Exception as exc:
             log.error("Gemini unexpected error: %s", exc)
             return {"answer": None, "grounding_metadata": None, "error": str(exc)}
