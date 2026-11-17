@@ -87,10 +87,12 @@ Table~\ref{tab:system_comparison} summarizes the performance of EvoRAG in compar
 \caption{Comparative Performance Across Benchmark Architectures}
 \label{tab:system_comparison}
 \small
+\setlength{\tabcolsep}{4.5pt}
 \renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\linewidth}{|l|c|c|c|c|c|X|}
+\begin{tabularx}{\linewidth}{|>{\raggedright\arraybackslash}p{3.4cm}|c|c|c|c|c|>{\centering\arraybackslash}X|}
 \hline
-\textbf{System / Architecture} & \textbf{$F_{\text{faith}}$ (\%)} & \textbf{$S_{\text{rel}}$} & \textbf{$D_{\text{depth}}$ (\%)} & \textbf{$H_{\text{rate}}$ (\%)} & \textbf{Latency (s)} & \textbf{Local / Adaptive} \\
+\textbf{System / Architecture} & \textbf{$F_{\text{faith}}$} & \textbf{$S_{\text{rel}}$} & \textbf{$D_{\text{depth}}$} & \textbf{$H_{\text{rate}}$} & \textbf{Latency} & \textbf{Local /} \\
+& \textbf{(\%)} & & \textbf{(\%)} & \textbf{(\%)} & \textbf{(s)} & \textbf{Adaptive} \\
 \hline
 Naive RAG~\cite{lewis2020rag} & 68.4 & 0.741 & 51.2 & 31.6 & \textbf{4.2} & Yes / Static \\
 \hline
@@ -125,8 +127,9 @@ To quantify the benefit of employing eight personas, we tested configurations wi
 \caption{Ablation Study on Persona Cardinality}
 \label{tab:persona_ablation}
 \small
+\setlength{\tabcolsep}{5pt}
 \renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\linewidth}{|c|l|c|c|c|}
+\begin{tabularx}{\linewidth}{|c|>{\raggedright\arraybackslash}X|c|c|c|}
 \hline
 \textbf{Count ($N$)} & \textbf{Active Personas Configuration} & \textbf{$F_{\text{faith}}$ (\%)} & \textbf{$D_{\text{depth}}$ (\%)} & \textbf{Latency (s)} \\
 \hline
