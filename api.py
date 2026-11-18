@@ -87,6 +87,7 @@ from recommendations import router as recommendations_router
 from personalization_api import router as personalization_router
 from personalization_agent import update_user_interests_incremental
 from news_api import router as news_router
+from event_api import router as event_router
 
 app.include_router(auth_router)
 app.include_router(conversations_router)
@@ -94,6 +95,7 @@ app.include_router(preferences_router)
 app.include_router(recommendations_router)
 app.include_router(personalization_router)
 app.include_router(news_router)
+app.include_router(event_router)
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -380,7 +382,13 @@ async def personas_endpoint(req: PersonaQueryRequest):
 async def upload_files_endpoint(request: Request):
     """Validate, extract, and cache uploaded documents/images for subsequent queries."""
     form = await request.form()
-    raw_files = form.getlist("files") + form.getlist("file")
+    raw_files = form.getlist("files") + form.getlist("file") + form.getlist("image") + form.getlist("attachment")
+    for key, val in form.multi_items():
+        if hasattr(val, "filename") and val.filename and val not in raw_files:
+            raw_files.append(val) + form.getlist("image") + form.getlist("attachment")
+    for key, val in form.multi_items():
+        if hasattr(val, "filename") and val.filename and val not in raw_files:
+            raw_files.append(val)
     uploaded_results = []
     seen_hashes = set()
     for f in raw_files:
@@ -478,7 +486,10 @@ async def consensus_multimodal_endpoint(
     except Exception:
         top_k_val = RETRIEVAL_TOP_K
 
-    raw_files = form.getlist("files") + form.getlist("file")
+    raw_files = form.getlist("files") + form.getlist("file") + form.getlist("image") + form.getlist("attachment")
+    for key, val in form.multi_items():
+        if hasattr(val, "filename") and val.filename and val not in raw_files:
+            raw_files.append(val)
     processed_files: List[ProcessedFile] = []
     seen_hashes = set()
     for f in raw_files:

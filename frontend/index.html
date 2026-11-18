@@ -2119,6 +2119,108 @@
       text-decoration: underline;
     }
 
+    /* ── Phase 3: Tracked News Events & Evolution Styles ── */
+    .event-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .event-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(0, 210, 255, 0.4);
+      box-shadow: 0 8px 24px rgba(0, 210, 255, 0.15);
+    }
+    .event-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .event-status-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .status-emerging { background: rgba(59, 130, 246, 0.18); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .status-developing { background: rgba(245, 158, 11, 0.18); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .status-ongoing { background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-resolved { background: rgba(107, 114, 128, 0.18); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.3); }
+    .status-dormant { background: rgba(139, 92, 246, 0.18); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3); }
+    
+    .event-card-title {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.35;
+      margin: 0 0 8px 0;
+    }
+    .event-card-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .event-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .event-timeline-step {
+      position: relative;
+      padding-left: 24px;
+      margin-bottom: 18px;
+    }
+    .event-timeline-step::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 14px;
+      bottom: -18px;
+      width: 2px;
+      background: var(--border);
+    }
+    .event-timeline-step:last-child::before {
+      display: none;
+    }
+    .event-step-dot {
+      position: absolute;
+      left: 0;
+      top: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid var(--surface);
+      box-shadow: 0 0 6px var(--primary);
+    }
+    .event-step-badge {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 6px;
+      background: rgba(0, 210, 255, 0.12);
+      color: var(--accent2);
+      margin-bottom: 4px;
+    }
+
     /* ── Autocomplete Dropdown Popover ───────────────────────────── */
     .autocomplete-dropdown {
       position: absolute;
@@ -2276,6 +2378,64 @@
         <div style="color:var(--muted); font-size:13px; text-align:center; padding:30px; grid-column: 1 / -1;">
           Loading real-time news articles...
         </div>
+      </div>
+    </div>
+
+    <!-- ── Phase 3 Novelty: Tracked News Events & Evolution Analysis ── -->
+    <div id="events-section" class="news-homepage-section" style="margin-top: 36px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.06);">
+      <div class="news-section-header">
+        <div class="news-header-left">
+          <h2 id="events-heading">⏳ Tracked News Events &amp; Evolution</h2>
+          <span id="events-subtitle" class="news-feed-subtitle">Evolving real-world event clusters, chronological milestones, and narrative timelines</span>
+        </div>
+        <div class="news-header-actions">
+          <button id="refresh-events-btn" class="news-action-btn" title="Re-cluster &amp; refresh tracked events">🔄 Refresh Events</button>
+        </div>
+      </div>
+
+      <!-- Event Category Tabs -->
+      <div id="events-category-tabs" class="news-tabs-wrap">
+        <button class="news-tab-chip active" data-category="all">🌐 All Tracked Events</button>
+      </div>
+
+      <!-- Events Cards Grid -->
+      <div id="events-cards-grid" class="news-articles-grid">
+        <div style="color:var(--muted); font-size:13px; text-align:center; padding:30px; grid-column: 1 / -1;">
+          Loading evolving news event clusters...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Interactive Event Timeline Modal ── -->
+  <div id="event-timeline-modal" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div class="modal-content" style="background:var(--surface); border:1px solid var(--border); border-radius:16px; width:92%; max-width:850px; max-height:85vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.6);">
+      <div style="padding:20px 24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div id="modal-event-category-badge" style="display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(108,99,255,0.15); color:var(--primary); font-weight:700; margin-bottom:6px;">Category</div>
+          <h3 id="modal-event-title" style="margin:0 0 6px 0; font-size:18px; color:var(--text); line-height:1.3;">Event Title</h3>
+          <div id="modal-event-meta" style="font-size:12px; color:var(--muted); display:flex; gap:12px; flex-wrap:wrap;">
+            <span id="modal-event-status">Status</span>
+            <span id="modal-event-dates">Dates</span>
+            <span id="modal-event-count">0 Articles</span>
+          </div>
+        </div>
+        <button id="modal-close-btn" style="background:transparent; border:none; color:var(--muted); font-size:24px; cursor:pointer; padding:0 6px;">✕</button>
+      </div>
+      <div style="padding:20px 24px; overflow-y:auto; flex:1;">
+        <div id="modal-event-narrative" style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:20px; font-size:13px; line-height:1.6; color:var(--text);">
+          Synthesizing event narrative...
+        </div>
+        <h4 style="font-size:14px; margin:0 0 14px 0; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px;">Chronological Timeline &amp; Developments</h4>
+        <div id="modal-timeline-flow">
+          <!-- Timeline items populated here -->
+        </div>
+      </div>
+      <div style="padding:16px 24px; border-top:1px solid var(--border); background:rgba(0,0,0,0.2); display:flex; justify-content:flex-end; gap:12px;">
+        <button id="modal-close-footer-btn" class="news-action-btn">Close</button>
+        <button id="modal-analyze-event-btn" class="welcome-chip-btn" style="background:var(--primary); color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:600; cursor:pointer;">
+          ⚡ Analyze this Event with EvoRAG
+        </button>
       </div>
     </div>
   </div>
@@ -3929,6 +4089,253 @@ if (refreshNewsBtn) {
 }
 
 /* ════════════════════════════════════════════════════════════════════
+   Phase 3: Tracked News Events & Evolution Analysis Implementation
+   ════════════════════════════════════════════════════════════════════ */
+let currentEventCategory = 'all';
+
+async function loadTrackedEvents(category = 'all') {
+  currentEventCategory = category;
+  const gridEl = $('events-cards-grid');
+  const tabsEl = $('events-category-tabs');
+  if (!gridEl || !tabsEl) return;
+
+  gridEl.innerHTML = `<div style="color:var(--muted); font-size:13px; text-align:center; padding:30px; grid-column: 1 / -1;">⏳ Loading tracked real-world event clusters...</div>`;
+
+  try {
+    const url = `/events?limit=24${category !== 'all' ? `&category=${encodeURIComponent(category)}` : ''}`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    const events = data.events || [];
+
+    // Fetch categories if needed
+    try {
+      const catResp = await fetch('/events/categories');
+      if (catResp.ok) {
+        const catData = await catResp.json();
+        renderEventCategoryTabs(catData.categories || [], currentEventCategory);
+      }
+    } catch (e) {
+      console.warn('Failed loading event categories', e);
+    }
+
+    renderEventCards(events);
+  } catch (err) {
+    gridEl.innerHTML = `
+      <div style="color:var(--danger); font-size:13px; text-align:center; padding:30px; grid-column: 1 / -1;">
+        Failed to load tracked events. <button id="retry-events-btn" style="background:transparent; color:var(--primary); border:none; text-decoration:underline; cursor:pointer;">Retry</button>
+      </div>
+    `;
+    const retryBtn = $('retry-events-btn');
+    if (retryBtn) retryBtn.addEventListener('click', () => loadTrackedEvents(category));
+  }
+}
+
+function renderEventCategoryTabs(categories, activeCat) {
+  const tabsEl = $('events-category-tabs');
+  if (!tabsEl) return;
+  tabsEl.innerHTML = '';
+
+  const allChip = document.createElement('button');
+  allChip.className = 'news-tab-chip' + (activeCat === 'all' ? ' active' : '');
+  allChip.textContent = '🌐 All Events';
+  allChip.addEventListener('click', () => loadTrackedEvents('all'));
+  tabsEl.appendChild(allChip);
+
+  categories.forEach(cat => {
+    const chip = document.createElement('button');
+    chip.className = 'news-tab-chip' + (activeCat.toLowerCase() === cat.toLowerCase() ? ' active' : '');
+    chip.textContent = cat;
+    chip.addEventListener('click', () => loadTrackedEvents(cat));
+    tabsEl.appendChild(chip);
+  });
+}
+
+function renderEventCards(events) {
+  const gridEl = $('events-cards-grid');
+  if (!gridEl) return;
+  gridEl.innerHTML = '';
+
+  if (!events || !events.length) {
+    gridEl.innerHTML = `
+      <div style="color:var(--muted); font-size:13px; text-align:center; padding:30px; grid-column: 1 / -1;">
+        No tracked news events recorded yet in this category. Click 'Refresh Events' to run event clustering.
+      </div>
+    `;
+    return;
+  }
+
+  const catIcons = {
+    'Artificial Intelligence': '🤖', 'Technology': '💻', 'Cricket': '🏏', 'Sports': '⚽',
+    'Agriculture': '🌾', 'Economy': '📈', 'Business': '💼', 'Science': '🔬',
+    'Healthcare': '🏥', 'Cybersecurity': '🛡️', 'Startups': '🚀', 'Politics': '🏛️',
+    'Environment': '🌱', 'Education': '🎓', 'Entertainment': '🎬', 'Employment': '👥',
+    'National News': '📰', 'International News': '🌍'
+  };
+
+  events.forEach(evt => {
+    const card = document.createElement('div');
+    card.className = 'event-card';
+    const icon = catIcons[evt.event_category] || '⏳';
+    const statusClass = `status-${(evt.current_status || 'developing').toLowerCase()}`;
+    const dateRange = (evt.event_start_date && evt.last_updated && evt.event_start_date !== evt.last_updated)
+      ? `${evt.event_start_date} → ${evt.last_updated}`
+      : (evt.last_updated || evt.event_start_date || 'Recent');
+
+    card.innerHTML = `
+      <div>
+        <div class="event-card-header">
+          <span class="news-cat-badge">${icon} ${escHtml(evt.event_category || 'General')}</span>
+          <span class="event-status-pill ${statusClass}">${escHtml(evt.current_status || 'Emerging')}</span>
+        </div>
+        <h4 class="event-card-title" title="${escHtml(evt.event_title)}">${escHtml(evt.event_title)}</h4>
+        <div class="event-card-desc">${escHtml(evt.event_description || 'Real-world evolving event cluster.')}</div>
+      </div>
+      <div>
+        <div class="event-card-footer">
+          <span>📚 ${evt.article_count} article${evt.article_count > 1 ? 's' : ''} • ${escHtml(dateRange)}</span>
+          <button class="news-ask-btn explore-timeline-btn" data-id="${escHtml(evt.event_id)}" style="background:rgba(0, 210, 255, 0.1); color:var(--accent2); border-color:rgba(0, 210, 255, 0.3);">
+            <span>⏱️ Timeline (${evt.article_count})</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    const btn = card.querySelector('.explore-timeline-btn');
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openEventTimelineModal(evt.event_id);
+    });
+
+    card.addEventListener('click', () => {
+      openEventTimelineModal(evt.event_id);
+    });
+
+    gridEl.appendChild(card);
+  });
+}
+
+let activeModalEvent = null;
+
+async function openEventTimelineModal(eventId) {
+  const modal = $('event-timeline-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+
+  $('modal-event-title').textContent = 'Loading event timeline...';
+  $('modal-event-category-badge').textContent = '...';
+  $('modal-event-status').textContent = 'Status: ...';
+  $('modal-event-dates').textContent = 'Dates: ...';
+  $('modal-event-count').textContent = '...';
+  $('modal-event-narrative').textContent = 'Synthesizing chronological progression...';
+  $('modal-timeline-flow').innerHTML = '<div style="color:var(--muted); font-size:13px; text-align:center; padding:20px;">⏳ Loading chronological milestones...</div>';
+
+  try {
+    const resp = await fetch(`/events/${encodeURIComponent(eventId)}/timeline`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    const evt = data.event;
+    activeModalEvent = evt;
+    const timeline = data.timeline || [];
+
+    $('modal-event-title').textContent = evt.event_title;
+    $('modal-event-category-badge').textContent = evt.event_category || 'News Event';
+    $('modal-event-status').innerHTML = `Status: <strong>${escHtml(evt.current_status || 'Developing')}</strong> (${Math.round((evt.status_confidence || 1.0) * 100)}% conf)`;
+    const dateRange = (evt.event_start_date && evt.last_updated && evt.event_start_date !== evt.last_updated)
+      ? `${evt.event_start_date} → ${evt.last_updated}`
+      : (evt.last_updated || evt.event_start_date || 'Recent');
+    $('modal-event-dates').textContent = `Active: ${dateRange}`;
+    $('modal-event-count').textContent = `${evt.article_count} verified articles`;
+
+    $('modal-event-narrative').innerHTML = `
+      <div style="font-weight:700; color:var(--accent2); margin-bottom:4px; font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">Synthesized Narrative & Turning Points</div>
+      <div>${escHtml(data.synthesized_narrative || evt.event_description || 'Evolving event tracking.')}</div>
+    `;
+
+    if (!timeline.length) {
+      $('modal-timeline-flow').innerHTML = '<div style="color:var(--muted); font-size:13px; text-align:center; padding:20px;">No milestones recorded yet.</div>';
+    } else {
+      $('modal-timeline-flow').innerHTML = timeline.map(item => `
+        <div class="event-timeline-step">
+          <span class="event-step-dot"></span>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; flex-wrap:wrap; gap:6px;">
+            <span class="event-step-badge">Seq #${item.event_sequence} • ${escHtml(item.development_type)}</span>
+            <span style="font-size:11px; color:var(--muted);">${escHtml(item.occurrence_date || item.publication_date || 'Date')}</span>
+          </div>
+          <div style="font-size:13.5px; font-weight:600; color:var(--text); margin-bottom:4px;">${escHtml(item.headline)}</div>
+          <div style="font-size:12px; color:var(--muted); line-height:1.45; margin-bottom:6px;">${escHtml(item.summary || item.content_snippet || '')}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--muted);">
+            <span>Source: <strong>${escHtml(item.source)}</strong></span>
+            ${item.source_url ? `<a href="${escHtml(item.source_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--primary); text-decoration:none;">View Original ↗</a>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+  } catch (err) {
+    $('modal-event-title').textContent = 'Error Loading Event';
+    $('modal-timeline-flow').innerHTML = `<div style="color:var(--danger); padding:20px; text-align:center;">Failed to load event timeline: ${escHtml(err.message)}</div>`;
+  }
+}
+
+function closeEventTimelineModal() {
+  const modal = $('event-timeline-modal');
+  if (modal) modal.style.display = 'none';
+  activeModalEvent = null;
+}
+
+// Wire modal buttons
+const modalCloseBtn = $('modal-close-btn');
+if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeEventTimelineModal);
+const modalCloseFooterBtn = $('modal-close-footer-btn');
+if (modalCloseFooterBtn) modalCloseFooterBtn.addEventListener('click', closeEventTimelineModal);
+const eventTimelineModal = $('event-timeline-modal');
+if (eventTimelineModal) {
+  eventTimelineModal.addEventListener('click', (e) => {
+    if (e.target === eventTimelineModal) closeEventTimelineModal();
+  });
+}
+
+const modalAnalyzeEventBtn = $('modal-analyze-event-btn');
+if (modalAnalyzeEventBtn) {
+  modalAnalyzeEventBtn.addEventListener('click', () => {
+    if (activeModalEvent) {
+      const q = `Analyze the evolution, turning points, and current status of event: "${activeModalEvent.event_title}". What were the initial announcements, what changed over time, and what is the latest state?`;
+      closeEventTimelineModal();
+      qInput.value = q;
+      autoResizeInput();
+      qInput.focus();
+      qInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const form = $('query-form');
+      if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+  });
+}
+
+// Wire refresh events button
+const refreshEventsBtn = $('refresh-events-btn');
+if (refreshEventsBtn) {
+  refreshEventsBtn.addEventListener('click', async () => {
+    refreshEventsBtn.disabled = true;
+    refreshEventsBtn.textContent = '🔄 Clustering...';
+    try {
+      const resp = await fetch('/events/cluster/refresh', { method: 'POST' });
+      if (resp.ok) {
+        const res = await resp.json();
+        showToast(`Event tracking refreshed! ${res.events_created} events created (${res.total_events} total).`);
+        await loadTrackedEvents(currentEventCategory);
+      } else {
+        showToast('Could not refresh event clustering.');
+      }
+    } catch (e) {
+      showToast('Error refreshing events: ' + e.message);
+    } finally {
+      refreshEventsBtn.disabled = false;
+      refreshEventsBtn.textContent = '🔄 Refresh Events';
+    }
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════════
    Phase 2: Smart Autocomplete Implementation
    ════════════════════════════════════════════════════════════════════ */
 let autocompleteItems = [];
@@ -4126,8 +4533,9 @@ async function loadAuthAndHistory() {
       }
     } catch (e) {}
 
-    // Load general news homepage for guest
+    // Load general news homepage and tracked events for guest
     loadNewsHomepage(false);
+    loadTrackedEvents('all');
     return;
   }
 
@@ -4151,8 +4559,9 @@ async function loadAuthAndHistory() {
       <button id="logout-btn" class="nav-btn" style="padding: 6px 12px; font-size: 12px;">Log Out</button>
     `;
 
-    // Load personalized news feed for authenticated user
+    // Load personalized news feed and tracked events for authenticated user
     loadNewsHomepage(true);
+    loadTrackedEvents('all');
 
     $('logout-btn').addEventListener('click', () => {
       stopAllPlayback();
@@ -4309,6 +4718,11 @@ async function openConversation(id, closeDrawerOnDone = true) {
 
     // Render full chronological conversation thread
     renderThread(activeMessages);
+    activeMessages.forEach((msg, idx) => {
+      if (msg.role === 'assistant' && Array.isArray(msg.components)) {
+        mountAdaptiveCharts(msg.components, idx);
+      }
+    });
     scrollToBottom();
 
     // Restore Persona Consensus Chart from the latest assistant turn in this conversation

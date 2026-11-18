@@ -439,6 +439,20 @@ def ingest_rss_feed(feed_info: Dict[str, Any], session: Session, max_articles: i
     if inserted > 0:
         session.commit()
         log.info("Ingested %d new articles from %s [%s]", inserted, source_name, default_cat)
+        # Incrementally cluster newly ingested articles into evolving event tracking
+        try:
+            from event_evolution_service import cluster_article_incrementally
+            new_articles = session.exec(
+                select(NewsArticle)
+                .where(NewsArticle.source == source_name)
+                .order_by(NewsArticle.id.desc())
+                .limit(inserted)
+            ).all()
+            for art in reversed(new_articles):
+                cluster_article_incrementally(art, session)
+            session.commit()
+        except Exception as cl_err:
+            log.warning("Incremental event clustering during RSS ingestion skipped: %s", cl_err)
 
     return inserted
 

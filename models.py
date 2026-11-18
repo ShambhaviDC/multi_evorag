@@ -101,6 +101,87 @@ class NewsArticle(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utc_now)
 
 
+# ── Temporal News Event Tracking & Evolution Models ──────────────────────────
+
+class NewsEvent(SQLModel, table=True):
+    """Tracked real-world news event evolving over time across multiple articles."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    event_id: str = Field(unique=True, index=True)
+    event_title: str = Field(index=True)
+    event_description: str
+    event_category: str = Field(index=True)
+    associated_topics: str = Field(default="[]")      # JSON list of sub-topics
+    involved_entities: str = Field(default="[]")      # JSON list of named entities (people, orgs, places)
+    primary_location: Optional[str] = Field(default=None, nullable=True)
+    event_start_date: Optional[str] = Field(default=None, index=True)
+    last_updated: Optional[str] = Field(default=None, index=True)
+    current_status: str = Field(default="Ongoing", index=True)  # Emerging, Ongoing, Developing, Resolved, Dormant, Unknown
+    status_confidence: float = Field(default=0.8)
+    event_summary: Optional[str] = Field(default=None, nullable=True)
+    article_count: int = Field(default=1)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now, sa_column_kwargs={"onupdate": utc_now})
+
+
+class EventArticleMapping(SQLModel, table=True):
+    """Mapping between an evolving event and a specific news article with chronological sequence."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    event_id: str = Field(index=True)
+    article_id: int = Field(foreign_key="newsarticle.id", index=True)
+    publication_date: str = Field(index=True)
+    occurrence_date: Optional[str] = Field(default=None, nullable=True)
+    event_sequence: int = Field(default=1)
+    similarity_score: float = Field(default=1.0)
+    association_confidence: float = Field(default=1.0)
+    development_type: str = Field(default="New development")  # Initial announcement, Policy modification, Correction, Conflict, etc.
+    created_at: datetime = Field(default_factory=utc_now)
+
+
+class EventRelationship(SQLModel, table=True):
+    """Explicit evidence-supported relationship between distinct events."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    source_event_id: str = Field(index=True)
+    target_event_id: str = Field(index=True)
+    relationship_type: str = Field(index=True)  # Related event, Follow-up, Consequence of, Part of broader event, Supersedes
+    confidence: float = Field(default=0.8)
+    description: Optional[str] = Field(default=None, nullable=True)
+    created_at: datetime = Field(default_factory=utc_now)
+
+
+class EventTimelineItem(BaseModel):
+    mapping_id: Optional[int] = None
+    article_id: int
+    headline: str
+    publication_date: str
+    occurrence_date: Optional[str] = None
+    source: str
+    url: str
+    development_type: str
+    development_description: str
+    association_confidence: float = 1.0
+
+
+class NewsEventRead(BaseModel):
+    id: Optional[int] = None
+    event_id: str
+    event_title: str
+    event_description: str
+    event_category: str
+    associated_topics: List[str] = []
+    involved_entities: List[str] = []
+    primary_location: Optional[str] = None
+    event_start_date: Optional[str] = None
+    last_updated: Optional[str] = None
+    current_status: str
+    status_confidence: float
+    event_summary: Optional[str] = None
+    article_count: int
+    created_at: datetime
+    updated_at: datetime
+    timeline: List[EventTimelineItem] = []
+    relationships: List[Dict[str, Any]] = []
+
+
 class NewsArticleRead(BaseModel):
     id: Optional[int] = None
     title: str

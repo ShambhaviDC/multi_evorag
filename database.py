@@ -62,6 +62,12 @@ def create_db_and_tables() -> None:
             if pp_cols and "preferred_subcategories_json" not in pp_cols:
                 conn.execute(text("ALTER TABLE personalizationprofile ADD COLUMN preferred_subcategories_json TEXT DEFAULT '[]'"))
                 conn.commit()
+
+            # Create unique index on eventarticlemapping to guarantee idempotency
+            conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS idx_event_article_unique ON eventarticlemapping (event_id, article_id)"))
+            # Create unique index on eventrelationship
+            conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS idx_event_rel_unique ON eventrelationship (source_event_id, target_event_id, relationship_type)"))
+            conn.commit()
     except Exception as e:
         pass
 

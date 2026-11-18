@@ -14,7 +14,7 @@ This module is imported by api.py (Phase 3) and by the persona engine (Phase 4).
 import logging
 import re
 from datetime import datetime, timezone
-from typing import List, Dict, Optional, Tuple
+from typing import Any, List, Dict, Optional, Tuple
 
 import httpx
 
@@ -522,6 +522,108 @@ def answer(query: str, top_k: int = RETRIEVAL_TOP_K) -> Dict:
     }
 
 
+
+
+def retrieve_temporal_event_context(
+    query: str,
+    session: Optional[Any] = None,
+    max_events: int = 1,
+) -> Dict[str, Any]:
+    """
+    Search and retrieve tracked evolving news event timelines and evolution history.
+    Provides chronological context, turning points, corrections, and latest state.
+    Gracefully returns empty dict if no relevant event cluster exists or on failure.
+    """
+    if not session:
+        return {}
+
+    try:
+        from sqlmodel import select
+        from models import NewsEvent
+        from event_evolution_service import get_event_timeline, generate_event_evolution_summary
+
+        # Clean search query
+        clean_q = re.sub(r"\b(what|when|why|how|the|is|are|in|on|at|latest|history|timeline|of|about)\b", "", query, flags=re.I).strip()
+        search_tokens = [t for t in clean_q.split() if len(t) > 2]
+        if not search_tokens:
+            search_tokens = [query.strip()]
+
+        # Query events by title, topic, or entity matching
+        stmt = select(NewsEvent)
+        events = session.exec(stmt).all()
+        if not events:
+            return {}
+
+        scored_events: List[Tuple[NewsEvent, float]] = []
+        lower_q = query.lower()
+
+        for evt in events:
+            score = 0.0
+            evt_title = evt.event_title.lower()
+            evt_entities = (evt.involved_entities or "").lower()
+            evt_topics = (evt.associated_topics or "").lower()
+
+            for tok in search_tokens:
+                t_lower = tok.lower()
+                if t_lower in evt_title:
+                    score += 3.0
+                if t_lower in evt_entities:
+                    score += 2.0
+                if t_lower in evt_topics:
+                    score += 1.0
+
+            if score > 0.0:
+                # Bonus for multi-article evolving events
+                score += min(2.0, evt.article_count * 0.5)
+                scored_events.append((evt, score))
+
+        if not scored_events:
+            return {}
+
+        scored_events.sort(key=lambda x: x[1], reverse=True)
+        top_event = scored_events[0][0]
+
+        summary_data = generate_event_evolution_summary(top_event.event_id, session)
+        timeline = summary_data.get("timeline", [])
+
+        # Build clean formatted text block for persona matrix injection
+        lines = [
+            f"=== TRACKED REAL-WORLD EVENT EVOLUTION: '{top_event.event_title}' ===",
+            f"Category: {top_event.event_category} | Current Status: {top_event.current_status} (Confidence: {int(top_event.status_confidence*100)}%)",
+            f"Active Period: {top_event.event_start_date or 'Initial'} -> {top_event.last_updated or 'Latest'}",
+            "",
+            "CHRONOLOGICAL EVENT TIMELINE & DEVELOPMENTS:",
+        ]
+        for item in timeline:
+            lines.append(
+                f"- [Seq #{item['event_sequence']} | {item['occurrence_date']} | {item['development_type']}] "
+                f"{item['headline']} (Source: {item['source']})"
+            )
+        lines.append("")
+        lines.append("EVOLUTION & TURNING POINTS NARRATIVE:")
+        lines.append(summary_data.get("synthesized_narrative", top_event.event_description))
+        lines.append("=" * 65)
+
+        return {
+            "has_event": True,
+            "event_id": top_event.event_id,
+            "event_title": top_event.event_title,
+            "category": top_event.event_category,
+            "status": top_event.current_status,
+            "status_confidence": top_event.status_confidence,
+            "start_date": top_event.event_start_date,
+            "last_updated": top_event.last_updated,
+            "article_count": top_event.article_count,
+            "context_text": "\n".join(lines),
+            "summary_data": summary_data,
+            "timeline": timeline,
+        }
+
+    except Exception as e:
+        log.warning("Temporal event retrieval bypassed due to error: %s", e)
+        return {}
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # 6. END-TO-END — async version (used by FastAPI)
 # ══════════════════════════════════════════════════════════════════════════════
@@ -559,3 +661,5 @@ async def answer_async(query: str, top_k: int = RETRIEVAL_TOP_K) -> Dict:
         "answer":  answer_text,
         "sources": sources,
     }
+
+

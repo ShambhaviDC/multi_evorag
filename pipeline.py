@@ -14,7 +14,7 @@ from input_understanding_agent import understand_user_query
 from personas import run_all_personas
 from query_models import StructuredQuery, UIComponent
 from response_planner import plan_adaptive_response
-from retriever import evaluate_retrieval, retrieve
+from retriever import evaluate_retrieval, retrieve, retrieve_temporal_event_context
 from score_store import append_score_entry
 from synthesis import select_top_personas, synthesize_top_k
 from utils import call_gemini_async, word_count
@@ -208,6 +208,35 @@ async def evorag_query(
                 if not any(c.get("url") == ec.get("url") for c in chunks):
                     chunks.append(ec)
 
+    # Step 2b: Temporal Event Evolution Context Retrieval
+    temporal_context: Dict[str, Any] = {}
+    try:
+        if session is not None:
+            temporal_context = retrieve_temporal_event_context(query, session=session)
+        else:
+            from database import get_session
+            with get_session() as s:
+                temporal_context = retrieve_temporal_event_context(query, session=s)
+    except Exception as t_err:
+        log.warning("Temporal event retrieval check failed: %s", t_err)
+
+    if temporal_context.get("has_event"):
+        log.info(
+            "Found tracked evolving event for query: '%s' (articles=%d, status=%s)",
+            temporal_context.get("event_title"),
+            temporal_context.get("article_count", 0),
+            temporal_context.get("status"),
+        )
+        # Prepend the event timeline context as high-priority grounded evidence
+        chunks.insert(0, {
+            "title": f"Timeline & Evolution: {temporal_context['event_title']}",
+            "text": temporal_context["context_text"],
+            "url": f"/events/{temporal_context['event_id']}",
+            "source": "EvoRAG Temporal Tracker",
+            "score": 1.0,
+            "published_at": temporal_context.get("last_updated") or "",
+        })
+
     # Check sufficiency of retrieved chunks
     is_sufficient, reason = evaluate_retrieval(query, chunks)
 
@@ -381,6 +410,32 @@ async def evorag_query(
             attachments=attachments,
         )
 
+        # Inject high-fidelity timeline component if temporal event tracked and not already present
+        if temporal_context.get("has_event") and temporal_context.get("timeline"):
+            has_timeline_comp = any(c.type == "timeline" for c in components)
+            if not has_timeline_comp:
+                timeline_events = [
+                    {
+                        "date": item.get("occurrence_date") or item.get("publication_date") or "Milestone",
+                        "title": f"[{item.get('development_type', 'Update')}] {item.get('headline')}",
+                        "label": f"[{item.get('development_type', 'Update')}] {item.get('headline')}",
+                        "description": f"{item.get('summary') or item.get('content_snippet', '')} (Source: {item.get('source', 'News')})",
+                        "details": f"{item.get('summary') or item.get('content_snippet', '')} (Source: {item.get('source', 'News')})",
+                        "source": item.get("source", "News"),
+                    }
+                    for item in temporal_context["timeline"]
+                ]
+                components.insert(0, UIComponent(
+                    type="timeline",
+                    title=f"Tracked Event Timeline: {temporal_context['event_title']}",
+                    data={
+                        "events": timeline_events,
+                        "status": temporal_context.get("status"),
+                        "event_id": temporal_context.get("event_id"),
+                        "article_count": temporal_context.get("article_count", len(timeline_events)),
+                    }
+                ))
+
         return {
             "final_answer": final_answer,
             "components": [c.model_dump() for c in components],
@@ -397,6 +452,7 @@ async def evorag_query(
                 "reason": reason,
                 "fallback_used": requires_gemini,
             },
+            "temporal_event": temporal_context if temporal_context.get("has_event") else None,
             "personalization_summary": pers_summary if is_personalized else "",
             "applied_personalization": {
                 "is_personalized": is_personalized,
@@ -451,6 +507,32 @@ async def evorag_query(
         attachments=attachments,
     )
 
+    # Inject high-fidelity timeline component if temporal event tracked and not already present
+    if temporal_context.get("has_event") and temporal_context.get("timeline"):
+        has_timeline_comp = any(c.type == "timeline" for c in components)
+        if not has_timeline_comp:
+            timeline_events = [
+                {
+                    "date": item.get("occurrence_date") or item.get("publication_date") or "Milestone",
+                    "title": f"[{item.get('development_type', 'Update')}] {item.get('headline')}",
+                    "label": f"[{item.get('development_type', 'Update')}] {item.get('headline')}",
+                    "description": f"{item.get('summary') or item.get('content_snippet', '')} (Source: {item.get('source', 'News')})",
+                    "details": f"{item.get('summary') or item.get('content_snippet', '')} (Source: {item.get('source', 'News')})",
+                    "source": item.get("source", "News"),
+                }
+                for item in temporal_context["timeline"]
+            ]
+            components.insert(0, UIComponent(
+                type="timeline",
+                title=f"Tracked Event Timeline: {temporal_context['event_title']}",
+                data={
+                    "events": timeline_events,
+                    "status": temporal_context.get("status"),
+                    "event_id": temporal_context.get("event_id"),
+                    "article_count": temporal_context.get("article_count", len(timeline_events)),
+                }
+            ))
+
     return {
         "final_answer": final_answer,
         "components": [c.model_dump() for c in components],
@@ -472,6 +554,7 @@ async def evorag_query(
             "reason": reason,
             "fallback_used": False,
         },
+        "temporal_event": temporal_context if temporal_context.get("has_event") else None,
         "personalization_summary": pers_summary if is_personalized else "",
         "applied_personalization": {
             "is_personalized": is_personalized,

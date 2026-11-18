@@ -219,8 +219,14 @@ def _deterministic_intent_classification(
             primary_format="comparison_table",
             additional_formats=["comparison_chart", "text_summary", "source_list"]
         )
-    # 5. Timeline / Chronological query
-    elif any(k in lower_q for k in ["timeline", "history", "chronology", "evolution of", "milestones", "over time", "roadmap"]):
+    # 5. Timeline / Chronological / Event Evolution query
+    is_temporal = any(k in lower_q for k in [
+        "timeline", "history", "chronology", "evolution", "evolved", "milestones",
+        "over time", "roadmap", "what happened initially", "latest developments",
+        "what changed", "changes in", "turning points", "current status",
+        "how did this start", "progression", "subsequent", "initially", "after the announcement"
+    ])
+    if is_temporal:
         intent = "timeline_generation"
         category = "historical"
         flags["requires_news_retrieval"] = True
@@ -270,6 +276,7 @@ def _deterministic_intent_classification(
         requires_latest_information=requires_latest,
         requires_source_citations=True,
         temporal_focus=temporal_focus,
+        is_temporal_evolution=is_temporal,
     )
 
     return intent, category, output_plan, constraints, flags, requested_info

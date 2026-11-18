@@ -20,6 +20,8 @@ class QueryConstraints(BaseModel):
     requires_latest_information: bool = Field(default=False)
     requires_source_citations: bool = Field(default=True)
     temporal_focus: Optional[str] = Field(default=None, description="e.g. 2026, latest, historical, Q3")
+    is_temporal_evolution: bool = Field(default=False, description="True if query asks for event progression, history, turning points, or evolution")
+    event_id: Optional[str] = Field(default=None, description="Explicit referenced event ID if matched")
 
 
 class OutputPlan(BaseModel):
