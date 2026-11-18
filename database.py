@@ -36,14 +36,33 @@ def create_db_and_tables() -> None:
     try:
         from sqlalchemy import text
         with engine.connect() as conn:
-            columns = [row[1] for row in conn.execute(text("PRAGMA table_info(message)")).fetchall()]
-            if columns and "sources_json" not in columns:
+            # message table
+            msg_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(message)")).fetchall()]
+            if msg_cols and "sources_json" not in msg_cols:
                 conn.execute(text("ALTER TABLE message ADD COLUMN sources_json TEXT"))
                 conn.commit()
-            if columns and "components_json" not in columns:
+            if msg_cols and "components_json" not in msg_cols:
                 conn.execute(text("ALTER TABLE message ADD COLUMN components_json TEXT"))
                 conn.commit()
-    except Exception:
+
+            # userpreference table
+            up_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(userpreference)")).fetchall()]
+            if up_cols and "preferred_categories_json" not in up_cols:
+                conn.execute(text("ALTER TABLE userpreference ADD COLUMN preferred_categories_json TEXT DEFAULT '[]'"))
+                conn.commit()
+            if up_cols and "preferred_subcategories_json" not in up_cols:
+                conn.execute(text("ALTER TABLE userpreference ADD COLUMN preferred_subcategories_json TEXT DEFAULT '[]'"))
+                conn.commit()
+
+            # personalizationprofile table
+            pp_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(personalizationprofile)")).fetchall()]
+            if pp_cols and "onboarding_completed" not in pp_cols:
+                conn.execute(text("ALTER TABLE personalizationprofile ADD COLUMN onboarding_completed BOOLEAN DEFAULT 0"))
+                conn.commit()
+            if pp_cols and "preferred_subcategories_json" not in pp_cols:
+                conn.execute(text("ALTER TABLE personalizationprofile ADD COLUMN preferred_subcategories_json TEXT DEFAULT '[]'"))
+                conn.commit()
+    except Exception as e:
         pass
 
 

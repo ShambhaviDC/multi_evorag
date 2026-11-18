@@ -86,12 +86,14 @@ from preferences import router as preferences_router
 from recommendations import router as recommendations_router
 from personalization_api import router as personalization_router
 from personalization_agent import update_user_interests_incremental
+from news_api import router as news_router
 
 app.include_router(auth_router)
 app.include_router(conversations_router)
 app.include_router(preferences_router)
 app.include_router(recommendations_router)
 app.include_router(personalization_router)
+app.include_router(news_router)
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse

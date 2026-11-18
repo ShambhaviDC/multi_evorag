@@ -1911,6 +1911,263 @@
       .active-chat-bar { flex-direction: column; align-items: flex-start; }
       .active-chat-actions { width: 100%; justify-content: flex-end; }
     }
+    /* ── Phase 2: Live News Discovery & Autocomplete Styles ──────── */
+    .news-homepage-section {
+      width: 100%;
+      max-width: 1100px;
+      margin: 32px auto 0;
+      text-align: left;
+    }
+    .news-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .news-header-left h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .news-feed-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .news-action-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .news-action-btn:hover {
+      background: var(--surface);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .news-tabs-wrap {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      margin-bottom: 18px;
+      scrollbar-width: thin;
+    }
+    .news-tab-chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .news-tab-chip:hover {
+      color: var(--text);
+      border-color: rgba(108, 99, 255, 0.4);
+    }
+    .news-tab-chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 2px 10px rgba(108, 99, 255, 0.35);
+    }
+    .news-articles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .news-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .news-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(108, 99, 255, 0.4);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+    .news-card-img-wrap {
+      width: 100%;
+      height: 140px;
+      background: var(--surface2);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .news-card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .news-card-img-fallback {
+      font-size: 38px;
+      opacity: 0.6;
+    }
+    .news-card-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .news-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 11px;
+    }
+    .news-cat-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 10.5px;
+      font-weight: 600;
+      background: rgba(108, 99, 255, 0.12);
+      color: #a78bfa;
+      border: 1px solid rgba(108, 99, 255, 0.25);
+    }
+    .news-source-tag {
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .news-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.4;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .news-card-snippet {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+      margin-bottom: 14px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1;
+    }
+    .news-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .news-ask-btn {
+      background: rgba(108, 99, 255, 0.12);
+      border: 1px solid rgba(108, 99, 255, 0.3);
+      color: #c4b5fd;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .news-ask-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .news-read-link {
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      transition: color 0.2s;
+    }
+    .news-read-link:hover {
+      color: var(--text);
+      text-decoration: underline;
+    }
+
+    /* ── Autocomplete Dropdown Popover ───────────────────────────── */
+    .autocomplete-dropdown {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 0;
+      right: 0;
+      max-height: 280px;
+      overflow-y: auto;
+      background: #15151e;
+      border: 1.5px solid #2d2d42;
+      border-radius: 14px;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      padding: 4px 0;
+      backdrop-filter: blur(12px);
+    }
+    .autocomplete-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 13.5px;
+      color: var(--text);
+      transition: background 0.15s;
+    }
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+    .autocomplete-item:hover, .autocomplete-item.active {
+      background: rgba(108, 99, 255, 0.18);
+      color: #fff;
+    }
+    .autocomplete-match {
+      color: #a78bfa;
+      font-weight: 700;
+    }
+    .autocomplete-type-pill {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-weight: 500;
+    }
   </style>
   <script src="/static/auth.js"></script>
 </head>
@@ -1995,6 +2252,31 @@
         <span class="chip-btn-icon">⚛️</span>
         <span>Recent breakthroughs in quantum error correction</span>
       </button>
+    </div>
+
+    <!-- ── Phase 2: Live News Discovery & Personalized Feed ── -->
+    <div id="news-homepage-section" class="news-homepage-section">
+      <div class="news-section-header">
+        <div class="news-header-left">
+          <h2 id="news-feed-heading">📰 Real-Time News Discovery</h2>
+          <span id="news-feed-subtitle" class="news-feed-subtitle">Live real-world news &amp; intelligence across 18 major domains</span>
+        </div>
+        <div class="news-header-actions">
+          <button id="refresh-news-btn" class="news-action-btn" title="Refresh live news feeds">🔄 Refresh Feeds</button>
+        </div>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div id="news-category-tabs" class="news-tabs-wrap">
+        <button class="news-tab-chip active" data-category="all">🌐 All Categories</button>
+      </div>
+
+      <!-- News Articles Grid -->
+      <div id="news-articles-grid" class="news-articles-grid">
+        <div style="color:var(--muted); font-size:13px; text-align:center; padding:30px; grid-column: 1 / -1;">
+          Loading real-time news articles...
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2129,7 +2411,10 @@
     </div>
 
     <!-- Input Capsule -->
-    <div class="chat-input-capsule">
+    <div class="chat-input-capsule" style="position:relative;">
+      <!-- Autocomplete Dropdown (Phase 2 Smart Autocomplete) -->
+      <div id="autocomplete-dropdown" class="autocomplete-dropdown" style="display:none;" role="listbox"></div>
+
       <!-- Paperclip File Attachment Button (Phase 7) -->
       <input type="file" id="file-picker" multiple style="display:none;" accept=".pdf,.docx,.txt,.md,.csv,.xlsx,.png,.jpg,.jpeg">
       <button id="attach-btn" type="button" class="dock-attach-btn" title="Attach files (PDF, DOCX, TXT, CSV, XLSX, Images)" aria-label="Attach files">
@@ -3027,6 +3312,7 @@ function startNewChat() {
   activeMessages = [];
   try {
     sessionStorage.removeItem(getActiveConvStorageKey());
+    sessionStorage.removeItem('evorag_guest_messages');
   } catch (e) {}
 
   updateActiveChatBar('New Research Chat', 0, null);
@@ -3436,6 +3722,383 @@ function renderThread(messages) {
   });
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   Phase 2: Live News Discovery & Personalized Feed Implementation
+   ════════════════════════════════════════════════════════════════════ */
+let currentNewsCategory = 'all';
+let currentNewsData = null;
+
+async function loadNewsHomepage(isAuth = false, category = 'all') {
+  currentNewsCategory = category;
+  const gridEl = $('news-articles-grid');
+  const tabsEl = $('news-category-tabs');
+  const headingEl = $('news-feed-heading');
+  const subtitleEl = $('news-feed-subtitle');
+  if (!gridEl || !tabsEl) return;
+
+  gridEl.innerHTML = `<div style="color:var(--muted); font-size:13px; text-align:center; padding:30px; grid-column: 1 / -1;">⏳ Loading real-time news articles...</div>`;
+
+  const token = window.EvoRAG ? window.EvoRAG.getToken() : localStorage.getItem('evorag_token');
+  const endpoint = (isAuth && token)
+    ? `/news/personalized${category !== 'all' ? `?category=${encodeURIComponent(category)}` : ''}`
+    : `/news/homepage${category !== 'all' ? `?category=${encodeURIComponent(category)}` : ''}`;
+
+  try {
+    const headers = (isAuth && token) ? { 'Authorization': `Bearer ${token}` } : {};
+    const resp = await fetch(endpoint, { headers });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      if (err.onboarding_required) {
+        window.location.href = '/static/onboarding.html?mandatory=1';
+        return;
+      }
+      throw new Error(`HTTP ${resp.status}`);
+    }
+    const data = await resp.json();
+    currentNewsData = data;
+
+    if (data.is_personalized) {
+      headingEl.innerHTML = `✨ Your Personalized News Feed`;
+      const prefList = (data.user_preferred_categories || []).join(', ') || 'Selected topics';
+      subtitleEl.textContent = `Curated based on your selected interests: ${prefList}`;
+    } else {
+      headingEl.innerHTML = `📰 Real-Time News Discovery`;
+      subtitleEl.textContent = `Live real-world news & intelligence across 18 major domains`;
+    }
+
+    // Render category tabs
+    renderNewsTabs(data.categories || [], category, isAuth);
+
+    // Extract articles to display
+    let articlesToRender = [];
+    if (data.articles && data.articles.length) {
+      articlesToRender = data.articles;
+    } else if (data.sections) {
+      const seenIds = new Set();
+      const order = [
+        'for_you', 'latest_developments', 'top_headlines', 'latest_news',
+        'technology_ai', 'sports_cricket', 'agriculture', 'business_economy',
+        'science_health', 'national_world', 'explore_other_topics'
+      ];
+      order.forEach(sec => {
+        if (data.sections[sec]) {
+          data.sections[sec].forEach(a => {
+            if (!seenIds.has(a.id)) {
+              seenIds.add(a.id);
+              articlesToRender.push(a);
+            }
+          });
+        }
+      });
+      Object.keys(data.sections).forEach(sec => {
+        if (!order.includes(sec)) {
+          data.sections[sec].forEach(a => {
+            if (!seenIds.has(a.id)) {
+              seenIds.add(a.id);
+              articlesToRender.push(a);
+            }
+          });
+        }
+      });
+    }
+
+    renderNewsCards(articlesToRender);
+
+  } catch (e) {
+    gridEl.innerHTML = `
+      <div style="color:var(--error); font-size:13px; text-align:center; padding:30px; grid-column: 1 / -1;">
+        Could not load news feeds (${e.message}).
+        <button id="retry-news-btn" class="news-action-btn" style="margin-left:8px;">Retry</button>
+      </div>
+    `;
+    const retryBtn = $('retry-news-btn');
+    if (retryBtn) retryBtn.addEventListener('click', () => loadNewsHomepage(isAuth, category));
+  }
+}
+
+function renderNewsTabs(categories, activeCat, isAuth) {
+  const tabsEl = $('news-category-tabs');
+  if (!tabsEl) return;
+  tabsEl.innerHTML = '';
+
+  const allChip = document.createElement('button');
+  allChip.className = 'news-tab-chip' + (activeCat === 'all' ? ' active' : '');
+  allChip.textContent = isAuth ? '✨ For You / All' : '🌐 All Categories';
+  allChip.addEventListener('click', () => loadNewsHomepage(isAuth, 'all'));
+  tabsEl.appendChild(allChip);
+
+  categories.forEach(cat => {
+    const chip = document.createElement('button');
+    chip.className = 'news-tab-chip' + (activeCat.toLowerCase() === cat.toLowerCase() ? ' active' : '');
+    chip.textContent = cat;
+    chip.addEventListener('click', () => loadNewsHomepage(isAuth, cat));
+    tabsEl.appendChild(chip);
+  });
+}
+
+function renderNewsCards(articles) {
+  const gridEl = $('news-articles-grid');
+  if (!gridEl) return;
+  gridEl.innerHTML = '';
+
+  if (!articles || !articles.length) {
+    gridEl.innerHTML = `
+      <div style="color:var(--muted); font-size:13px; text-align:center; padding:30px; grid-column: 1 / -1;">
+        No articles found for this category. Click another category or refresh feeds.
+      </div>
+    `;
+    return;
+  }
+
+  const catIcons = {
+    'Artificial Intelligence': '🤖', 'Technology': '💻', 'Cricket': '🏏', 'Sports': '⚽',
+    'Agriculture': '🌾', 'Economy': '📈', 'Business': '💼', 'Science': '🔬',
+    'Healthcare': '🏥', 'Cybersecurity': '🛡️', 'Startups': '🚀', 'Politics': '🏛️',
+    'Environment': '🌱', 'Education': '🎓', 'Entertainment': '🎬', 'Employment': '👥',
+    'National News': '📰', 'International News': '🌍'
+  };
+
+  articles.slice(0, 24).forEach(art => {
+    const card = document.createElement('div');
+    card.className = 'news-card';
+    const icon = catIcons[art.category] || '📰';
+    const timeAgo = formatRelativeTime(art.published_at);
+
+    let imgHtml = '';
+    if (art.image_url && art.image_url.startsWith('http')) {
+      imgHtml = `<img src="${escHtml(art.image_url)}" alt="${escHtml(art.title)}" class="news-card-img" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\\'news-card-img-fallback\\'>${icon}</span>';">`;
+    } else {
+      imgHtml = `<span class="news-card-img-fallback">${icon}</span>`;
+    }
+
+    card.innerHTML = `
+      <div class="news-card-img-wrap">
+        ${imgHtml}
+      </div>
+      <div class="news-card-body">
+        <div class="news-card-meta">
+          <span class="news-cat-badge">${icon} ${escHtml(art.category)}</span>
+          <span class="news-source-tag">${escHtml(art.source || 'News')} • ${escHtml(timeAgo || 'Recent')}</span>
+        </div>
+        <div class="news-card-title" title="${escHtml(art.title)}">${escHtml(art.title)}</div>
+        <div class="news-card-snippet">${escHtml(art.snippet || '')}</div>
+        <div class="news-card-footer">
+          <button class="news-ask-btn" title="Analyze this article with EvoRAG multi-persona consensus">
+            <span>🔍 Ask EvoRAG</span>
+          </button>
+          <a href="${escHtml(art.url)}" target="_blank" rel="noopener noreferrer" class="news-read-link">Read Source ↗</a>
+        </div>
+      </div>
+    `;
+
+    const askBtn = card.querySelector('.news-ask-btn');
+    askBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      qInput.value = `Analyze this ${art.category} news development: "${art.title}". What are the key implications, risks, and verified facts?`;
+      autoResizeInput();
+      qInput.focus();
+      qInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    gridEl.appendChild(card);
+  });
+}
+
+// Wire refresh button
+const refreshNewsBtn = $('refresh-news-btn');
+if (refreshNewsBtn) {
+  refreshNewsBtn.addEventListener('click', async () => {
+    refreshNewsBtn.disabled = true;
+    refreshNewsBtn.textContent = '🔄 Ingesting...';
+    try {
+      const resp = await fetch('/news/refresh', { method: 'POST' });
+      if (resp.ok) {
+        showToast('Fresh real-time news ingested!');
+        const token = window.EvoRAG ? window.EvoRAG.getToken() : localStorage.getItem('evorag_token');
+        await loadNewsHomepage(!!token, currentNewsCategory);
+      } else {
+        showToast('Could not refresh feeds.');
+      }
+    } catch (e) {
+      showToast('Error refreshing news: ' + e.message);
+    } finally {
+      refreshNewsBtn.disabled = false;
+      refreshNewsBtn.textContent = '🔄 Refresh Feeds';
+    }
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Phase 2: Smart Autocomplete Implementation
+   ════════════════════════════════════════════════════════════════════ */
+let autocompleteItems = [];
+let autocompleteSelectedIndex = -1;
+let autocompleteDebounceTimer = null;
+let activeTokenInfo = null;
+
+function initAutocomplete() {
+  const dropdown = $('autocomplete-dropdown');
+  if (!dropdown) return;
+
+  qInput.addEventListener('input', () => {
+    clearTimeout(autocompleteDebounceTimer);
+    const text = qInput.value;
+    if (!text || text.trim().length === 0) {
+      hideAutocomplete();
+      return;
+    }
+
+    autocompleteDebounceTimer = setTimeout(async () => {
+      try {
+        const resp = await fetch(`/autocomplete?q=${encodeURIComponent(text)}`);
+        if (!resp.ok) {
+          hideAutocomplete();
+          return;
+        }
+        const data = await resp.json();
+        if (data.suggestions && data.suggestions.length > 0) {
+          activeTokenInfo = {
+            token: data.token,
+            start_idx: data.start_idx,
+            end_idx: data.end_idx
+          };
+          renderAutocomplete(data.suggestions);
+        } else {
+          hideAutocomplete();
+        }
+      } catch (err) {
+        hideAutocomplete();
+      }
+    }, 200);
+  });
+
+  qInput.addEventListener('keydown', (e) => {
+    const dropdown = $('autocomplete-dropdown');
+    if (dropdown && dropdown.style.display !== 'none' && autocompleteItems.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        autocompleteSelectedIndex = (autocompleteSelectedIndex + 1) % autocompleteItems.length;
+        updateAutocompleteSelection();
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        autocompleteSelectedIndex = (autocompleteSelectedIndex - 1 + autocompleteItems.length) % autocompleteItems.length;
+        updateAutocompleteSelection();
+        return;
+      }
+      if (e.key === 'Enter' && !e.shiftKey) {
+        if (autocompleteSelectedIndex >= 0 && autocompleteSelectedIndex < autocompleteItems.length) {
+          e.preventDefault();
+          e.stopPropagation();
+          applyAutocomplete(autocompleteItems[autocompleteSelectedIndex]);
+          return;
+        }
+      }
+      if (e.key === 'Escape') {
+        hideAutocomplete();
+        return;
+      }
+    }
+  }, true);
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#autocomplete-dropdown') && !e.target.closest('#query-input')) {
+      hideAutocomplete();
+    }
+  });
+}
+
+function renderAutocomplete(suggestions) {
+  const dropdown = $('autocomplete-dropdown');
+  if (!dropdown) return;
+  dropdown.innerHTML = '';
+  autocompleteItems = suggestions;
+  autocompleteSelectedIndex = -1;
+
+  const typeIcons = {
+    'category': '🏷️ Category',
+    'subcategory': '🔖 Topic',
+    'entity': '💡 Entity',
+    'trending': '🔥 Trending',
+    'news': '📰 News',
+    'topic': '📌 Topic'
+  };
+
+  suggestions.forEach((s, idx) => {
+    const itemEl = document.createElement('div');
+    itemEl.className = 'autocomplete-item';
+    itemEl.setAttribute('role', 'option');
+
+    const typeLabel = typeIcons[s.type] || '🔍 Suggestion';
+    itemEl.innerHTML = `
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-weight:500;">${escHtml(s.text)}</span>
+        ${s.category ? `<span style="font-size:11px; color:var(--muted);">(${escHtml(s.category)})</span>` : ''}
+      </div>
+      <span class="autocomplete-type-pill">${escHtml(typeLabel)}</span>
+    `;
+
+    itemEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      applyAutocomplete(s);
+    });
+
+    itemEl.addEventListener('mouseenter', () => {
+      autocompleteSelectedIndex = idx;
+      updateAutocompleteSelection();
+    });
+
+    dropdown.appendChild(itemEl);
+  });
+
+  dropdown.style.display = 'flex';
+}
+
+function updateAutocompleteSelection() {
+  const dropdown = $('autocomplete-dropdown');
+  if (!dropdown) return;
+  const items = dropdown.querySelectorAll('.autocomplete-item');
+  items.forEach((it, idx) => {
+    if (idx === autocompleteSelectedIndex) {
+      it.classList.add('active');
+      it.scrollIntoView({ block: 'nearest' });
+    } else {
+      it.classList.remove('active');
+    }
+  });
+}
+
+function hideAutocomplete() {
+  const dropdown = $('autocomplete-dropdown');
+  if (dropdown) dropdown.style.display = 'none';
+  autocompleteItems = [];
+  autocompleteSelectedIndex = -1;
+}
+
+function applyAutocomplete(item) {
+  if (!activeTokenInfo || !item || !item.text) {
+    hideAutocomplete();
+    return;
+  }
+  const original = qInput.value;
+  const start = activeTokenInfo.start_idx !== undefined ? activeTokenInfo.start_idx : 0;
+  const end = activeTokenInfo.end_idx !== undefined ? activeTokenInfo.end_idx : original.length;
+
+  const before = original.slice(0, start);
+  const after = original.slice(end);
+
+  const updated = before + item.text + (after.startsWith(' ') || after === '' ? '' : ' ') + after;
+  qInput.value = updated;
+  autoResizeInput();
+
+  const newCursorPos = (before + item.text + (after.startsWith(' ') || after === '' ? '' : ' ')).length;
+  qInput.setSelectionRange(newCursorPos, newCursorPos);
+  qInput.focus();
+
+  hideAutocomplete();
+}
+
 async function loadAuthAndHistory() {
   const token = window.EvoRAG ? window.EvoRAG.getToken() : localStorage.getItem('evorag_token');
   const userContainer = $('nav-user-container');
@@ -3450,6 +4113,21 @@ async function loadAuthAndHistory() {
     historyCount.textContent = '0';
     drawerCount.textContent = '0';
     if (recContainer) recContainer.style.display = 'none';
+
+    // Restore guest session chat if present
+    try {
+      const guestMsgs = sessionStorage.getItem('evorag_guest_messages');
+      if (guestMsgs) {
+        const parsed = JSON.parse(guestMsgs);
+        if (Array.isArray(parsed) && parsed.length) {
+          activeMessages = parsed;
+          renderThread(activeMessages);
+        }
+      }
+    } catch (e) {}
+
+    // Load general news homepage for guest
+    loadNewsHomepage(false);
     return;
   }
 
@@ -3460,12 +4138,21 @@ async function loadAuthAndHistory() {
     if (!meResp.ok) throw new Error('Invalid token');
     currentUser = await meResp.json();
 
+    // Check mandatory onboarding requirement
+    if (currentUser && currentUser.onboarding_completed === false) {
+      window.location.href = '/static/onboarding.html?mandatory=1';
+      return;
+    }
+
     const displayName = currentUser.full_name || currentUser.email.split('@')[0];
     userContainer.innerHTML = `
       <div class="nav-user-badge">👤 <strong>${escHtml(displayName)}</strong></div>
       <a href="/static/onboarding.html" class="nav-link-btn" title="Preferences & Profile">Preferences</a>
       <button id="logout-btn" class="nav-btn" style="padding: 6px 12px; font-size: 12px;">Log Out</button>
     `;
+
+    // Load personalized news feed for authenticated user
+    loadNewsHomepage(true);
 
     $('logout-btn').addEventListener('click', () => {
       stopAllPlayback();
@@ -4230,6 +4917,13 @@ async function runQuery() {
     renderThread(activeMessages);
     scrollToBottom();
 
+    // Persist to guest session storage if unauthenticated
+    if (!token) {
+      try {
+        sessionStorage.setItem('evorag_guest_messages', JSON.stringify(activeMessages));
+      } catch (e) {}
+    }
+
     // 4. Persist assistant message to active conversation
     if (token && activeConversationId && data.final_answer) {
       await fetch(`/conversations/${activeConversationId}/messages`, {
@@ -4430,6 +5124,7 @@ renderPersonaBreakdownChart(
 );
 renderThread(activeMessages);
 loadAuthAndHistory();
+initAutocomplete();
 
 </script>
 </body>

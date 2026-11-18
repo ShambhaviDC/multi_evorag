@@ -41,15 +41,15 @@ if (loginForm) {
     try {
       const tokenResp = await postJSON('/auth/login', { username: email, password });
       setToken(tokenResp.access_token);
-      // After login, redirect to onboarding if not completed, else to chat (placeholder)
+      // After login, redirect to onboarding if not completed, else to homepage
       const prefResp = await fetch('/preferences/', {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       const pref = await prefResp.json();
       if (pref.onboarding_completed) {
-        window.location.href = '/static/chat.html';
+        window.location.href = '/static/index.html';
       } else {
-        window.location.href = '/static/onboarding.html';
+        window.location.href = '/static/onboarding.html?mandatory=1';
       }
     } catch (err) {
       errorDiv.textContent = err.message;
@@ -78,7 +78,7 @@ if (signupForm) {
       // Auto‑login after successful signup
       const tokenResp = await postJSON('/auth/login', { username: email, password });
       setToken(tokenResp.access_token);
-      window.location.href = '/static/onboarding.html';
+      window.location.href = '/static/onboarding.html?mandatory=1';
     } catch (err) {
       errorDiv.textContent = err.message;
       errorDiv.style.display = 'block';

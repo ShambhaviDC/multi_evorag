@@ -46,6 +46,8 @@ class UserPreference(SQLModel, table=True):
     role: Optional[str] = Field(default=None)
     interests: Optional[str] = Field(default=None)  # comma-separated list
     response_style: Optional[str] = Field(default=None)
+    preferred_categories_json: Optional[str] = Field(default="[]")
+    preferred_subcategories_json: Optional[str] = Field(default="[]")
     onboarding_completed: bool = Field(default=False)
     updated_at: datetime = Field(default_factory=utc_now, sa_column_kwargs={"onupdate": utc_now})
 
@@ -73,13 +75,49 @@ class PersonalizationProfile(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id", unique=True, index=True)
     enabled: bool = Field(default=True)
+    onboarding_completed: bool = Field(default=False)
     inferred_interests_json: str = Field(default="[]")     # JSON: [{category, score, confidence, count, ...}]
     excluded_interests_json: str = Field(default="[]")     # JSON: ["Sports", ...] topics user removed/avoided
     preferred_categories_json: str = Field(default="[]")   # JSON: ["Technology", "Economy", ...]
+    preferred_subcategories_json: str = Field(default="[]") # JSON: ["AI", "Startups", ...]
     preferred_perspectives_json: str = Field(default="[]") # JSON: ["Technical", "Economic", ...]
     preferred_language: str = Field(default="English")
     preferred_length: str = Field(default="detailed")
     last_profile_update: datetime = Field(default_factory=utc_now)
+
+
+class NewsArticle(SQLModel, table=True):
+    """Real news article record for multi-category discovery, autocomplete, and personalization."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: str = Field(index=True)
+    url: str = Field(unique=True, index=True)
+    url_hash: str = Field(index=True)
+    source: str = Field(index=True)
+    category: str = Field(index=True)
+    subcategory: Optional[str] = Field(default=None, index=True)
+    published_at: str = Field(index=True)
+    snippet: str
+    image_url: Optional[str] = Field(default=None, nullable=True)
+    created_at: datetime = Field(default_factory=utc_now)
+
+
+class NewsArticleRead(BaseModel):
+    id: Optional[int] = None
+    title: str
+    url: str
+    source: str
+    category: str
+    subcategory: Optional[str] = None
+    published_at: str
+    snippet: str
+    image_url: Optional[str] = None
+
+
+class AutocompleteSuggestion(BaseModel):
+    text: str
+    category: str
+    type: str  # "category", "subcategory", "entity", "headline", "trending"
+    preview: Optional[str] = None
 
 
 class InferredInterestItem(BaseModel):
@@ -96,10 +134,12 @@ class InferredInterestItem(BaseModel):
 class PersonalizationProfileRead(BaseModel):
     user_id: int
     enabled: bool
+    onboarding_completed: bool = False
     explicit_interests: List[str]
     inferred_interests: List[Dict[str, Any]]
     excluded_interests: List[str]
     preferred_categories: List[str]
+    preferred_subcategories: List[str] = []
     preferred_perspectives: List[str]
     preferred_language: str
     preferred_length: str
@@ -109,7 +149,9 @@ class PersonalizationProfileRead(BaseModel):
 
 class PersonalizationProfileUpdate(BaseModel):
     enabled: Optional[bool] = None
+    onboarding_completed: Optional[bool] = None
     preferred_categories: Optional[List[str]] = None
+    preferred_subcategories: Optional[List[str]] = None
     preferred_perspectives: Optional[List[str]] = None
     preferred_language: Optional[str] = None
     preferred_length: Optional[str] = None

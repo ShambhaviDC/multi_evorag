@@ -70,6 +70,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    onboarding_completed: bool = False
+    user_id: Optional[int] = None
+    email: Optional[str] = None
 
 
 class TokenData(BaseModel):
@@ -86,6 +89,7 @@ class UserRead(BaseModel):
     id: int
     email: EmailStr
     full_name: Optional[str] = None
+    onboarding_completed: bool = False
 
     class Config:
         from_attributes = True
@@ -162,7 +166,23 @@ def signup(user_in: UserCreate, session: Session = Depends(get_session)):
     session.add(user)
     session.commit()
     session.refresh(user)
-    return user
+
+    # Initialize UserPreference with onboarding_completed = False
+    from models import UserPreference, PersonalizationProfile
+    pref = UserPreference(user_id=user.id, onboarding_completed=False)
+    session.add(pref)
+
+    # Initialize PersonalizationProfile with onboarding_completed = False
+    profile = PersonalizationProfile(user_id=user.id, enabled=True, onboarding_completed=False)
+    session.add(profile)
+    session.commit()
+
+    return UserRead(
+        id=user.id,
+        email=user.email,
+        full_name=user.full_name,
+        onboarding_completed=False,
+    )
 
 
 @router.post("/login", response_model=Token, summary="Obtain a JWT access token")
@@ -188,8 +208,19 @@ async def login(
     user = authenticate_user(session, username, password)
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
+
+    # Check onboarding completion
+    from models import UserPreference
+    pref = session.exec(select(UserPreference).where(UserPreference.user_id == user.id)).first()
+    onboarded = bool(pref.onboarding_completed) if pref else False
+
     access_token = create_access_token(data={"sub": str(user.id)})
-    return Token(access_token=access_token)
+    return Token(
+        access_token=access_token,
+        onboarding_completed=onboarded,
+        user_id=user.id,
+        email=user.email,
+    )
 
 
 # Add Google OAuth routes
@@ -242,6 +273,13 @@ def google_callback(request: Request, session: Session = Depends(get_session)):
 
 # Example protected route (can be used for testing)
 @router.get("/me", response_model=UserRead, summary="Get current user profile")
-def read_current_user(current_user: User = Depends(get_current_user)):
-    return current_user
+def read_current_user(current_user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    from models import UserPreference
+    pref = session.exec(select(UserPreference).where(UserPreference.user_id == current_user.id)).first()
+    return UserRead(
+        id=current_user.id,
+        email=current_user.email,
+        full_name=current_user.full_name,
+        onboarding_completed=bool(pref.onboarding_completed) if pref else False,
+    )
 

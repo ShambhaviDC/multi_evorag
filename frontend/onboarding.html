@@ -3,114 +3,130 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EvoRAG – Personalization & Interest Profile</title>
+  <title>EvoRAG – Personalize Your Experience</title>
   <link rel="stylesheet" href="/static/styles.css" />
   <style>
     .onboarding-container {
-      max-width: 680px;
-      margin: 30px auto;
-      padding: 32px 36px;
+      max-width: 820px;
+      margin: 32px auto;
+      padding: 36px 40px;
       background: #181824;
       border: 1px solid #2a2a3e;
-      border-radius: 14px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     }
     .header-section {
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 28px;
+    }
+    .header-section h1.logo {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 40%, #a18cd1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
     }
     .header-section h2 {
-      font-size: 24px;
+      font-size: 26px;
       font-weight: 700;
       color: #fff;
       margin-top: 8px;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
     .desc {
-      font-size: 13.5px;
-      color: #9292b0;
+      font-size: 14.5px;
+      color: #9da0bd;
       margin: 0 auto;
-      max-width: 520px;
-      line-height: 1.5;
+      max-width: 580px;
+      line-height: 1.55;
     }
-    .profile-card {
-      background: #1f1f2e;
-      border: 1px solid #323248;
-      border-radius: 10px;
-      padding: 18px 20px;
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
       margin-bottom: 20px;
     }
-    .card-title {
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #706bfd;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .toggle-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 13px;
-      color: #e0e0f5;
-    }
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 24px;
-    }
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    .slider {
-      position: absolute;
+    .cat-card {
+      background: #1f1f2f;
+      border: 1.5px solid #2f2f45;
+      border-radius: 10px;
+      padding: 14px 12px;
       cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #3e3e56;
-      transition: .3s;
-      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      user-select: none;
+      position: relative;
     }
-    .slider:before {
+    .cat-card:hover {
+      border-color: #6c63ff;
+      transform: translateY(-2px);
+      background: #242438;
+    }
+    .cat-card.selected {
+      background: linear-gradient(135deg, rgba(108, 99, 255, 0.2), rgba(139, 92, 246, 0.25));
+      border-color: #6c63ff;
+      box-shadow: 0 4px 14px rgba(108, 99, 255, 0.35);
+    }
+    .cat-card.selected::after {
+      content: "✓";
       position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .3s;
-      border-radius: 50%;
+      top: 6px;
+      right: 8px;
+      font-size: 12px;
+      font-weight: bold;
+      color: #a78bfa;
     }
-    input:checked + .slider {
-      background-color: #6c63ff;
+    .cat-icon {
+      font-size: 26px;
+      margin-bottom: 2px;
     }
-    input:checked + .slider:before {
-      transform: translateX(20px);
+    .cat-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e2e2f2;
+    }
+    .subcat-box {
+      background: #151522;
+      border: 1px solid #2e2e44;
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 22px;
+      display: none;
+    }
+    .subcat-box.active {
+      display: block;
+    }
+    .subcat-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #a78bfa;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     .chip-container {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 8px;
     }
     .chip {
-      padding: 6px 14px;
-      font-size: 12.5px;
+      padding: 6px 13px;
+      font-size: 12px;
       font-weight: 500;
       border-radius: 20px;
-      background: #27273a;
+      background: #252538;
       border: 1px solid #3c3c58;
       color: #c0c0dc;
       cursor: pointer;
       user-select: none;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }
     .chip:hover {
       border-color: #6c63ff;
@@ -120,7 +136,25 @@
       background: linear-gradient(135deg, #6c63ff, #8b5cf6);
       color: #fff;
       border-color: transparent;
-      box-shadow: 0 2px 8px rgba(108, 99, 255, 0.4);
+      box-shadow: 0 2px 8px rgba(108, 99, 255, 0.35);
+    }
+    .profile-card {
+      background: #1f1f2e;
+      border: 1px solid #323248;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #706bfd;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
     .interests-list {
       display: flex;
@@ -142,18 +176,12 @@
       align-items: center;
       gap: 12px;
     }
-    .interest-name {
-      font-size: 13.5px;
-      font-weight: 600;
-      color: #e2e2f2;
-    }
     .badge {
       font-size: 11px;
       padding: 2px 8px;
       border-radius: 12px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
     .badge-strong { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34,197,94,0.4); }
     .badge-recurring { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.4); }
@@ -166,11 +194,6 @@
       cursor: pointer;
       font-size: 15px;
       padding: 4px 8px;
-      border-radius: 4px;
-      transition: background 0.15s;
-    }
-    .btn-icon-del:hover {
-      background: rgba(239, 68, 68, 0.15);
     }
     .btn-icon-restore {
       background: transparent;
@@ -180,38 +203,6 @@
       font-size: 11px;
       padding: 3px 8px;
       border-radius: 4px;
-      transition: background 0.15s;
-    }
-    .btn-icon-restore:hover {
-      background: rgba(56, 189, 248, 0.15);
-    }
-    .manual-add-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-    }
-    .manual-add-row select {
-      flex: 1;
-      padding: 8px 12px;
-      background: #27273a;
-      border: 1px solid #3c3c58;
-      border-radius: 6px;
-      color: #e0e0f0;
-      font-size: 13px;
-    }
-    .btn-add {
-      background: #6c63ff;
-      border: none;
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 13px;
-      transition: background 0.2s;
-    }
-    .btn-add:hover {
-      background: #5b52e0;
     }
     .form-group {
       margin-bottom: 1rem;
@@ -233,10 +224,6 @@
       font-size: 13.5px;
       box-sizing: border-box;
     }
-    select:focus, input[type="text"]:focus {
-      outline: none;
-      border-color: #6c63ff;
-    }
     .button-group {
       display: flex;
       flex-direction: column;
@@ -245,9 +232,9 @@
     }
     .btn {
       width: 100%;
-      padding: 11px;
-      font-size: 14px;
-      font-weight: 600;
+      padding: 12px;
+      font-size: 14.5px;
+      font-weight: 700;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s;
@@ -258,8 +245,13 @@
       color: #fff;
       box-shadow: 0 4px 14px rgba(108, 99, 255, 0.35);
     }
-    .btn-primary:hover {
-      box-shadow: 0 6px 18px rgba(108, 99, 255, 0.5);
+    .btn-primary:hover:not(:disabled) {
+      box-shadow: 0 6px 20px rgba(108, 99, 255, 0.55);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     .btn-secondary {
       background: transparent;
@@ -270,16 +262,6 @@
       background: rgba(255,255,255,0.05);
       color: #fff;
     }
-    .btn-danger-outline {
-      background: transparent;
-      border: 1px solid #5a2e36;
-      color: #f87171;
-      font-size: 12.5px;
-      padding: 8px;
-    }
-    .btn-danger-outline:hover {
-      background: rgba(239, 68, 68, 0.1);
-    }
     .alert-banner {
       padding: 10px 14px;
       border-radius: 6px;
@@ -289,103 +271,73 @@
     }
     .alert-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
     .alert-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .selection-counter {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #c4b5fd;
+      background: rgba(108, 99, 255, 0.15);
+      padding: 3px 10px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 <body class="auth-page">
   <div class="onboarding-container">
     <div class="header-section">
-      <h1 class="logo" style="margin-bottom: 4px;">EvoRAG</h1>
-      <h2>User Personalization & Interest Profile</h2>
-      <p class="desc">
-        EvoRAG dynamically learns your recurring research topics and adapts persona weighting to your analytical focus while strictly maintaining factual ground truth.
+      <h1 class="logo">EvoRAG</h1>
+      <h2 id="main-heading">Let's personalize your news experience</h2>
+      <p class="desc" id="main-subheading">
+        Choose the topics you care about. EvoRAG will discover the latest developments that matter to you.
       </p>
     </div>
 
     <div id="status-msg" class="alert-banner"></div>
 
-    <!-- Master Personalization Toggle -->
-    <div class="profile-card" style="display: flex; align-items: center; justify-content: space-between;">
-      <div>
-        <div style="font-weight: 700; color: #fff; font-size: 14.5px;">Adaptive Personalization Engine</div>
-        <div style="font-size: 12.5px; color: #9494b2;">Tailor persona prioritization and responses based on your preferences.</div>
-      </div>
-      <div class="toggle-wrapper">
-        <span id="toggle-label" style="font-weight: 600;">Active</span>
-        <label class="switch">
-          <input type="checkbox" id="personalization-toggle" checked />
-          <span class="slider"></span>
-        </label>
-      </div>
+    <div style="text-align: center;">
+      <span id="cat-counter" class="selection-counter">0 categories selected (Choose at least 1)</span>
     </div>
 
-    <!-- Explicit Interests (Categories) -->
-    <div class="profile-card">
-      <div class="card-title">
-        <span>Preferred Topics & Domains</span>
-        <span style="font-size: 11px; color: #8888a6; text-transform: none;">Click to toggle</span>
-      </div>
-      <div class="chip-container" id="category-chips">
-        <!-- Dynamically injected categories -->
-      </div>
+    <!-- 18 Selectable Category Cards -->
+    <div class="category-grid" id="category-grid">
+      <!-- Injected via JavaScript -->
     </div>
 
-    <!-- Preferred Perspectives -->
+    <!-- Subcategories Exploration Box -->
+    <div class="subcat-box" id="subcat-box">
+      <div class="subcat-title">
+        <span>Select Specific Sub-Topics / Interests:</span>
+        <span style="font-size:11px; color:#8888a6; text-transform:none;">(Optional finer focus)</span>
+      </div>
+      <div class="chip-container" id="subcat-chips"></div>
+    </div>
+
+    <!-- Analytical Perspectives -->
     <div class="profile-card">
       <div class="card-title">
-        <span>Preferred Analytical Perspectives</span>
+        <span>Preferred Analytical Angles</span>
         <span style="font-size: 11px; color: #8888a6; text-transform: none;">Click to toggle</span>
       </div>
       <div class="chip-container" id="perspective-chips">
-        <div class="chip" data-val="Technical">Technical Depth</div>
-        <div class="chip" data-val="Empirical">Data-Driven / Empirical</div>
+        <div class="chip active" data-val="Technical">Technical Depth</div>
+        <div class="chip active" data-val="Empirical">Data-Driven / Empirical</div>
         <div class="chip" data-val="Critical">Critical & Skeptical</div>
-        <div class="chip" data-val="Synthesized">Synthesized & Holistic</div>
+        <div class="chip active" data-val="Synthesized">Synthesized & Holistic</div>
         <div class="chip" data-val="Historical">Historical & Contextual</div>
         <div class="chip" data-val="Creative">Creative & Lateral</div>
         <div class="chip" data-val="Risk">Risk Assessment</div>
       </div>
     </div>
 
-    <!-- AI-Inferred Dynamic Interests -->
-    <div class="profile-card">
-      <div class="card-title">
-        <span>AI-Learned Recurring Interests</span>
-        <span style="font-size: 11px; color: #8888a6; text-transform: none;">From conversation history</span>
-      </div>
-      <div id="inferred-list" class="interests-list">
-        <!-- Dynamically rendered list -->
-      </div>
-
-      <!-- Add Interest Manually -->
-      <div style="margin-top: 16px; border-top: 1px solid #2d2d42; padding-top: 12px;">
-        <label style="font-size: 12px; color: #9494b2;">Pin New Research Topic Directly:</label>
-        <div class="manual-add-row">
-          <select id="manual-cat-select">
-            <option value="">Select an interest category...</option>
-          </select>
-          <button type="button" id="btn-add-interest" class="btn-add">+ Add Topic</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Excluded Interests -->
-    <div class="profile-card" id="excluded-card" style="display: none;">
-      <div class="card-title">
-        <span style="color: #ef4444;">Excluded Topics (Never Inferred)</span>
-      </div>
-      <div id="excluded-list" class="chip-container">
-        <!-- Excluded chips with restore icon -->
-      </div>
-    </div>
-
     <!-- Synthesis Style & Language Settings -->
     <div class="profile-card">
-      <div class="card-title">Synthesis & Response Style</div>
+      <div class="card-title">Response Settings</div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
         <div class="form-group" style="margin-bottom: 0;">
           <label for="preferred-length">Response Depth</label>
           <select id="preferred-length">
-            <option value="detailed">Detailed & Comprehensive</option>
+            <option value="detailed" selected>Detailed & Comprehensive</option>
             <option value="concise">Concise & Key Takeaways</option>
             <option value="exhaustive">Exhaustive & In-Depth</option>
           </select>
@@ -393,21 +345,37 @@
         <div class="form-group" style="margin-bottom: 0;">
           <label for="preferred-language">Response Language</label>
           <select id="preferred-language">
-            <option value="English">English</option>
+            <option value="English" selected>English</option>
             <option value="Spanish">Spanish</option>
             <option value="French">French</option>
             <option value="German">German</option>
-            <option value="Japanese">Japanese</option>
             <option value="Hindi">Hindi</option>
+            <option value="Kannada">Kannada</option>
           </select>
         </div>
       </div>
     </div>
 
+    <!-- AI-Inferred Dynamic Interests (Shown for returning users) -->
+    <div class="profile-card" id="ai-interests-card" style="display: none;">
+      <div class="card-title">
+        <span>AI-Learned Recurring Interests</span>
+        <span style="font-size: 11px; color: #8888a6; text-transform: none;">From chat interactions</span>
+      </div>
+      <div id="inferred-list" class="interests-list"></div>
+    </div>
+
+    <!-- Excluded Interests -->
+    <div class="profile-card" id="excluded-card" style="display: none;">
+      <div class="card-title">
+        <span style="color: #ef4444;">Excluded Topics (Never Inferred)</span>
+      </div>
+      <div id="excluded-list" class="chip-container"></div>
+    </div>
+
     <div class="button-group">
-      <button type="button" id="save-btn" class="btn btn-primary">Save Personalization Profile</button>
-      <button type="button" id="reset-interests-btn" class="btn btn-danger-outline">Reset Learned AI Interests</button>
-      <button type="button" id="back-btn" class="btn btn-secondary">Back to Research Assistant</button>
+      <button type="button" id="save-btn" class="btn btn-primary" disabled>Continue to Personalized Homepage</button>
+      <button type="button" id="back-btn" class="btn btn-secondary" style="display: none;">Back to Research Assistant</button>
     </div>
   </div>
 
@@ -418,13 +386,33 @@
       window.location.href = '/static/login.html';
     }
 
-    const ALL_CATEGORIES = [
-      "Politics", "Technology", "Artificial Intelligence", "Business and Startups",
-      "Economy and Finance", "Sports", "Science", "Environment", "Healthcare",
-      "International Affairs", "Education", "Employment", "Cybersecurity", "Innovation"
-    ];
+    const urlParams = new URLSearchParams(window.location.search);
+    const isMandatory = urlParams.get('mandatory') === '1';
 
-    let currentProfile = null;
+    const CATEGORY_ICONS = {
+      "Politics": "🏛️",
+      "Technology": "💻",
+      "Artificial Intelligence": "🤖",
+      "Agriculture": "🌾",
+      "National News": "🇮🇳",
+      "International News": "🌐",
+      "Business": "💼",
+      "Economy": "📈",
+      "Sports": "⚽",
+      "Cricket": "🏏",
+      "Science": "🔬",
+      "Healthcare": "🏥",
+      "Environment": "🌿",
+      "Education": "🎓",
+      "Entertainment": "🎬",
+      "Cybersecurity": "🔒",
+      "Startups": "🚀",
+      "Employment": "👔",
+    };
+
+    let taxonomy = {};
+    let selectedCategories = new Set();
+    let selectedSubcategories = new Set();
 
     function showStatus(msg, isError = false) {
       const el = document.getElementById('status-msg');
@@ -434,245 +422,230 @@
       setTimeout(() => { el.style.display = 'none'; }, 4000);
     }
 
-    function initCategoryChips() {
-      const container = document.getElementById('category-chips');
-      const selectEl = document.getElementById('manual-cat-select');
-      container.innerHTML = '';
-      selectEl.innerHTML = '<option value="">Select an interest category...</option>';
+    function updateCounterAndButton() {
+      const count = selectedCategories.size;
+      const counterEl = document.getElementById('cat-counter');
+      const saveBtn = document.getElementById('save-btn');
 
-      ALL_CATEGORIES.forEach(cat => {
-        // Chip
+      if (count === 0) {
+        counterEl.textContent = '0 categories selected (Choose at least 1)';
+        counterEl.style.color = '#f87171';
+        saveBtn.disabled = true;
+      } else {
+        counterEl.textContent = `${count} categor${count === 1 ? 'y' : 'ies'} selected`;
+        counterEl.style.color = '#c4b5fd';
+        saveBtn.disabled = false;
+      }
+    }
+
+    function renderSubcategories() {
+      const subcatBox = document.getElementById('subcat-box');
+      const subcatChips = document.getElementById('subcat-chips');
+      subcatChips.innerHTML = '';
+
+      if (selectedCategories.size === 0) {
+        subcatBox.classList.remove('active');
+        return;
+      }
+
+      let allAvailableSubs = [];
+      selectedCategories.forEach(cat => {
+        const subs = taxonomy[cat] || [];
+        subs.forEach(s => {
+          allAvailableSubs.push({ category: cat, name: s });
+        });
+      });
+
+      if (allAvailableSubs.length === 0) {
+        subcatBox.classList.remove('active');
+        return;
+      }
+
+      subcatBox.classList.add('active');
+      allAvailableSubs.forEach(subObj => {
         const chip = document.createElement('div');
         chip.className = 'chip';
-        chip.dataset.val = cat;
-        chip.textContent = cat;
-        chip.addEventListener('click', () => chip.classList.toggle('active'));
-        container.appendChild(chip);
-
-        // Select option
-        const opt = document.createElement('option');
-        opt.value = cat;
-        opt.textContent = cat;
-        selectEl.appendChild(opt);
-      });
-
-      // Perspective chips toggle
-      document.querySelectorAll('#perspective-chips .chip').forEach(c => {
-        c.addEventListener('click', () => c.classList.toggle('active'));
+        if (selectedSubcategories.has(subObj.name)) {
+          chip.classList.add('active');
+        }
+        chip.textContent = subObj.name;
+        chip.addEventListener('click', () => {
+          if (selectedSubcategories.has(subObj.name)) {
+            selectedSubcategories.delete(subObj.name);
+            chip.classList.remove('active');
+          } else {
+            selectedSubcategories.add(subObj.name);
+            chip.classList.add('active');
+          }
+        });
+        subcatChips.appendChild(chip);
       });
     }
 
-    function renderProfile(profile) {
-      currentProfile = profile;
+    function renderCategoryGrid() {
+      const grid = document.getElementById('category-grid');
+      grid.innerHTML = '';
 
-      // Master Toggle
-      const toggle = document.getElementById('personalization-toggle');
-      toggle.checked = profile.enabled;
-      document.getElementById('toggle-label').textContent = profile.enabled ? 'Active' : 'Disabled';
+      const categories = Object.keys(taxonomy);
+      categories.forEach(cat => {
+        const card = document.createElement('div');
+        card.className = 'cat-card';
+        if (selectedCategories.has(cat)) card.classList.add('selected');
 
-      // Explicit Category Chips
-      const activeCats = new Set(profile.preferred_categories || []);
-      document.querySelectorAll('#category-chips .chip').forEach(c => {
-        c.classList.toggle('active', activeCats.has(c.dataset.val));
-      });
-
-      // Preferred Perspective Chips
-      const activePersp = new Set(profile.preferred_perspectives || []);
-      document.querySelectorAll('#perspective-chips .chip').forEach(c => {
-        c.classList.toggle('active', activePersp.has(c.dataset.val));
-      });
-
-      // Selects
-      if (profile.preferred_length) document.getElementById('preferred-length').value = profile.preferred_length;
-      if (profile.preferred_language) document.getElementById('preferred-language').value = profile.preferred_language;
-
-      // Inferred Interests List
-      const listEl = document.getElementById('inferred-list');
-      listEl.innerHTML = '';
-      const inferred = profile.inferred_interests || [];
-
-      if (inferred.length === 0) {
-        listEl.innerHTML = `
-          <div style="text-align: center; color: #787896; font-size: 13px; padding: 16px 0;">
-            No interests inferred yet. Start chatting about your favorite topics and EvoRAG will build your profile!
-          </div>
+        const icon = CATEGORY_ICONS[cat] || '📰';
+        card.innerHTML = `
+          <div class="cat-icon">${icon}</div>
+          <div class="cat-name">${cat}</div>
         `;
-      } else {
-        inferred.forEach(item => {
-          const statusClass = `badge-${item.status || 'emerging'}`;
-          const row = document.createElement('div');
-          row.className = 'interest-item';
-          row.innerHTML = `
-            <div class="interest-info">
-              <span class="interest-name">${item.category}</span>
-              <span class="badge ${statusClass}">${item.status || 'emerging'}</span>
-              <span style="font-size: 11px; color: #8c8ca8;">Score: ${(item.score * 100).toFixed(0)}% (${item.supporting_interactions || 1} queries)</span>
-            </div>
-            <button class="btn-icon-del" title="Exclude Topic" data-cat="${item.category}">✕</button>
-          `;
-          row.querySelector('.btn-icon-del').addEventListener('click', () => excludeInterest(item.category));
-          listEl.appendChild(row);
-        });
-      }
 
-      // Excluded List
-      const exCard = document.getElementById('excluded-card');
-      const exList = document.getElementById('excluded-list');
-      const excluded = profile.excluded_interests || [];
-      if (excluded.length > 0) {
-        exCard.style.display = 'block';
-        exList.innerHTML = '';
-        excluded.forEach(cat => {
-          const exChip = document.createElement('div');
-          exChip.className = 'chip';
-          exChip.style.borderColor = '#ef4444';
-          exChip.style.display = 'flex';
-          exChip.style.alignItems = 'center';
-          exChip.style.gap = '6px';
-          exChip.innerHTML = `
-            <span>${cat}</span>
-            <button class="btn-icon-restore" title="Restore Topic">↺</button>
-          `;
-          exChip.querySelector('.btn-icon-restore').addEventListener('click', () => restoreInterest(cat));
-          exList.appendChild(exChip);
+        card.addEventListener('click', () => {
+          if (selectedCategories.has(cat)) {
+            selectedCategories.delete(cat);
+            card.classList.remove('selected');
+            // Remove associated subcategories
+            (taxonomy[cat] || []).forEach(s => selectedSubcategories.delete(s));
+          } else {
+            selectedCategories.add(cat);
+            card.classList.add('selected');
+          }
+          updateCounterAndButton();
+          renderSubcategories();
         });
-      } else {
-        exCard.style.display = 'none';
-      }
+
+        grid.appendChild(card);
+      });
+
+      updateCounterAndButton();
     }
 
-    async function loadProfile() {
+    async function loadTaxonomyAndProfile() {
       try {
-        const resp = await fetch('/personalization/profile', {
+        // 1. Fetch taxonomy
+        const taxResp = await fetch('/news/categories');
+        const taxData = await taxResp.json();
+        taxonomy = taxData.taxonomy || {};
+
+        // 2. Fetch user preferences & profile
+        const profResp = await fetch('/personalization/profile', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (!resp.ok) throw new Error('Failed to load profile');
-        const data = await resp.json();
-        renderProfile(data);
+        if (profResp.ok) {
+          const profile = await profResp.json();
+
+          (profile.preferred_categories || []).forEach(c => selectedCategories.add(c));
+          (profile.preferred_subcategories || []).forEach(s => selectedSubcategories.add(s));
+
+          if (profile.preferred_length) document.getElementById('preferred-length').value = profile.preferred_length;
+          if (profile.preferred_language) document.getElementById('preferred-language').value = profile.preferred_language;
+
+          // Perspectives
+          const pSet = new Set(profile.preferred_perspectives || []);
+          if (pSet.size > 0) {
+            document.querySelectorAll('#perspective-chips .chip').forEach(c => {
+              c.classList.toggle('active', pSet.has(c.dataset.val));
+            });
+          }
+
+          // If returning user with completed onboarding, show AI interests and Back button
+          if (profile.onboarding_completed && !isMandatory) {
+            document.getElementById('back-btn').style.display = 'block';
+            document.getElementById('main-heading').textContent = 'My Personalization & News Preferences';
+            document.getElementById('main-subheading').textContent = 'Update your news categories, analytical angles, and explore learned interests.';
+            document.getElementById('save-btn').textContent = 'Save Changes & Return to Homepage';
+
+            // Show AI Inferred Interests
+            const inferred = profile.inferred_interests || [];
+            if (inferred.length > 0) {
+              const aiCard = document.getElementById('ai-interests-card');
+              const listEl = document.getElementById('inferred-list');
+              aiCard.style.display = 'block';
+              listEl.innerHTML = '';
+              inferred.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'interest-item';
+                row.innerHTML = `
+                  <div class="interest-info">
+                    <span style="font-weight:600; color:#fff;">${item.category}</span>
+                    <span class="badge badge-${item.status || 'emerging'}">${item.status}</span>
+                    <span style="font-size:11px; color:#8c8ca8;">Score: ${(item.score * 100).toFixed(0)}%</span>
+                  </div>
+                `;
+                listEl.appendChild(row);
+              });
+            }
+          }
+        }
+
+        renderCategoryGrid();
+        renderSubcategories();
+
+        // Wire perspective chips
+        document.querySelectorAll('#perspective-chips .chip').forEach(c => {
+          c.addEventListener('click', () => c.classList.toggle('active'));
+        });
+
       } catch (err) {
-        showStatus(err.message, true);
+        showStatus('Error loading profile: ' + err.message, true);
       }
     }
 
-    async function saveProfile() {
-      const selectedCats = Array.from(document.querySelectorAll('#category-chips .chip.active')).map(c => c.dataset.val);
-      const selectedPersp = Array.from(document.querySelectorAll('#perspective-chips .chip.active')).map(c => c.dataset.val);
-      const isEnabled = document.getElementById('personalization-toggle').checked;
-      const prefLen = document.getElementById('preferred-length').value;
-      const prefLang = document.getElementById('preferred-language').value;
+    async function handleSave() {
+      if (selectedCategories.size === 0) {
+        alert('Please select at least one major category before continuing.');
+        return;
+      }
+
+      const saveBtn = document.getElementById('save-btn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving Preferences...';
+
+      const catsList = Array.from(selectedCategories);
+      const subsList = Array.from(selectedSubcategories);
+      const perspectives = Array.from(document.querySelectorAll('#perspective-chips .chip.active')).map(c => c.dataset.val);
+      const prefLength = document.getElementById('preferred-length').value;
+      const prefLanguage = document.getElementById('preferred-language').value;
 
       try {
-        const resp = await fetch('/personalization/profile', {
+        const resp = await fetch('/preferences/', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
-            enabled: isEnabled,
-            preferred_categories: selectedCats,
-            preferred_perspectives: selectedPersp,
-            preferred_length: prefLen,
-            preferred_language: prefLang,
+            categories: catsList,
+            subcategories: subsList,
+            preferred_categories: catsList,
+            preferred_subcategories: subsList,
+            preferred_perspectives: perspectives,
+            preferred_length: prefLength,
+            preferred_language: prefLanguage,
+            onboarding_completed: true,
           })
         });
-        if (!resp.ok) throw new Error('Failed to update personalization profile');
-        const updated = await resp.json();
-        renderProfile(updated);
-        showStatus('Personalization profile successfully saved!');
+
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.detail || 'Failed to save preferences');
+        }
+
+        showStatus('Preferences saved successfully! Redirecting...');
+        setTimeout(() => {
+          window.location.href = '/static/index.html';
+        }, 600);
       } catch (err) {
         showStatus(err.message, true);
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Continue to Personalized Homepage';
       }
     }
 
-    async function excludeInterest(category) {
-      if (!confirm(`Exclude "${category}" from your personalization profile? EvoRAG will no longer prioritize or learn this topic.`)) return;
-      try {
-        const resp = await fetch(`/personalization/interests/${encodeURIComponent(category)}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!resp.ok) throw new Error('Failed to exclude interest');
-        const updated = await resp.json();
-        renderProfile(updated);
-        showStatus(`"${category}" excluded.`);
-      } catch (err) {
-        showStatus(err.message, true);
-      }
-    }
-
-    async function restoreInterest(category) {
-      try {
-        const resp = await fetch(`/personalization/interests/restore/${encodeURIComponent(category)}`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!resp.ok) throw new Error('Failed to restore interest');
-        const updated = await resp.json();
-        renderProfile(updated);
-        showStatus(`"${category}" restored.`);
-      } catch (err) {
-        showStatus(err.message, true);
-      }
-    }
-
-    async function addManualInterest() {
-      const selectEl = document.getElementById('manual-cat-select');
-      const cat = selectEl.value;
-      if (!cat) {
-        alert('Please select an interest category first.');
-        return;
-      }
-      try {
-        const resp = await fetch('/personalization/interests/manual', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ category: cat })
-        });
-        if (!resp.ok) throw new Error('Failed to add manual interest');
-        const updated = await resp.json();
-        renderProfile(updated);
-        selectEl.value = '';
-        showStatus(`Pinned "${cat}" as active recurring interest!`);
-      } catch (err) {
-        showStatus(err.message, true);
-      }
-    }
-
-    async function resetInterests() {
-      if (!confirm('Are you sure you want to reset all AI-learned interests? Your explicit preference selections will be preserved.')) return;
-      try {
-        const resp = await fetch('/personalization/reset', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!resp.ok) throw new Error('Failed to reset interests');
-        const updated = await resp.json();
-        renderProfile(updated);
-        showStatus('Learned interests reset.');
-      } catch (err) {
-        showStatus(err.message, true);
-      }
-    }
-
-    // Event listeners
-    document.getElementById('save-btn').addEventListener('click', saveProfile);
-    document.getElementById('btn-add-interest').addEventListener('click', addManualInterest);
-    document.getElementById('reset-interests-btn').addEventListener('click', resetInterests);
+    document.getElementById('save-btn').addEventListener('click', handleSave);
     document.getElementById('back-btn').addEventListener('click', () => {
       window.location.href = '/static/index.html';
     });
 
-    document.getElementById('personalization-toggle').addEventListener('change', (e) => {
-      document.getElementById('toggle-label').textContent = e.target.checked ? 'Active' : 'Disabled';
-    });
-
-    // Initialize
-    initCategoryChips();
-    loadProfile();
+    loadTaxonomyAndProfile();
   </script>
 </body>
 </html>
