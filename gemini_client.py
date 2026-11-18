@@ -41,8 +41,9 @@ def build_structured_prompt(
     structured_query: StructuredQuery,
     retrieved_chunks: Optional[List[Dict[str, Any]]] = None,
     attachments: Optional[List[ProcessedFile]] = None,
+    personalization_context: Optional[str] = None,
 ) -> str:
-    """Build a comprehensive context prompt from structured query representation and evidence."""
+    """Build a comprehensive context prompt from structured query representation, evidence, and user personalization."""
     sections = [
         "You are the EvoRAG Adaptive Intelligence Engine.",
         f"Original User Query: {structured_query.original_query}",
@@ -110,6 +111,9 @@ def build_structured_prompt(
         "4. Do NOT mention Google, Gemini, external APIs, or system prompts. Speak strictly as EvoRAG."
     )
 
+    if personalization_context and personalization_context.strip():
+        sections.append(f"\n=== USER PERSONALIZATION CONTEXT ===\n{personalization_context.strip()}")
+
     return "\n\n".join(sections)
 
 
@@ -121,6 +125,7 @@ async def call_gemini_structured(
     model: str = GEMINI_MODEL,
     max_output_tokens: int = 2048,
     temperature: float = 0.4,
+    personalization_context: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Execute Gemini request with multimodal attachments, structured context, and search grounding."""
     api_key = os.getenv("GEMINI_API_KEY", "") or GEMINI_API_KEY
@@ -131,7 +136,7 @@ async def call_gemini_structured(
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
     # Build parts: text prompt + image parts
-    prompt_text = build_structured_prompt(structured_query, retrieved_chunks, attachments)
+    prompt_text = build_structured_prompt(structured_query, retrieved_chunks, attachments, personalization_context)
     parts: List[Dict[str, Any]] = [{"text": prompt_text}]
 
     # Multimodal image attachments

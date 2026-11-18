@@ -76,9 +76,12 @@ def _error_message(exc: Exception) -> str:
 # 1. PERSONA PROMPT
 # ══════════════════════════════════════════════════════════════════════════════
 
-def _persona_prompt(persona: Dict, context_prompt: str) -> str:
-    """Prepend the persona's system instruction to the shared RAG context prompt."""
-    return f"{persona['system_prompt']}\n\n{context_prompt}"
+def _persona_prompt(persona: Dict, context_prompt: str, personalization_context: Optional[str] = None) -> str:
+    """Prepend the persona's system instruction and optional user personalization context to the shared RAG context prompt."""
+    base = f"{persona['system_prompt']}\n\n{context_prompt}"
+    if personalization_context and personalization_context.strip():
+        return f"{base}\n\n{personalization_context.strip()}"
+    return base
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -180,6 +183,7 @@ async def run_persona(
     persona: Dict,
     context_prompt: str,
     semaphore: asyncio.Semaphore,
+    personalization_context: Optional[str] = None,
 ) -> Dict:
     """
     Call Ollama for a single persona, with a hidden Gemini fallback if Ollama
@@ -195,7 +199,7 @@ async def run_persona(
     """
     pid  = persona["id"]
     name = persona["name"]
-    prompt = _persona_prompt(persona, context_prompt)
+    prompt = _persona_prompt(persona, context_prompt, personalization_context)
 
     log.info("[%s] Starting generation (persona=%s)...", pid, name)
     t0 = time.time()
@@ -241,6 +245,7 @@ async def run_all_personas(
     top_k: int = RETRIEVAL_TOP_K,
     persona_ids: Optional[List[str]] = None,
     pre_retrieved_chunks: Optional[List[Dict]] = None,
+    personalization_context: Optional[str] = None,
 ) -> Dict:
     """
     Full multi-persona pipeline:
@@ -307,7 +312,7 @@ async def run_all_personas(
 
     # Step 5 â Initial pass (run active personas concurrently)
     results: List[Dict] = list(await asyncio.gather(
-        *[run_persona(persona, context_prompt, semaphore) for persona in active]
+        *[run_persona(persona, context_prompt, semaphore, personalization_context) for persona in active]
     ))
 
     # Step 6 — Retry empty responses sequentially
@@ -332,7 +337,7 @@ async def run_all_personas(
 
             log.info("[%s] Retry attempt %s...", pid, attempt)
             await asyncio.sleep(RETRY_DELAY_SECONDS)
-            retry = await run_persona(persona, context_prompt, semaphore)
+            retry = await run_persona(persona, context_prompt, semaphore, personalization_context)
             results[result_by_id[pid]] = retry
 
             if retry["response"].strip():

@@ -16,7 +16,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional
 
-from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -76,17 +76,22 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-from database import create_db_and_tables
+from database import create_db_and_tables, get_session
+from models import User
+from sqlmodel import Session
 
-from auth import router as auth_router
+from auth import router as auth_router, get_optional_current_user
 from conversations import router as conversations_router
 from preferences import router as preferences_router
 from recommendations import router as recommendations_router
+from personalization_api import router as personalization_router
+from personalization_agent import update_user_interests_incremental
 
 app.include_router(auth_router)
 app.include_router(conversations_router)
 app.include_router(preferences_router)
 app.include_router(recommendations_router)
+app.include_router(personalization_router)
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -166,6 +171,8 @@ class ConsensusQueryResponse(BaseModel):
     structured_query: Optional[Dict[str, Any]] = None
     attachments_processed: List[Dict[str, Any]] = Field(default_factory=list)
     retrieval_status: Optional[Dict[str, Any]] = None
+    personalization_summary: Optional[str] = ""
+    applied_personalization: Optional[Dict[str, Any]] = None
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -386,21 +393,32 @@ async def upload_files_endpoint(request: Request):
 
 
 @app.post("/query/consensus", response_model=ConsensusQueryResponse, summary="EvoRAG consensus query")
-async def consensus_endpoint(req: ConsensusQueryRequest, background_tasks: BackgroundTasks):
+async def consensus_endpoint(
+    req: ConsensusQueryRequest,
+    background_tasks: BackgroundTasks,
+    current_user: Optional[User] = Depends(get_optional_current_user),
+    session: Session = Depends(get_session),
+):
     """
-    Phase 5 & 7 — Consensus Voting & Adaptive Multimodal Response:
+    Phase 5 & 7 — Consensus Voting, User Personalization, & Adaptive Multimodal Response:
       1. Run Input Understanding Agent & Routing
-      2. Run all 8 personas or multimodal structured engine
-      3. Ask personas to score peer responses
-      4. Select the top 3 personas by peer score
-      5. Formulate adaptive visualizations (charts, tables, timelines)
-      6. Synthesize a final answer and append score_store.json
-      7. Trigger evolutionary persona check in background (zero latency)
+      2. Resolve User Personalization Profile & weights (if authenticated)
+      3. Run all 8 personas or multimodal structured engine
+      4. Ask personas to score peer responses
+      5. Select top 3 personas (80% peer evaluation + 20% personalization)
+      6. Formulate adaptive visualizations (charts, tables, timelines)
+      7. Synthesize final answer and append score_store.json
+      8. Trigger evolutionary check and incremental personalization update in background
     """
     if _state.get("index") is None:
         raise HTTPException(status_code=503, detail="Index not loaded.")
 
-    log.info(f"POST /query/consensus — '{req.query[:60]}' (top_k={req.top_k})")
+    log.info(
+        "POST /query/consensus — '%s' (top_k=%d, user=%s)",
+        req.query[:60],
+        req.top_k,
+        getattr(current_user, "username", "Anonymous"),
+    )
 
     attachments: List[ProcessedFile] = []
     if req.attachment_hashes:
@@ -410,7 +428,13 @@ async def consensus_endpoint(req: ConsensusQueryRequest, background_tasks: Backg
                 attachments.append(cached)
 
     try:
-        result = await evorag_query(req.query, top_k=req.top_k, attachments=attachments)
+        result = await evorag_query(
+            req.query,
+            top_k=req.top_k,
+            attachments=attachments,
+            user=current_user,
+            session=session,
+        )
     except ConnectionError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
@@ -419,6 +443,10 @@ async def consensus_endpoint(req: ConsensusQueryRequest, background_tasks: Backg
 
     # Run evolution check AFTER the response is built — adds zero latency
     background_tasks.add_task(_run_evolution_check)
+
+    # Incrementally update user learned interests in background
+    if current_user and getattr(current_user, "id", None):
+        background_tasks.add_task(update_user_interests_incremental, user_id=current_user.id, query=req.query)
 
     return ConsensusQueryResponse(**result)
 
@@ -429,6 +457,8 @@ async def consensus_multimodal_endpoint(
     background_tasks: BackgroundTasks,
     query: Optional[str] = Form(None),
     top_k: int = Form(RETRIEVAL_TOP_K),
+    current_user: Optional[User] = Depends(get_optional_current_user),
+    session: Session = Depends(get_session),
 ):
     """Accept multipart form data with query and file attachments in a single request."""
     if _state.get("index") is None:
@@ -458,10 +488,21 @@ async def consensus_multimodal_endpoint(
                     seen_hashes.add(proc.file_hash)
                     processed_files.append(proc)
 
-    log.info("POST /query/consensus/multimodal — '%s' (files=%d)", actual_query[:60], len(processed_files))
+    log.info(
+        "POST /query/consensus/multimodal — '%s' (files=%d, user=%s)",
+        actual_query[:60],
+        len(processed_files),
+        getattr(current_user, "username", "Anonymous"),
+    )
 
     try:
-        result = await evorag_query(actual_query, top_k=top_k_val, attachments=processed_files)
+        result = await evorag_query(
+            actual_query,
+            top_k=top_k_val,
+            attachments=processed_files,
+            user=current_user,
+            session=session,
+        )
     except ConnectionError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
@@ -469,6 +510,10 @@ async def consensus_multimodal_endpoint(
         raise HTTPException(status_code=500, detail=f"Internal error: {e}")
 
     background_tasks.add_task(_run_evolution_check)
+
+    if current_user and getattr(current_user, "id", None):
+        background_tasks.add_task(update_user_interests_incremental, user_id=current_user.id, query=actual_query)
+
     return ConsensusQueryResponse(**result)
 
 

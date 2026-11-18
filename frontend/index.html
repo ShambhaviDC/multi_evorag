@@ -543,6 +543,21 @@
       background: rgba(108, 99, 255, 0.1);
     }
 
+    .personalization-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(108, 99, 255, 0.16);
+      border: 1px solid rgba(108, 99, 255, 0.45);
+      color: #b7b2ff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 100px;
+      margin-left: 8px;
+      letter-spacing: 0.2px;
+    }
+
     /* ── Voice Preferences Toolbar ──────────────────────────────────── */
     .voice-toolbar {
       display: flex;
@@ -3368,6 +3383,7 @@ function renderThread(messages) {
         <div class="chat-assistant-meta">
           <span class="chat-assistant-avatar">🤖</span>
           <span>EvoRAG Synthesis</span>
+          ${msg.personalization_summary ? `<span class="personalization-badge" title="Adapted to your preferences and learned research profile">✨ ${escHtml(msg.personalization_summary)}</span>` : ''}
           <span class="chat-assistant-time">${escHtml(timeStr)}</span>
         </div>
         <div class="chat-assistant-body markdown-content">${contentHtml}</div>
@@ -4125,6 +4141,7 @@ async function runQuery() {
     }
 
     // 3. Run EvoRAG 8-persona Consensus pipeline (JSON or Multipart with attachments)
+    const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
     let response;
     if (pendingAttachments.length > 0) {
       const formData = new FormData();
@@ -4134,6 +4151,7 @@ async function runQuery() {
 
       response = await fetch(`${API_BASE}/query/consensus/multimodal`, {
         method: 'POST',
+        headers: authHeaders,
         body: formData,
       });
 
@@ -4143,7 +4161,7 @@ async function runQuery() {
     } else {
       response = await fetch(`${API_BASE}/query/consensus`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({ query: queryText }),
       });
     }
@@ -4205,6 +4223,7 @@ async function runQuery() {
       top_personas: data.top_personas || [],
       components: data.components || [],
       structured_query: data.structured_query || null,
+      personalization_summary: data.personalization_summary || '',
       timestamp: new Date().toISOString()
     };
     activeMessages.push(assistantMsgObj);

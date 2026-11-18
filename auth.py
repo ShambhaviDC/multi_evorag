@@ -35,6 +35,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 import bcrypt
 
 oauth_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth_optional_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
 # Settings – in a real deployment these would come from .env
 JWT_SECRET_KEY = "supersecretkey"  # placeholder; override via env
@@ -125,6 +126,23 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+
+async def get_optional_current_user(
+    token: Optional[str] = Depends(oauth_optional_scheme),
+    session: Session = Depends(get_session)
+) -> Optional[User]:
+    """Optionally resolve current authenticated user if token is present, without raising 401."""
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        user_id_raw = payload.get("sub")
+        if user_id_raw is None:
+            return None
+        return session.get(User, int(user_id_raw))
+    except Exception:
+        return None
 
 
 # ---------------------------------------------------------------------------

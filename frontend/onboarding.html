@@ -3,102 +3,412 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EvoRAG – Personalize Your Experience</title>
+  <title>EvoRAG – Personalization & Interest Profile</title>
   <link rel="stylesheet" href="/static/styles.css" />
   <style>
     .onboarding-container {
-      max-width: 480px;
+      max-width: 680px;
+      margin: 30px auto;
+      padding: 32px 36px;
+      background: #181824;
+      border: 1px solid #2a2a3e;
+      border-radius: 14px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    }
+    .header-section {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .header-section h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 8px;
+      margin-bottom: 6px;
+    }
+    .desc {
+      font-size: 13.5px;
+      color: #9292b0;
+      margin: 0 auto;
+      max-width: 520px;
+      line-height: 1.5;
+    }
+    .profile-card {
+      background: #1f1f2e;
+      border: 1px solid #323248;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #706bfd;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .toggle-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #e0e0f5;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #3e3e56;
+      transition: .3s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #6c63ff;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    .chip-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .chip {
+      padding: 6px 14px;
+      font-size: 12.5px;
+      font-weight: 500;
+      border-radius: 20px;
+      background: #27273a;
+      border: 1px solid #3c3c58;
+      color: #c0c0dc;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .chip:hover {
+      border-color: #6c63ff;
+      color: #fff;
+    }
+    .chip.active {
+      background: linear-gradient(135deg, #6c63ff, #8b5cf6);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 2px 8px rgba(108, 99, 255, 0.4);
+    }
+    .interests-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .interest-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #252538;
+      border: 1px solid #36364e;
+      border-radius: 8px;
+    }
+    .interest-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .interest-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #e2e2f2;
+    }
+    .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-strong { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34,197,94,0.4); }
+    .badge-recurring { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.4); }
+    .badge-emerging { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); }
+    .badge-declining { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid rgba(148,163,184,0.4); }
+    .btn-icon-del {
+      background: transparent;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 15px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+    .btn-icon-del:hover {
+      background: rgba(239, 68, 68, 0.15);
+    }
+    .btn-icon-restore {
+      background: transparent;
+      border: 1px solid #3e3e56;
+      color: #38bdf8;
+      cursor: pointer;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+    .btn-icon-restore:hover {
+      background: rgba(56, 189, 248, 0.15);
+    }
+    .manual-add-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .manual-add-row select {
+      flex: 1;
+      padding: 8px 12px;
+      background: #27273a;
+      border: 1px solid #3c3c58;
+      border-radius: 6px;
+      color: #e0e0f0;
+      font-size: 13px;
+    }
+    .btn-add {
+      background: #6c63ff;
+      border: none;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.2s;
+    }
+    .btn-add:hover {
+      background: #5b52e0;
     }
     .form-group {
       margin-bottom: 1rem;
     }
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #c4c4dc;
+      display: block;
+      margin-bottom: 4px;
+    }
     select, input[type="text"] {
       width: 100%;
       padding: 0.65rem 0.8rem;
-      margin-top: 0.4rem;
       border: 1px solid #3e3e56;
       border-radius: 6px;
       background: #1e1e2d;
       color: #e0e0f0;
-      font-size: 14px;
+      font-size: 13.5px;
       box-sizing: border-box;
     }
     select:focus, input[type="text"]:focus {
       outline: none;
       border-color: #6c63ff;
     }
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .btn {
+      width: 100%;
+      padding: 11px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #6c63ff, #8b5cf6);
+      border: none;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(108, 99, 255, 0.35);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 6px 18px rgba(108, 99, 255, 0.5);
+    }
     .btn-secondary {
       background: transparent;
       border: 1px solid #3e3e56;
-      color: #9a9ab8;
-      margin-top: 0.5rem;
+      color: #a0a0be;
     }
     .btn-secondary:hover {
       background: rgba(255,255,255,0.05);
       color: #fff;
     }
-    .desc {
-      font-size: 13px;
-      color: #8c8ca8;
-      text-align: center;
-      margin-bottom: 1.5rem;
+    .btn-danger-outline {
+      background: transparent;
+      border: 1px solid #5a2e36;
+      color: #f87171;
+      font-size: 12.5px;
+      padding: 8px;
     }
+    .btn-danger-outline:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+    .alert-banner {
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .alert-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .alert-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
   </style>
 </head>
 <body class="auth-page">
-  <div class="auth-container onboarding-container">
-    <h1 class="logo">EvoRAG</h1>
-    <h2>Personalize Your Profile</h2>
-    <p class="desc">Help EvoRAG tailor research personas and recommendations to your interests.</p>
+  <div class="onboarding-container">
+    <div class="header-section">
+      <h1 class="logo" style="margin-bottom: 4px;">EvoRAG</h1>
+      <h2>User Personalization & Interest Profile</h2>
+      <p class="desc">
+        EvoRAG dynamically learns your recurring research topics and adapts persona weighting to your analytical focus while strictly maintaining factual ground truth.
+      </p>
+    </div>
 
-    <form id="onboarding-form">
-      <div class="form-group">
-        <label for="role">Your Primary Role</label>
-        <select id="role" name="role">
-          <option value="AI Researcher">AI / ML Researcher</option>
-          <option value="Software Engineer">Software Engineer</option>
-          <option value="Policy & Legal Analyst">Policy & Legal Analyst</option>
-          <option value="Academic / Student">Academic / Student</option>
-          <option value="Product / Business Leader">Product / Business Leader</option>
-          <option value="Other">Other</option>
-        </select>
+    <div id="status-msg" class="alert-banner"></div>
+
+    <!-- Master Personalization Toggle -->
+    <div class="profile-card" style="display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <div style="font-weight: 700; color: #fff; font-size: 14.5px;">Adaptive Personalization Engine</div>
+        <div style="font-size: 12.5px; color: #9494b2;">Tailor persona prioritization and responses based on your preferences.</div>
+      </div>
+      <div class="toggle-wrapper">
+        <span id="toggle-label" style="font-weight: 600;">Active</span>
+        <label class="switch">
+          <input type="checkbox" id="personalization-toggle" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Explicit Interests (Categories) -->
+    <div class="profile-card">
+      <div class="card-title">
+        <span>Preferred Topics & Domains</span>
+        <span style="font-size: 11px; color: #8888a6; text-transform: none;">Click to toggle</span>
+      </div>
+      <div class="chip-container" id="category-chips">
+        <!-- Dynamically injected categories -->
+      </div>
+    </div>
+
+    <!-- Preferred Perspectives -->
+    <div class="profile-card">
+      <div class="card-title">
+        <span>Preferred Analytical Perspectives</span>
+        <span style="font-size: 11px; color: #8888a6; text-transform: none;">Click to toggle</span>
+      </div>
+      <div class="chip-container" id="perspective-chips">
+        <div class="chip" data-val="Technical">Technical Depth</div>
+        <div class="chip" data-val="Empirical">Data-Driven / Empirical</div>
+        <div class="chip" data-val="Critical">Critical & Skeptical</div>
+        <div class="chip" data-val="Synthesized">Synthesized & Holistic</div>
+        <div class="chip" data-val="Historical">Historical & Contextual</div>
+        <div class="chip" data-val="Creative">Creative & Lateral</div>
+        <div class="chip" data-val="Risk">Risk Assessment</div>
+      </div>
+    </div>
+
+    <!-- AI-Inferred Dynamic Interests -->
+    <div class="profile-card">
+      <div class="card-title">
+        <span>AI-Learned Recurring Interests</span>
+        <span style="font-size: 11px; color: #8888a6; text-transform: none;">From conversation history</span>
+      </div>
+      <div id="inferred-list" class="interests-list">
+        <!-- Dynamically rendered list -->
       </div>
 
-      <div class="form-group">
-        <label for="age_range">Age Range</label>
-        <select id="age_range" name="age_range">
-          <option value="18-24">18 – 24</option>
-          <option value="25-34" selected>25 – 34</option>
-          <option value="35-49">35 – 49</option>
-          <option value="50+">50+</option>
-        </select>
+      <!-- Add Interest Manually -->
+      <div style="margin-top: 16px; border-top: 1px solid #2d2d42; padding-top: 12px;">
+        <label style="font-size: 12px; color: #9494b2;">Pin New Research Topic Directly:</label>
+        <div class="manual-add-row">
+          <select id="manual-cat-select">
+            <option value="">Select an interest category...</option>
+          </select>
+          <button type="button" id="btn-add-interest" class="btn-add">+ Add Topic</button>
+        </div>
       </div>
+    </div>
 
-      <div class="form-group">
-        <label for="interests">Primary Interests (comma-separated)</label>
-        <input
-          type="text"
-          id="interests"
-          name="interests"
-          placeholder="e.g. LLM Alignment, AI Governance, Chips, Multi-agent Systems"
-          value="AI Safety, Foundation Models, Multi-agent Systems"
-        />
+    <!-- Excluded Interests -->
+    <div class="profile-card" id="excluded-card" style="display: none;">
+      <div class="card-title">
+        <span style="color: #ef4444;">Excluded Topics (Never Inferred)</span>
       </div>
-
-      <div class="form-group">
-        <label for="response_style">Preferred Synthesis Style</label>
-        <select id="response_style" name="response_style">
-          <option value="Analytical & Rigorous">Analytical & Rigorous (Deep analysis)</option>
-          <option value="Concise & Direct">Concise & Direct (Key findings first)</option>
-          <option value="Balanced & Multi-perspective">Balanced & Multi-perspective (Full spectrum)</option>
-        </select>
+      <div id="excluded-list" class="chip-container">
+        <!-- Excluded chips with restore icon -->
       </div>
+    </div>
 
-      <button type="submit" class="btn primary">Save & Continue to Research</button>
-      <button type="button" id="skip-btn" class="btn btn-secondary">Skip to Research Assistant</button>
-    </form>
+    <!-- Synthesis Style & Language Settings -->
+    <div class="profile-card">
+      <div class="card-title">Synthesis & Response Style</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="preferred-length">Response Depth</label>
+          <select id="preferred-length">
+            <option value="detailed">Detailed & Comprehensive</option>
+            <option value="concise">Concise & Key Takeaways</option>
+            <option value="exhaustive">Exhaustive & In-Depth</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="preferred-language">Response Language</label>
+          <select id="preferred-language">
+            <option value="English">English</option>
+            <option value="Spanish">Spanish</option>
+            <option value="French">French</option>
+            <option value="German">German</option>
+            <option value="Japanese">Japanese</option>
+            <option value="Hindi">Hindi</option>
+          </select>
+        </div>
+      </div>
+    </div>
 
-    <div id="onboard-error" class="error-message" style="display:none;"></div>
+    <div class="button-group">
+      <button type="button" id="save-btn" class="btn btn-primary">Save Personalization Profile</button>
+      <button type="button" id="reset-interests-btn" class="btn btn-danger-outline">Reset Learned AI Interests</button>
+      <button type="button" id="back-btn" class="btn btn-secondary">Back to Research Assistant</button>
+    </div>
   </div>
 
   <script src="/static/auth.js"></script>
@@ -108,56 +418,261 @@
       window.location.href = '/static/login.html';
     }
 
-    // Prefill if already set
-    fetch('/preferences/', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    .then(r => r.ok ? r.json() : null)
-    .then(pref => {
-      if (pref) {
-        if (pref.role) document.getElementById('role').value = pref.role;
-        if (pref.age_range) document.getElementById('age_range').value = pref.age_range;
-        if (pref.interests) document.getElementById('interests').value = pref.interests;
-        if (pref.response_style) document.getElementById('response_style').value = pref.response_style;
-      }
-    })
-    .catch(() => {});
+    const ALL_CATEGORIES = [
+      "Politics", "Technology", "Artificial Intelligence", "Business and Startups",
+      "Economy and Finance", "Sports", "Science", "Environment", "Healthcare",
+      "International Affairs", "Education", "Employment", "Cybersecurity", "Innovation"
+    ];
 
-    document.getElementById('onboarding-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const errorDiv = document.getElementById('onboard-error');
-      const payload = {
-        role: document.getElementById('role').value,
-        age_range: document.getElementById('age_range').value,
-        interests: document.getElementById('interests').value,
-        response_style: document.getElementById('response_style').value,
-        onboarding_completed: true,
-      };
+    let currentProfile = null;
+
+    function showStatus(msg, isError = false) {
+      const el = document.getElementById('status-msg');
+      el.textContent = msg;
+      el.className = `alert-banner ${isError ? 'alert-error' : 'alert-success'}`;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 4000);
+    }
+
+    function initCategoryChips() {
+      const container = document.getElementById('category-chips');
+      const selectEl = document.getElementById('manual-cat-select');
+      container.innerHTML = '';
+      selectEl.innerHTML = '<option value="">Select an interest category...</option>';
+
+      ALL_CATEGORIES.forEach(cat => {
+        // Chip
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        chip.dataset.val = cat;
+        chip.textContent = cat;
+        chip.addEventListener('click', () => chip.classList.toggle('active'));
+        container.appendChild(chip);
+
+        // Select option
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        selectEl.appendChild(opt);
+      });
+
+      // Perspective chips toggle
+      document.querySelectorAll('#perspective-chips .chip').forEach(c => {
+        c.addEventListener('click', () => c.classList.toggle('active'));
+      });
+    }
+
+    function renderProfile(profile) {
+      currentProfile = profile;
+
+      // Master Toggle
+      const toggle = document.getElementById('personalization-toggle');
+      toggle.checked = profile.enabled;
+      document.getElementById('toggle-label').textContent = profile.enabled ? 'Active' : 'Disabled';
+
+      // Explicit Category Chips
+      const activeCats = new Set(profile.preferred_categories || []);
+      document.querySelectorAll('#category-chips .chip').forEach(c => {
+        c.classList.toggle('active', activeCats.has(c.dataset.val));
+      });
+
+      // Preferred Perspective Chips
+      const activePersp = new Set(profile.preferred_perspectives || []);
+      document.querySelectorAll('#perspective-chips .chip').forEach(c => {
+        c.classList.toggle('active', activePersp.has(c.dataset.val));
+      });
+
+      // Selects
+      if (profile.preferred_length) document.getElementById('preferred-length').value = profile.preferred_length;
+      if (profile.preferred_language) document.getElementById('preferred-language').value = profile.preferred_language;
+
+      // Inferred Interests List
+      const listEl = document.getElementById('inferred-list');
+      listEl.innerHTML = '';
+      const inferred = profile.inferred_interests || [];
+
+      if (inferred.length === 0) {
+        listEl.innerHTML = `
+          <div style="text-align: center; color: #787896; font-size: 13px; padding: 16px 0;">
+            No interests inferred yet. Start chatting about your favorite topics and EvoRAG will build your profile!
+          </div>
+        `;
+      } else {
+        inferred.forEach(item => {
+          const statusClass = `badge-${item.status || 'emerging'}`;
+          const row = document.createElement('div');
+          row.className = 'interest-item';
+          row.innerHTML = `
+            <div class="interest-info">
+              <span class="interest-name">${item.category}</span>
+              <span class="badge ${statusClass}">${item.status || 'emerging'}</span>
+              <span style="font-size: 11px; color: #8c8ca8;">Score: ${(item.score * 100).toFixed(0)}% (${item.supporting_interactions || 1} queries)</span>
+            </div>
+            <button class="btn-icon-del" title="Exclude Topic" data-cat="${item.category}">✕</button>
+          `;
+          row.querySelector('.btn-icon-del').addEventListener('click', () => excludeInterest(item.category));
+          listEl.appendChild(row);
+        });
+      }
+
+      // Excluded List
+      const exCard = document.getElementById('excluded-card');
+      const exList = document.getElementById('excluded-list');
+      const excluded = profile.excluded_interests || [];
+      if (excluded.length > 0) {
+        exCard.style.display = 'block';
+        exList.innerHTML = '';
+        excluded.forEach(cat => {
+          const exChip = document.createElement('div');
+          exChip.className = 'chip';
+          exChip.style.borderColor = '#ef4444';
+          exChip.style.display = 'flex';
+          exChip.style.alignItems = 'center';
+          exChip.style.gap = '6px';
+          exChip.innerHTML = `
+            <span>${cat}</span>
+            <button class="btn-icon-restore" title="Restore Topic">↺</button>
+          `;
+          exChip.querySelector('.btn-icon-restore').addEventListener('click', () => restoreInterest(cat));
+          exList.appendChild(exChip);
+        });
+      } else {
+        exCard.style.display = 'none';
+      }
+    }
+
+    async function loadProfile() {
+      try {
+        const resp = await fetch('/personalization/profile', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!resp.ok) throw new Error('Failed to load profile');
+        const data = await resp.json();
+        renderProfile(data);
+      } catch (err) {
+        showStatus(err.message, true);
+      }
+    }
+
+    async function saveProfile() {
+      const selectedCats = Array.from(document.querySelectorAll('#category-chips .chip.active')).map(c => c.dataset.val);
+      const selectedPersp = Array.from(document.querySelectorAll('#perspective-chips .chip.active')).map(c => c.dataset.val);
+      const isEnabled = document.getElementById('personalization-toggle').checked;
+      const prefLen = document.getElementById('preferred-length').value;
+      const prefLang = document.getElementById('preferred-language').value;
 
       try {
-        const resp = await fetch('/preferences/', {
+        const resp = await fetch('/personalization/profile', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            enabled: isEnabled,
+            preferred_categories: selectedCats,
+            preferred_perspectives: selectedPersp,
+            preferred_length: prefLen,
+            preferred_language: prefLang,
+          })
         });
-        if (!resp.ok) {
-          const err = await resp.json();
-          throw new Error(err.detail || 'Failed to save preferences');
-        }
-        window.location.href = '/static/index.html';
+        if (!resp.ok) throw new Error('Failed to update personalization profile');
+        const updated = await resp.json();
+        renderProfile(updated);
+        showStatus('Personalization profile successfully saved!');
       } catch (err) {
-        errorDiv.textContent = err.message;
-        errorDiv.style.display = 'block';
+        showStatus(err.message, true);
       }
-    });
+    }
 
-    document.getElementById('skip-btn').addEventListener('click', () => {
+    async function excludeInterest(category) {
+      if (!confirm(`Exclude "${category}" from your personalization profile? EvoRAG will no longer prioritize or learn this topic.`)) return;
+      try {
+        const resp = await fetch(`/personalization/interests/${encodeURIComponent(category)}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!resp.ok) throw new Error('Failed to exclude interest');
+        const updated = await resp.json();
+        renderProfile(updated);
+        showStatus(`"${category}" excluded.`);
+      } catch (err) {
+        showStatus(err.message, true);
+      }
+    }
+
+    async function restoreInterest(category) {
+      try {
+        const resp = await fetch(`/personalization/interests/restore/${encodeURIComponent(category)}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!resp.ok) throw new Error('Failed to restore interest');
+        const updated = await resp.json();
+        renderProfile(updated);
+        showStatus(`"${category}" restored.`);
+      } catch (err) {
+        showStatus(err.message, true);
+      }
+    }
+
+    async function addManualInterest() {
+      const selectEl = document.getElementById('manual-cat-select');
+      const cat = selectEl.value;
+      if (!cat) {
+        alert('Please select an interest category first.');
+        return;
+      }
+      try {
+        const resp = await fetch('/personalization/interests/manual', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ category: cat })
+        });
+        if (!resp.ok) throw new Error('Failed to add manual interest');
+        const updated = await resp.json();
+        renderProfile(updated);
+        selectEl.value = '';
+        showStatus(`Pinned "${cat}" as active recurring interest!`);
+      } catch (err) {
+        showStatus(err.message, true);
+      }
+    }
+
+    async function resetInterests() {
+      if (!confirm('Are you sure you want to reset all AI-learned interests? Your explicit preference selections will be preserved.')) return;
+      try {
+        const resp = await fetch('/personalization/reset', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!resp.ok) throw new Error('Failed to reset interests');
+        const updated = await resp.json();
+        renderProfile(updated);
+        showStatus('Learned interests reset.');
+      } catch (err) {
+        showStatus(err.message, true);
+      }
+    }
+
+    // Event listeners
+    document.getElementById('save-btn').addEventListener('click', saveProfile);
+    document.getElementById('btn-add-interest').addEventListener('click', addManualInterest);
+    document.getElementById('reset-interests-btn').addEventListener('click', resetInterests);
+    document.getElementById('back-btn').addEventListener('click', () => {
       window.location.href = '/static/index.html';
     });
+
+    document.getElementById('personalization-toggle').addEventListener('change', (e) => {
+      document.getElementById('toggle-label').textContent = e.target.checked ? 'Active' : 'Disabled';
+    });
+
+    // Initialize
+    initCategoryChips();
+    loadProfile();
   </script>
 </body>
 </html>
-

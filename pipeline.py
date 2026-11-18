@@ -19,6 +19,14 @@ from score_store import append_score_entry
 from synthesis import select_top_personas, synthesize_top_k
 from utils import call_gemini_async, word_count
 from voting import build_score_matrix, compute_final_scores, summarize_received_scores
+from models import User
+from personalization_agent import (
+    compute_personalization_scores,
+    build_personalization_context,
+    generate_personalization_summary,
+    extract_query_interests,
+    get_or_create_profile,
+)
 
 log = logging.getLogger(__name__)
 
@@ -129,19 +137,54 @@ async def evorag_query(
     query: str,
     top_k: int = RETRIEVAL_TOP_K,
     attachments: Optional[List[ProcessedFile]] = None,
+    user: Optional[User] = None,
+    session: Optional[Any] = None,
 ) -> dict[str, Any]:
     """Run Phase 7 multimodal input understanding, routing, multi-persona consensus, and adaptive response generation.
 
     Workflow:
       1. Analyze query & attachments with the Input Understanding Agent.
-      2. Route query to appropriate document, image, tabular, or news retrieval path.
-      3. For comparative queries, expand retrieval across all target entities.
-      4. If local context is sufficient and no complex multimodal inputs exist: run 8-persona local consensus.
-      5. If attachments, image inputs, or insufficient/outdated local evidence exist: run structured synthesis.
-      6. Formulate adaptive UI components (tables, Chart.js charts, timelines, graphs).
+      2. Check user personalization profile and compute persona affinity weights.
+      3. Route query to appropriate document, image, tabular, or news retrieval path.
+      4. For comparative queries, expand retrieval across all target entities.
+      5. If local context is sufficient and no complex multimodal inputs exist: run 8-persona local consensus.
+      6. If attachments, image inputs, or insufficient/outdated local evidence exist: run structured synthesis.
+      7. Formulate adaptive UI components (tables, Chart.js charts, timelines, graphs).
     """
     query_id = str(uuid4())
     attachments = attachments or []
+
+    # Step 0: Resolve User Personalization Profile (if user authenticated)
+    pers_scores: Optional[Dict[str, float]] = None
+    pers_context: Optional[str] = None
+    pers_summary: str = ""
+    is_personalized: bool = False
+
+    if user and getattr(user, "id", None):
+        try:
+            from database import get_session
+            s = session
+            close_s = False
+            if s is None:
+                s = next(get_session())
+                close_s = True
+            try:
+                profile = get_or_create_profile(user.id, s)
+                if profile and profile.enabled:
+                    pers_scores = compute_personalization_scores(query, profile)
+                    pers_context = build_personalization_context(profile, query, pers_scores)
+                    detected_cats = [c["category"] for c in extract_query_interests(query)]
+                    pers_summary = generate_personalization_summary(profile, detected_cats)
+                    is_personalized = True
+                    log.info(
+                        "Applying personalization for user_id=%d: summary='%s', scores=%s",
+                        user.id, pers_summary, pers_scores
+                    )
+            finally:
+                if close_s and s:
+                    s.close()
+        except Exception as p_err:
+            log.warning("Personalization context resolution failed: %s", p_err)
 
     # Step 1: Input Understanding Agent extracts structured intent, entities, and output plan
     structured_query: StructuredQuery = await understand_user_query(query, attachments)
@@ -230,6 +273,7 @@ async def evorag_query(
             attachments=attachments,
             enable_search_grounding=structured_query.constraints.requires_latest_information,
             max_output_tokens=2500,
+            personalization_context=pers_context,
         )
         raw_response = gemini_result.get("answer") or ""
 
@@ -273,8 +317,19 @@ async def evorag_query(
             "risk-evaluative": 7.9,
             "creative-lateral": 7.8,
         }
-        top_personas = ["synthesis-integrative", "domain-expert", "analytical-critical"]
-        winner = "synthesis-integrative"
+
+        # Apply decoupled personalization scoring (80% peer score + 20% personalization preference)
+        if pers_scores:
+            ranked_pids = sorted(
+                all_persona_ids,
+                key=lambda pid: 0.80 * final_scores.get(pid, 8.0) + 0.20 * (pers_scores.get(pid, 0.5) * 10.0),
+                reverse=True,
+            )
+            top_personas = ranked_pids[:3]
+            winner = top_personas[0]
+        else:
+            top_personas = ["synthesis-integrative", "domain-expert", "analytical-critical"]
+            winner = "synthesis-integrative"
 
         # Construct realistic 8x8 peer scoring matrix
         score_matrix = {}
@@ -342,6 +397,12 @@ async def evorag_query(
                 "reason": reason,
                 "fallback_used": requires_gemini,
             },
+            "personalization_summary": pers_summary if is_personalized else "",
+            "applied_personalization": {
+                "is_personalized": is_personalized,
+                "summary": pers_summary,
+                "weights": pers_scores,
+            } if is_personalized else None,
         }
 
     # Step 4: Pure Local Pipeline when context is sufficient and no attachments exist
@@ -350,6 +411,7 @@ async def evorag_query(
         top_k=top_k,
         persona_ids=None,
         pre_retrieved_chunks=chunks,
+        personalization_context=pers_context,
     )
     responses: dict[str, Optional[str]] = {
         persona["id"]: persona.get("response") or None
@@ -358,7 +420,7 @@ async def evorag_query(
 
     score_matrix = await build_score_matrix(query, responses)
     final_scores = compute_final_scores(score_matrix)
-    top_personas = select_top_personas(final_scores, responses)
+    top_personas = select_top_personas(final_scores, responses, personalization_scores=pers_scores)
     final_answer = await synthesize_top_k(query, top_personas, responses, final_scores)
 
     received = summarize_received_scores(score_matrix)
@@ -410,4 +472,10 @@ async def evorag_query(
             "reason": reason,
             "fallback_used": False,
         },
+        "personalization_summary": pers_summary if is_personalized else "",
+        "applied_personalization": {
+            "is_personalized": is_personalized,
+            "summary": pers_summary,
+            "weights": pers_scores,
+        } if is_personalized else None,
     }
