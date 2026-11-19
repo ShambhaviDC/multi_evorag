@@ -606,7 +606,10 @@ def retrieve_temporal_event_context(
             )
         lines.append("")
         lines.append("SUMMARY OF REPORTING:")
-        lines.append(summary_data.get("synthesized_narrative", top_event.event_description))
+        if top_event.event_description and top_event.event_description != "Real-world evolving event cluster.":
+            lines.append(top_event.event_description)
+        if summary_data.get("synthesized_narrative"):
+            lines.append(summary_data["synthesized_narrative"])
         lines.append("=" * 65)
 
         return {

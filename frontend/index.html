@@ -3939,6 +3939,7 @@ function renderThread(messages) {
     const isUser = msg.role === 'user';
     const msgEl = document.createElement('div');
     const timeStr = formatRelativeTime(msg.timestamp);
+    let otherComps = [];
 
     if (isUser) {
       // ChatGPT style user bubble with optional file attachment chips
@@ -3958,7 +3959,7 @@ function renderThread(messages) {
       const sources = Array.isArray(msg.sources) ? msg.sources : [];
       const components = Array.isArray(msg.components) ? msg.components : [];
       const mediaGalleryComp = components.filter(c => c.type === 'media_gallery');
-      const otherComps = components.filter(c => c.type !== 'media_gallery');
+      otherComps = components.filter(c => c.type !== 'media_gallery');
       const mediaHtml = renderAdaptiveComponentsHtml(mediaGalleryComp, `${idx}-top`);
       const otherComponentsHtml = renderAdaptiveComponentsHtml(otherComps, idx);
       const contentHtml = renderMarkdownWithCitations(msg.content, sources, `thread-${idx}`);

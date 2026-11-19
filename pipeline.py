@@ -59,18 +59,35 @@ def clean_final_answer(text: str) -> str:
     Ensures the user receives clean, direct, informative news analysis.
     """
     if not text:
-        return text
+        return ""
 
-    # 1. Strip internal system classification sentences like:
-    # "It is classified as an 'Emerging' active national news topic with an assessed confidence level of 85% [1]."
+    # 1. Strip meta lead-ins like:
+    # "Based on the provided context, the event regarding ... is tracked as an emerging political development [1]."
     text = re.sub(
-        r"(?:It\s+is\s+)?(?:currently\s+)?classified\s+as\s+(?:an?\s+)?['\"][^'\"]+['\"]\s+(?:active\s+)?(?:national\s+|international\s+)?news\s+topic\s+with\s+an\s+assessed\s+confidence(?:\s+level)?\s+of\s+\d+%(?:\s*\[\d+\])?\.?",
+        r"(?:Based\s+on\s+the\s+provided\s+context,?\s*)?(?:the\s+event\s+regarding\s+)?['\"]?[^.\n]+?['\"]?\s+is\s+tracked\s+as\s+an?\s+[\w\s-]+\s+(?:development|event|topic)(?:\s*\[\d+\])?\.?\s*",
         "",
         text,
         flags=re.IGNORECASE,
     )
+
+    # 2. Strip internal system classification sentences:
+    # e.g. "It is classified as an 'Emerging' active national news topic with an assessed confidence level of 85% [1]."
     text = re.sub(
-        r"(?:with\s+)?an\s+assessed\s+confidence\s+(?:level|rating|score)\s+of\s+\d+%(?:\s*\[\d+\])?\.?",
+        r"(?:It\s+is\s+)?(?:currently\s+)?classified\s+as\s+(?:an?\s+)?['\"][^'\"]+['\"]\s+(?:active\s+)?(?:national\s+|international\s+)?news\s+topic(?:\s+with\s+an\s+assessed\s+confidence(?:\s+level)?\s+of\s+\d+%)?(?:\s*\[\d+\])?\.?",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+    # Bullet or sentence: "• Status: The current assessed status of this political event is categorized as "Emerging" with an 85% confidence rating [1] ."
+    text = re.sub(
+        r"(?:\n\s*•?\s*)?(?:Status|Current\s+Status):\s*[^.\n]*(?:categorized\s+as|confidence\s+(?:rating|level|score))\s*[^.\n]*\.",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+    # General confidence rating expressions
+    text = re.sub(
+        r"(?:with\s+)?(?:an\s+)?(?:assessed\s+)?confidence\s+(?:level|rating|score)\s*(?:of)?\s*\d+%(?:\s*\[\d+\])?\.?",
         "",
         text,
         flags=re.IGNORECASE,
@@ -82,23 +99,48 @@ def clean_final_answer(text: str) -> str:
         flags=re.IGNORECASE,
     )
 
-    # 2. Strip robotic meta-sections:
-    # "Logical Structure and Assumptions", "Analytical Critique and Limitations", "Implications and Risks" (when complaining about context)
+    # Bullet or sentence: "• Date and Origin: The meeting is marked by a single recorded chronological data point acting as both the initial announcement and the origin point on ..."
+    text = re.sub(
+        r"(?:\n\s*•?\s*)?Date\s+and\s+Origin:\s*[^.\n]*(?:single\s+recorded\s+chronological\s+data\s+point|initial\s+announcement)[^.\n]*\.",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    # Bullet or sentence: "• Temporal Context: Positioned alongside other ..."
+    text = re.sub(
+        r"(?:\n\s*•?\s*)?Temporal\s+Context:\s*[^.\n]*contemporaneous\s+point[^.\n]*\.",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    # 3. Strip robotic meta-sections:
+    # "Logical Structure and Assumptions", "Analytical Critique and Limitations", "Implications and Risks"
     unwanted_sections_pattern = (
         r"(?:\n\s*|\A)(?:#{1,4}\s+|\*\*)?"
         r"(?:Logical\s+Structure\s+and\s+Assumptions"
         r"|Analytical\s+Critique\s+and\s+Limitations"
         r"|Critique\s+and\s+Limitations"
         r"|Limitations(?:\s+and\s+Critique)?"
+        r"|Limitations(?:\s+and\s+Assumptions)?"
         r"|Weaknesses\s+and\s+Missing\s+Evidence"
+        r"|Methodological\s+Uncertainty"
+        r"|Single-Source\s+Reliance"
+        r"|Lack\s+of\s+Substantive\s+Details"
         r"|Implications\s+and\s+Risks)"
         r"(?:\*\*)?:?[\s\S]*?(?=(?:\n#{1,4}\s+|\n\*\*[A-Z]|\Z))"
     )
     text = re.sub(unwanted_sections_pattern, "", text, flags=re.IGNORECASE).rstrip()
 
-    # 3. Clean double spaces, orphaned periods, and trailing whitespace
+    # If "Timeline and Sequence" only left empty or bullet remnants, clean it up
+    text = re.sub(r"(?:\n\s*|\A)(?:#{1,4}\s+|\*\*)?Timeline\s+and\s+Sequence(?:\*\*)?:?\s*(?=(?:\n#{1,4}\s+|\n\*\*[A-Z]|\Z))", "", text, flags=re.IGNORECASE)
+
+    # 4. Clean double spaces, orphaned periods, and trailing whitespace
     text = re.sub(r"[ \t]{2,}", " ", text)
     text = re.sub(r"\.\s*\.", ".", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = re.sub(r"^\s*[.,;:–—]\s*", "", text.strip())
     return text.strip()
 
 
@@ -329,11 +371,12 @@ async def evorag_query(
             "Provide an authoritative, detailed consensus news answer along with 8 distinct, concise analytical perspectives (1-2 sharp sentences each) corresponding to each of the 8 EvoRAG personas:\n"
             f"{persona_guide}\n\n"
             "STRICT RULES FOR NEWS & CONSENSUS REPORTING:\n"
-            "- Focus directly on explaining the news and answering the user's specific query authoritatively and thoroughly.\n"
+            "- Focus directly on explaining the real-world news story and answering the user's specific query authoritatively and thoroughly.\n"
             "- Explain WHAT happened, who is involved, key proposals/statements, historical context, and practical significance.\n"
             "- Attribution: Citing verified news publishers (e.g. Inside Higher Ed, BBC News, Reuters) is encouraged.\n"
-            "- STRICTLY FORBIDDEN: Do NOT output internal pipeline classifications or metrics (never say 'classified as Emerging', 'confidence level of 85%', 'status confidence', 'initial announcement', etc.).\n"
-            "- STRICTLY FORBIDDEN: Do NOT output meta-academic sections like 'Logical Structure and Assumptions', 'Analytical Critique and Limitations', 'Implications and Risks', or 'Weaknesses'.\n"
+            "- INTEGRATING REAL-WORLD KNOWLEDGE: If retrieved snippets or timeline entries are brief, actively integrate your deep real-world knowledge of the figures, institutions, and events to provide a comprehensive, engaging story. NEVER critique the database or claim 'context lacks details', 'single-source reliance', or 'isolated announcement'.\n"
+            "- STRICTLY FORBIDDEN: Do NOT output internal pipeline classifications or metrics (never say 'classified as Emerging', 'confidence level of 85%', 'status confidence', 'initial announcement', 'single recorded chronological data point', etc.).\n"
+            "- STRICTLY FORBIDDEN: Do NOT output meta-academic sections like 'Logical Structure and Assumptions', 'Analytical Critique and Limitations', 'Implications and Risks', 'Methodological Uncertainty', or 'Weaknesses'.\n"
             "- KNOWLEDGE GAPS & PREDICTIONS: Do NOT claim that context lacks information or state speculative disclaimers for regular news questions. Only mention a knowledge gap if the user explicitly asks you to predict, forecast, or guess future unknown outcomes.\n"
             "- Do NOT mention Gemini, Google, APIs, fallbacks, or external sources anywhere in the output.\n"
             "- Speak strictly as the EvoRAG Consensus Engine.\n\n"

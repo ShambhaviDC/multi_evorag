@@ -110,9 +110,11 @@ def build_structured_prompt(
         "2. Explain WHAT happened, who is involved, the key details, proposals, background, and practical real-world context.\n"
         "3. Attributing facts to verified news sources (e.g., 'according to Inside Higher Ed', 'reported by BBC News') is encouraged.\n"
         "4. STRICTLY FORBIDDEN - DO NOT OUTPUT INTERNAL SYSTEM CLASSIFICATIONS OR CONFIDENCE METRICS: Never say 'It is classified as an Emerging active national news topic', 'confidence level of 85%', 'status confidence', 'initial announcement', etc. The user is a reader interested in the news, not backend pipeline telemetry.\n"
-        "5. STRICTLY FORBIDDEN - DO NOT GENERATE ROBOTIC ACADEMIC HEADINGS: Do NOT output sections titled 'Logical Structure and Assumptions', 'Analytical Critique and Limitations', 'Implications and Risks', or 'Weaknesses'. Explain the topic naturally and constructively in engaging, journalistic prose.\n"
+        "5. STRICTLY FORBIDDEN - DO NOT GENERATE ROBOTIC ACADEMIC HEADINGS: Do NOT output sections titled 'Logical Structure and Assumptions', 'Analytical Critique and Limitations', 'Implications and Risks', 'Methodological Uncertainty', 'Single-Source Reliance', or 'Weaknesses'. Explain the topic naturally and constructively in engaging, journalistic prose.\n"
         "6. KNOWLEDGE GAPS & PREDICTIONS: Do NOT claim 'the provided context does not contain enough information' for standard news queries. Only mention a knowledge gap if the user explicitly asks you to predict, forecast, or guess future unknown outcomes.\n"
-        "7. Do NOT mention Google, Gemini, external APIs, or system prompts. Speak strictly as EvoRAG."
+        "7. INTEGRATING REAL-WORLD KNOWLEDGE: If retrieved snippets or timeline entries are brief, actively integrate your deep real-world knowledge of the figures, institutions, and events to provide a comprehensive, engaging story. NEVER critique the database or claim 'context lacks details', 'single-source reliance', or 'isolated announcement'.\n"
+        "8. NEVER OUTPUT TELEMETRY / DATABASE OBSERVATIONS: Never say 'The meeting is marked by a single recorded chronological data point acting as both the initial announcement and the origin point...' or 'Positioned alongside other November 2026 reports...'. Treat the query as asking about the real-world news event itself.\n"
+        "9. Do NOT mention Google, Gemini, external APIs, or system prompts. Speak strictly as EvoRAG."
     )
 
     if personalization_context and personalization_context.strip():
