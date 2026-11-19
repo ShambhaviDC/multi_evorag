@@ -3935,29 +3935,36 @@ async function loadNewsHomepage(isAuth = false, category = 'all') {
       articlesToRender = data.articles;
     } else if (data.sections) {
       const seenIds = new Set();
+      const addArticle = (a) => {
+        if (a && a.id && !seenIds.has(a.id)) {
+          seenIds.add(a.id);
+          articlesToRender.push(a);
+        }
+      };
+      const processSectionVal = (secVal) => {
+        if (Array.isArray(secVal)) {
+          secVal.forEach(addArticle);
+        } else if (secVal && typeof secVal === 'object') {
+          Object.values(secVal).forEach(subList => {
+            if (Array.isArray(subList)) subList.forEach(addArticle);
+          });
+        }
+      };
+
       const order = [
         'for_you', 'latest_developments', 'top_headlines', 'latest_news',
-        'technology_ai', 'sports_cricket', 'agriculture', 'business_economy',
+        'selected_categories', 'trending_in_interests', 'technology_ai',
+        'sports_cricket', 'agriculture', 'business_economy',
         'science_health', 'national_world', 'explore_other_topics'
       ];
       order.forEach(sec => {
         if (data.sections[sec]) {
-          data.sections[sec].forEach(a => {
-            if (!seenIds.has(a.id)) {
-              seenIds.add(a.id);
-              articlesToRender.push(a);
-            }
-          });
+          processSectionVal(data.sections[sec]);
         }
       });
       Object.keys(data.sections).forEach(sec => {
         if (!order.includes(sec)) {
-          data.sections[sec].forEach(a => {
-            if (!seenIds.has(a.id)) {
-              seenIds.add(a.id);
-              articlesToRender.push(a);
-            }
-          });
+          processSectionVal(data.sections[sec]);
         }
       });
     }
@@ -4176,26 +4183,32 @@ function renderEventCards(events) {
   events.forEach(evt => {
     const card = document.createElement('div');
     card.className = 'event-card';
-    const icon = catIcons[evt.event_category] || '⏳';
-    const statusClass = `status-${(evt.current_status || 'developing').toLowerCase()}`;
-    const dateRange = (evt.event_start_date && evt.last_updated && evt.event_start_date !== evt.last_updated)
-      ? `${evt.event_start_date} → ${evt.last_updated}`
-      : (evt.last_updated || evt.event_start_date || 'Recent');
+    const cat = evt.event_category || evt.category || 'General';
+    const title = evt.event_title || evt.title || 'Untitled Event';
+    const desc = evt.event_description || evt.description || 'Real-world evolving event cluster.';
+    const status = evt.current_status || evt.status || 'Emerging';
+    const startDate = evt.event_start_date || evt.start_date || '';
+    const lastUp = evt.last_updated || '';
+    const icon = catIcons[cat] || '⏳';
+    const statusClass = `status-${status.toLowerCase()}`;
+    const dateRange = (startDate && lastUp && startDate !== lastUp)
+      ? `${startDate} → ${lastUp}`
+      : (lastUp || startDate || 'Recent');
 
     card.innerHTML = `
       <div>
         <div class="event-card-header">
-          <span class="news-cat-badge">${icon} ${escHtml(evt.event_category || 'General')}</span>
-          <span class="event-status-pill ${statusClass}">${escHtml(evt.current_status || 'Emerging')}</span>
+          <span class="news-cat-badge">${icon} ${escHtml(cat)}</span>
+          <span class="event-status-pill ${statusClass}">${escHtml(status)}</span>
         </div>
-        <h4 class="event-card-title" title="${escHtml(evt.event_title)}">${escHtml(evt.event_title)}</h4>
-        <div class="event-card-desc">${escHtml(evt.event_description || 'Real-world evolving event cluster.')}</div>
+        <h4 class="event-card-title" title="${escHtml(title)}">${escHtml(title)}</h4>
+        <div class="event-card-desc">${escHtml(desc)}</div>
       </div>
       <div>
         <div class="event-card-footer">
-          <span>📚 ${evt.article_count} article${evt.article_count > 1 ? 's' : ''} • ${escHtml(dateRange)}</span>
+          <span>📚 ${evt.article_count || 1} article${(evt.article_count || 1) > 1 ? 's' : ''} • ${escHtml(dateRange)}</span>
           <button class="news-ask-btn explore-timeline-btn" data-id="${escHtml(evt.event_id)}" style="background:rgba(0, 210, 255, 0.1); color:var(--accent2); border-color:rgba(0, 210, 255, 0.3);">
-            <span>⏱️ Timeline (${evt.article_count})</span>
+            <span>⏱️ Timeline (${evt.article_count || 1})</span>
           </button>
         </div>
       </div>
@@ -4234,22 +4247,27 @@ async function openEventTimelineModal(eventId) {
     const resp = await fetch(`/events/${encodeURIComponent(eventId)}/timeline`);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
-    const evt = data.event;
+    const evt = data.event || data;
     activeModalEvent = evt;
     const timeline = data.timeline || [];
+    const title = evt.event_title || evt.title || 'Tracked Event';
+    const cat = evt.event_category || evt.category || 'News Event';
+    const status = evt.current_status || evt.status || 'Developing';
+    const conf = evt.status_confidence !== undefined ? Math.round(evt.status_confidence * 100) : 85;
+    const sDate = evt.event_start_date || evt.start_date || '';
+    const lDate = evt.last_updated || '';
+    const dateRange = (sDate && lDate && sDate !== lDate) ? `${sDate} → ${lDate}` : (lDate || sDate || 'Recent');
+    const artCount = evt.article_count || (timeline.length || 1);
 
-    $('modal-event-title').textContent = evt.event_title;
-    $('modal-event-category-badge').textContent = evt.event_category || 'News Event';
-    $('modal-event-status').innerHTML = `Status: <strong>${escHtml(evt.current_status || 'Developing')}</strong> (${Math.round((evt.status_confidence || 1.0) * 100)}% conf)`;
-    const dateRange = (evt.event_start_date && evt.last_updated && evt.event_start_date !== evt.last_updated)
-      ? `${evt.event_start_date} → ${evt.last_updated}`
-      : (evt.last_updated || evt.event_start_date || 'Recent');
+    $('modal-event-title').textContent = title;
+    $('modal-event-category-badge').textContent = cat;
+    $('modal-event-status').innerHTML = `Status: <strong>${escHtml(status)}</strong> (${conf}% conf)`;
     $('modal-event-dates').textContent = `Active: ${dateRange}`;
-    $('modal-event-count').textContent = `${evt.article_count} verified articles`;
+    $('modal-event-count').textContent = `${artCount} verified article${artCount > 1 ? 's' : ''}`;
 
     $('modal-event-narrative').innerHTML = `
       <div style="font-weight:700; color:var(--accent2); margin-bottom:4px; font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">Synthesized Narrative & Turning Points</div>
-      <div>${escHtml(data.synthesized_narrative || evt.event_description || 'Evolving event tracking.')}</div>
+      <div>${escHtml(data.synthesized_narrative || evt.event_description || evt.description || 'Evolving event tracking.')}</div>
     `;
 
     if (!timeline.length) {

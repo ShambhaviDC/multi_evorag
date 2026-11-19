@@ -61,11 +61,16 @@ def list_events(
         results.append({
             "event_id": evt.event_id,
             "title": evt.event_title,
+            "event_title": evt.event_title,
             "description": evt.event_description,
+            "event_description": evt.event_description,
             "category": evt.event_category,
+            "event_category": evt.event_category,
             "status": evt.current_status,
+            "current_status": evt.current_status,
             "status_confidence": round(evt.status_confidence, 2),
             "start_date": evt.event_start_date,
+            "event_start_date": evt.event_start_date,
             "last_updated": evt.last_updated,
             "article_count": evt.article_count,
             "primary_location": evt.primary_location,
@@ -109,13 +114,29 @@ def get_timeline(event_id: str, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="News event not found")
 
     timeline = get_event_timeline(event_id, session)
-    return {
+    summary_data = generate_event_evolution_summary(event_id, session)
+    evt_dict = {
         "event_id": evt.event_id,
+        "title": evt.event_title,
         "event_title": evt.event_title,
+        "description": evt.event_description,
+        "event_description": evt.event_description,
         "category": evt.event_category,
+        "event_category": evt.event_category,
         "status": evt.current_status,
+        "current_status": evt.current_status,
+        "status_confidence": evt.status_confidence,
+        "event_start_date": evt.event_start_date,
+        "start_date": evt.event_start_date,
+        "last_updated": evt.last_updated,
+        "article_count": evt.article_count,
+    }
+    return {
+        **evt_dict,
         "total_developments": len(timeline),
         "timeline": timeline,
+        "synthesized_narrative": summary_data.get("synthesized_narrative") if summary_data else "",
+        "event": evt_dict,
     }
 
 
