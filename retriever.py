@@ -542,11 +542,17 @@ def retrieve_temporal_event_context(
         from models import NewsEvent
         from event_evolution_service import get_event_timeline, generate_event_evolution_summary
 
-        # Clean search query
-        clean_q = re.sub(r"\b(what|when|why|how|the|is|are|in|on|at|latest|history|timeline|of|about)\b", "", query, flags=re.I).strip()
-        search_tokens = [t for t in clean_q.split() if len(t) > 2]
+        # Clean search query (strip generic conversational question words, conjunctions, and news metadata)
+        clean_q = re.sub(
+            r"\b(what|when|why|how|the|is|are|in|on|at|latest|history|timeline|of|about|news|regarding|updates|update|tell|give|me|show|and|or|for|with|from|to|a|an)\b",
+            "",
+            query,
+            flags=re.I
+        ).strip()
+        search_tokens = [re.sub(r"[^\w]", "", t).lower() for t in clean_q.split()]
+        search_tokens = [t for t in search_tokens if len(t) > 2 and t not in ("and", "the", "for", "with", "from")]
         if not search_tokens:
-            search_tokens = [query.strip()]
+            return {}
 
         # Query events by title, topic, or entity matching
         stmt = select(NewsEvent)
@@ -555,7 +561,6 @@ def retrieve_temporal_event_context(
             return {}
 
         scored_events: List[Tuple[NewsEvent, float]] = []
-        lower_q = query.lower()
 
         for evt in events:
             score = 0.0
@@ -565,15 +570,16 @@ def retrieve_temporal_event_context(
 
             for tok in search_tokens:
                 t_lower = tok.lower()
-                if t_lower in evt_title:
-                    score += 3.0
-                if t_lower in evt_entities:
-                    score += 2.0
-                if t_lower in evt_topics:
+                pattern = r"\b" + re.escape(t_lower) + r"\b"
+                if re.search(pattern, evt_title):
+                    score += 4.0
+                if re.search(pattern, evt_entities):
+                    score += 2.5
+                if re.search(pattern, evt_topics):
                     score += 1.0
 
-            if score > 0.0:
-                # Bonus for multi-article evolving events
+            # Only consider genuine semantic matches (requires at least one strong title or entity match >= 3.0)
+            if score >= 3.0:
                 score += min(2.0, evt.article_count * 0.5)
                 scored_events.append((evt, score))
 

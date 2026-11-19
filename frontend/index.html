@@ -1116,6 +1116,113 @@
       margin-top: 2px;
     }
 
+    /* Media Gallery Cards in Adaptive Response */
+    .media-gallery-card {
+      overflow: hidden;
+      padding: 12px 14px;
+    }
+    .media-count-badge {
+      font-size: 11px;
+      color: var(--accent2);
+      background: rgba(0, 210, 255, 0.12);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .media-gallery-scroll {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 4px 2px 10px 2px;
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+    }
+    .media-gallery-scroll::-webkit-scrollbar {
+      height: 6px;
+    }
+    .media-gallery-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+    .media-gallery-item {
+      flex: 0 0 240px;
+      max-width: 240px;
+      background: rgba(26, 32, 54, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .media-gallery-item:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      box-shadow: 0 6px 20px rgba(108, 99, 255, 0.25);
+    }
+    .media-thumb-wrap {
+      position: relative;
+      width: 100%;
+      height: 125px;
+      background: #0f1322;
+      overflow: hidden;
+    }
+    .media-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .media-gallery-item:hover .media-thumb-img {
+      transform: scale(1.05);
+    }
+    .media-badge-pill {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      background: rgba(10, 14, 26, 0.85);
+      backdrop-filter: blur(4px);
+      color: #fff;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .media-info-wrap {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex: 1;
+      gap: 6px;
+    }
+    .media-item-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #e2e8f0;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .media-item-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10.5px;
+      color: #94a3b8;
+    }
+    .media-category-pill {
+      color: var(--accent2);
+      background: rgba(0, 210, 255, 0.08);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
     /* User attachment bubbles */
     .user-attachment-chips {
       display: flex;
@@ -3608,7 +3715,36 @@ function renderAdaptiveComponentsHtml(components, turnIdx) {
   let html = '<div class="adaptive-components-section">';
   components.forEach((comp, cIdx) => {
     const title = escHtml(comp.title || comp.type);
-    if (comp.type === 'comparison_table') {
+    if (comp.type === 'media_gallery') {
+      const items = comp.data?.items || [];
+      if (items.length) {
+        html += `
+          <div class="adaptive-card media-gallery-card">
+            <div class="adaptive-card-header">
+              <div class="adaptive-card-title">🖼️ ${title}</div>
+              <span class="media-count-badge">${items.length} visual items</span>
+            </div>
+            <div class="media-gallery-scroll">
+              ${items.map(item => `
+                <div class="media-gallery-item" onclick="if ('${escHtml(item.url || '')}' !== '#' && '${escHtml(item.url || '')}' !== '') window.open('${escHtml(item.url || '#')}', '_blank');">
+                  <div class="media-thumb-wrap">
+                    <img src="${escHtml(item.image_url || '')}" alt="${escHtml(item.title || 'News image')}" class="media-thumb-img" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=600';">
+                    <div class="media-badge-pill">${escHtml(item.source || 'News Source')}</div>
+                  </div>
+                  <div class="media-info-wrap">
+                    <div class="media-item-title" title="${escHtml(item.title || '')}">${escHtml(item.title || '')}</div>
+                    <div class="media-item-meta">
+                      <span>📅 ${escHtml(item.published_at || 'Recent')}</span>
+                      ${item.category ? `<span class="media-category-pill">${escHtml(item.category)}</span>` : ''}
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+    } else if (comp.type === 'comparison_table') {
       const headers = comp.data?.headers || [];
       const rows = comp.data?.rows || [];
       html += `
@@ -3742,9 +3878,11 @@ function mountAdaptiveCharts(components, turnIdx) {
         try { window._evoragChartInstances[canvasId].destroy(); } catch (e) {}
       }
 
-      const chartType = comp.data.chartType || (comp.type === 'line_chart' ? 'line' : (comp.type === 'pie_chart' ? 'pie' : 'bar'));
+      const chartType = comp.data.chartType || (comp.type === 'line_chart' ? 'line' : (comp.type === 'pie_chart' ? 'pie' : (comp.type === 'radar_chart' ? 'radar' : (comp.type === 'doughnut_chart' ? 'doughnut' : 'bar'))));
       const ctx = canvasEl.getContext('2d');
       try {
+        const isCircular = chartType === 'pie' || chartType === 'doughnut';
+        const isRadar = chartType === 'radar';
         window._evoragChartInstances[canvasId] = new Chart(ctx, {
           type: chartType,
           data: {
@@ -3758,10 +3896,17 @@ function mountAdaptiveCharts(components, turnIdx) {
               legend: { labels: { color: '#e2e8f0', font: { size: 11 } } },
               tooltip: { backgroundColor: '#1e243e' }
             },
-            scales: chartType !== 'pie' ? {
+            scales: isCircular ? {} : (isRadar ? {
+              r: {
+                angleLines: { color: 'rgba(255,255,255,0.1)' },
+                grid: { color: 'rgba(255,255,255,0.1)' },
+                pointLabels: { color: '#cbd5e1', font: { size: 11, weight: '600' } },
+                ticks: { backdropColor: 'transparent', color: '#94a3b8' }
+              }
+            } : {
               x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.06)' } },
               y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.06)' } }
-            } : {}
+            })
           }
         });
       } catch (err) {
@@ -3812,8 +3957,11 @@ function renderThread(messages) {
       msgEl.className = 'chat-turn-assistant';
       const sources = Array.isArray(msg.sources) ? msg.sources : [];
       const components = Array.isArray(msg.components) ? msg.components : [];
+      const mediaGalleryComp = components.filter(c => c.type === 'media_gallery');
+      const otherComps = components.filter(c => c.type !== 'media_gallery');
+      const mediaHtml = renderAdaptiveComponentsHtml(mediaGalleryComp, `${idx}-top`);
+      const otherComponentsHtml = renderAdaptiveComponentsHtml(otherComps, idx);
       const contentHtml = renderMarkdownWithCitations(msg.content, sources, `thread-${idx}`);
-      const componentsHtml = renderAdaptiveComponentsHtml(components, idx);
       const sourcesHtml = sources.length ? renderSourcesSectionHtml(sources, `thread-${idx}`) : '';
 
       let topPersonasHtml = '';
@@ -3832,8 +3980,9 @@ function renderThread(messages) {
           ${msg.personalization_summary ? `<span class="personalization-badge" title="Adapted to your preferences and learned research profile">✨ ${escHtml(msg.personalization_summary)}</span>` : ''}
           <span class="chat-assistant-time">${escHtml(timeStr)}</span>
         </div>
+        ${mediaHtml}
         <div class="chat-assistant-body markdown-content">${contentHtml}</div>
-        ${componentsHtml}
+        ${otherComponentsHtml}
         <div class="chat-assistant-toolbar" id="msg-audio-${idx}">
           <button class="chat-tool-btn copy-msg-btn" title="Copy response text">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -3876,8 +4025,8 @@ function renderThread(messages) {
     chatThreadContainer.appendChild(msgEl);
 
     // Mount any charts present in this turn
-    if (!isUser && msg.components) {
-      mountAdaptiveCharts(msg.components, idx);
+    if (!isUser && otherComps && otherComps.length) {
+      mountAdaptiveCharts(otherComps, idx);
     }
   });
 }

@@ -471,12 +471,15 @@ async def evorag_query(
         }
         append_score_entry(score_entry)
 
-        # Plan adaptive UI components (tables, Chart.js visualizations, timelines)
+        # Plan adaptive UI components (media gallery, charts, tables, timelines)
         components = plan_adaptive_response(
             structured_query=structured_query,
             final_answer=final_answer,
             retrieved_chunks=chunks,
             attachments=attachments,
+            session=session,
+            persona_scores=final_scores,
+            temporal_context=temporal_context,
         )
 
         # Inject high-fidelity timeline component if temporal event tracked and not already present
@@ -574,6 +577,9 @@ async def evorag_query(
         final_answer=final_answer,
         retrieved_chunks=chunks,
         attachments=attachments,
+        session=session,
+        persona_scores=final_scores,
+        temporal_context=temporal_context,
     )
 
     # Inject high-fidelity timeline component if temporal event tracked and not already present
