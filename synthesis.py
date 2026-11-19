@@ -74,6 +74,7 @@ Rules:
 - Do not mention that this is a synthesis or that multiple perspectives were used
 - Write as a single, natural, authoritative answer
 - Preserve inline citation markers such as [1], [2], [3] that attribute statements to retrieved evidence passages
+- Do NOT generate a 'Limitations', 'Critique and Limitations', or 'Weaknesses' section. Focus purely on substantive analysis.
 
 {selected}
 

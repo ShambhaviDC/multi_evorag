@@ -589,7 +589,7 @@ def retrieve_temporal_event_context(
         # Build clean formatted text block for persona matrix injection
         lines = [
             f"=== TRACKED REAL-WORLD EVENT EVOLUTION: '{top_event.event_title}' ===",
-            f"Category: {top_event.event_category} | Current Status: {top_event.current_status} (Confidence: {int(top_event.status_confidence*100)}%)",
+            f"Category: {top_event.event_category} | Current Status: {top_event.current_status}",
             f"Active Period: {top_event.event_start_date or 'Initial'} -> {top_event.last_updated or 'Latest'}",
             "",
             "CHRONOLOGICAL EVENT TIMELINE & DEVELOPMENTS:",

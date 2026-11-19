@@ -53,6 +53,17 @@ def sanitize_source_url(url: Optional[str]) -> str:
     return clean
 
 
+def strip_unwanted_limitation_sections(text: str) -> str:
+    """Strip unwanted 'Analytical Critique and Limitations' meta-disclaimer sections from final answer."""
+    if not text:
+        return text
+    # Pattern matching headings like:
+    # "### Analytical Critique and Limitations" or "## Limitations" or "**Analytical Critique and Limitations**"
+    pattern = r"(?:\n\s*|\A)(?:#{1,4}\s+|\*\*)?(?:Analytical\s+Critique\s+and\s+Limitations|Critique\s+and\s+Limitations|Limitations(?:\s+and\s+Critique)?)(?:\*\*)?:?[\s\S]*$"
+    cleaned = re.sub(pattern, "", text, flags=re.IGNORECASE).rstrip()
+    return cleaned if cleaned else text
+
+
 def build_filtered_sources(
     chunks: List[Dict[str, Any]],
     attachments: Optional[List[ProcessedFile]] = None,
@@ -277,18 +288,21 @@ async def evorag_query(
             "- Ground all assertions in the provided evidence, document text, and visual image inputs.\n"
             "- Do NOT mention Gemini, Google, APIs, fallbacks, or external sources anywhere in the output.\n"
             "- Speak strictly as the EvoRAG Consensus Engine.\n"
-            "- Ensure each persona provides a unique, high-quality perspective tailored to the question.\n\n"
+            "- Ensure each persona provides a unique, high-quality perspective tailored to the question.\n"
+            "- CRITICAL: Do NOT generate a 'Limitations', 'Analytical Critique and Limitations', or 'Weaknesses' section in the final_answer.\n"
+            "- Do NOT critique the quantity of evidence, single-source reliance, or system confidence metrics.\n"
+            "- Present a confident, factual, and informative news analysis covering the background, event developments, timeline, and significance directly.\n\n"
             "Format your response as a valid JSON object with this exact structure:\n"
             "{\n"
-            '  "final_answer": "Comprehensive synthesized consensus answer...",\n'
+            '  "final_answer": "Comprehensive synthesized consensus answer focusing purely on factual news analysis and chronological progression without limitation disclaimers...",\n'
             '  "personas": {\n'
             '    "analytical-critical": "Analytical breakdown of logic, mechanisms, and core components...",\n'
             '    "empirical-evidential": "Empirical evidence, verifiable facts, data, and key milestones...",\n'
-            '    "adversarial-skeptical": "Critical examination, counter-arguments, caveats, and limitations...",\n'
+            '    "adversarial-skeptical": "Substantive counter-perspectives, opposing political/economic viewpoints, and alternative arguments on the topic...",\n'
             '    "synthesis-integrative": "Holistic synthesis connecting key themes and insights...",\n'
             '    "domain-expert": "In-depth technical depth, specialized domain concepts, and precision...",\n'
             '    "temporal-contextual": "Chronological timeline, evolution, and forward trajectory...",\n'
-            '    "risk-evaluative": "Risk assessment, failure modes, uncertainties, and impacts...",\n'
+            '    "risk-evaluative": "Risk assessment, strategic implications, uncertainties, and impacts...",\n'
             '    "creative-lateral": "Novel framings, broader implications, and interdisciplinary connections..."\n'
             '  }\n'
             "}\n"
@@ -318,10 +332,10 @@ async def evorag_query(
                 parsed_data = None
 
         if isinstance(parsed_data, dict) and parsed_data.get("final_answer"):
-            final_answer = parsed_data["final_answer"].strip()
+            final_answer = strip_unwanted_limitation_sections(parsed_data["final_answer"].strip())
             p_dict = parsed_data.get("personas") or {}
         else:
-            final_answer = (raw_response or "EvoRAG consensus analysis was unable to generate an answer at this time.").strip()
+            final_answer = strip_unwanted_limitation_sections((raw_response or "EvoRAG consensus analysis was unable to generate an answer at this time.").strip())
             p_dict = {}
 
         # Populate all 8 personas
@@ -534,7 +548,7 @@ async def evorag_query(
             ))
 
     return {
-        "final_answer": final_answer,
+        "final_answer": strip_unwanted_limitation_sections(final_answer),
         "components": [c.model_dump() for c in components],
         "structured_query": structured_query.model_dump(),
         "top_personas": top_personas,

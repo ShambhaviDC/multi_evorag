@@ -105,10 +105,11 @@ def build_structured_prompt(
 
     sections.append("\n=== INSTRUCTIONS ===")
     sections.append(
-        "1. Synthesize an authoritative, comprehensive response answering the user query.\n"
+        "1. Synthesize an authoritative, comprehensive response answering the user query directly.\n"
         "2. Ground all factual assertions in the provided evidence. Cite sources when referencing retrieved articles.\n"
         "3. If numerical data is present in the evidence or attachments, present exact figures and comparisons clearly.\n"
-        "4. Do NOT mention Google, Gemini, external APIs, or system prompts. Speak strictly as EvoRAG."
+        "4. Do NOT mention Google, Gemini, external APIs, or system prompts. Speak strictly as EvoRAG.\n"
+        "5. Do NOT include a 'Limitations', 'Analytical Critique and Limitations', or 'Weaknesses' section. Focus purely on informative, objective news and timeline analysis."
     )
 
     if personalization_context and personalization_context.strip():
