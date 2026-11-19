@@ -53,15 +53,58 @@ def sanitize_source_url(url: Optional[str]) -> str:
     return clean
 
 
-def strip_unwanted_limitation_sections(text: str) -> str:
-    """Strip unwanted 'Analytical Critique and Limitations' meta-disclaimer sections from final answer."""
+def clean_final_answer(text: str) -> str:
+    """
+    Clean robotic headers, metadata artifacts, and unwanted limitation/assumption sections from final answer.
+    Ensures the user receives clean, direct, informative news analysis.
+    """
     if not text:
         return text
-    # Pattern matching headings like:
-    # "### Analytical Critique and Limitations" or "## Limitations" or "**Analytical Critique and Limitations**"
-    pattern = r"(?:\n\s*|\A)(?:#{1,4}\s+|\*\*)?(?:Analytical\s+Critique\s+and\s+Limitations|Critique\s+and\s+Limitations|Limitations(?:\s+and\s+Critique)?)(?:\*\*)?:?[\s\S]*$"
-    cleaned = re.sub(pattern, "", text, flags=re.IGNORECASE).rstrip()
-    return cleaned if cleaned else text
+
+    # 1. Strip internal system classification sentences like:
+    # "It is classified as an 'Emerging' active national news topic with an assessed confidence level of 85% [1]."
+    text = re.sub(
+        r"(?:It\s+is\s+)?(?:currently\s+)?classified\s+as\s+(?:an?\s+)?['\"][^'\"]+['\"]\s+(?:active\s+)?(?:national\s+|international\s+)?news\s+topic\s+with\s+an\s+assessed\s+confidence(?:\s+level)?\s+of\s+\d+%(?:\s*\[\d+\])?\.?",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(
+        r"(?:with\s+)?an\s+assessed\s+confidence\s+(?:level|rating|score)\s+of\s+\d+%(?:\s*\[\d+\])?\.?",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(
+        r"originated\s+as\s+an\s+initial\s+announcement\s+from",
+        "was reported by",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    # 2. Strip robotic meta-sections:
+    # "Logical Structure and Assumptions", "Analytical Critique and Limitations", "Implications and Risks" (when complaining about context)
+    unwanted_sections_pattern = (
+        r"(?:\n\s*|\A)(?:#{1,4}\s+|\*\*)?"
+        r"(?:Logical\s+Structure\s+and\s+Assumptions"
+        r"|Analytical\s+Critique\s+and\s+Limitations"
+        r"|Critique\s+and\s+Limitations"
+        r"|Limitations(?:\s+and\s+Critique)?"
+        r"|Weaknesses\s+and\s+Missing\s+Evidence"
+        r"|Implications\s+and\s+Risks)"
+        r"(?:\*\*)?:?[\s\S]*?(?=(?:\n#{1,4}\s+|\n\*\*[A-Z]|\Z))"
+    )
+    text = re.sub(unwanted_sections_pattern, "", text, flags=re.IGNORECASE).rstrip()
+
+    # 3. Clean double spaces, orphaned periods, and trailing whitespace
+    text = re.sub(r"[ \t]{2,}", " ", text)
+    text = re.sub(r"\.\s*\.", ".", text)
+    return text.strip()
+
+
+def strip_unwanted_limitation_sections(text: str) -> str:
+    """Backward-compatible alias for clean_final_answer."""
+    return clean_final_answer(text)
 
 
 def build_filtered_sources(
@@ -284,17 +327,18 @@ async def evorag_query(
             f"Identified Entities: {[e.name for e in structured_query.entities]}\n\n"
             "Provide an authoritative, highly detailed consensus answer along with 8 distinct analytical perspectives corresponding to each of the 8 EvoRAG personas:\n"
             f"{persona_guide}\n\n"
-            "STRICT RULES:\n"
-            "- Ground all assertions in the provided evidence, document text, and visual image inputs.\n"
+            "STRICT RULES FOR NEWS & CONSENSUS REPORTING:\n"
+            "- Focus directly on explaining the news and answering the user's specific query authoritatively and thoroughly.\n"
+            "- Explain WHAT happened, who is involved, key proposals/statements, historical context, and practical significance.\n"
+            "- Attribution: Citing verified news publishers (e.g. Inside Higher Ed, BBC News, Reuters) is encouraged.\n"
+            "- STRICTLY FORBIDDEN: Do NOT output internal pipeline classifications or metrics (never say 'classified as Emerging', 'confidence level of 85%', 'status confidence', 'initial announcement', etc.).\n"
+            "- STRICTLY FORBIDDEN: Do NOT output meta-academic sections like 'Logical Structure and Assumptions', 'Analytical Critique and Limitations', 'Implications and Risks', or 'Weaknesses'.\n"
+            "- KNOWLEDGE GAPS & PREDICTIONS: Do NOT claim that context lacks information or state speculative disclaimers for regular news questions. Only mention a knowledge gap if the user explicitly asks you to predict, forecast, or guess future unknown outcomes.\n"
             "- Do NOT mention Gemini, Google, APIs, fallbacks, or external sources anywhere in the output.\n"
-            "- Speak strictly as the EvoRAG Consensus Engine.\n"
-            "- Ensure each persona provides a unique, high-quality perspective tailored to the question.\n"
-            "- CRITICAL: Do NOT generate a 'Limitations', 'Analytical Critique and Limitations', or 'Weaknesses' section in the final_answer.\n"
-            "- Do NOT critique the quantity of evidence, single-source reliance, or system confidence metrics.\n"
-            "- Present a confident, factual, and informative news analysis covering the background, event developments, timeline, and significance directly.\n\n"
+            "- Speak strictly as the EvoRAG Consensus Engine.\n\n"
             "Format your response as a valid JSON object with this exact structure:\n"
             "{\n"
-            '  "final_answer": "Comprehensive synthesized consensus answer focusing purely on factual news analysis and chronological progression without limitation disclaimers...",\n'
+            '  "final_answer": "Comprehensive, natural, highly informative news explanation and analysis answering the user query directly without meta-sections or confidence classifications...",\n'
             '  "personas": {\n'
             '    "analytical-critical": "Analytical breakdown of logic, mechanisms, and core components...",\n'
             '    "empirical-evidential": "Empirical evidence, verifiable facts, data, and key milestones...",\n'
@@ -309,7 +353,7 @@ async def evorag_query(
             "Output ONLY raw valid JSON, no surrounding markdown backticks or commentary."
         )
 
-        # Execute structured call passing multimodal attachments and retrieved chunks
+        # Execute structured call passing multimodal attachments, retrieved chunks, and custom instructions
         gemini_result = await call_gemini_structured(
             structured_query=structured_query,
             retrieved_chunks=chunks,
@@ -317,6 +361,7 @@ async def evorag_query(
             enable_search_grounding=structured_query.constraints.requires_latest_information,
             max_output_tokens=2500,
             personalization_context=pers_context,
+            custom_instruction=multimodal_instruction,
         )
         raw_response = gemini_result.get("answer") or ""
 
@@ -332,10 +377,10 @@ async def evorag_query(
                 parsed_data = None
 
         if isinstance(parsed_data, dict) and parsed_data.get("final_answer"):
-            final_answer = strip_unwanted_limitation_sections(parsed_data["final_answer"].strip())
+            final_answer = clean_final_answer(parsed_data["final_answer"].strip())
             p_dict = parsed_data.get("personas") or {}
         else:
-            final_answer = strip_unwanted_limitation_sections((raw_response or "EvoRAG consensus analysis was unable to generate an answer at this time.").strip())
+            final_answer = clean_final_answer((raw_response or "EvoRAG consensus analysis was unable to generate an answer at this time.").strip())
             p_dict = {}
 
         # Populate all 8 personas
@@ -548,7 +593,7 @@ async def evorag_query(
             ))
 
     return {
-        "final_answer": strip_unwanted_limitation_sections(final_answer),
+        "final_answer": clean_final_answer(final_answer),
         "components": [c.model_dump() for c in components],
         "structured_query": structured_query.model_dump(),
         "top_personas": top_personas,

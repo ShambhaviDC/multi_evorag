@@ -68,13 +68,15 @@ Strong responses to the question "{query}" have been selected through peer evalu
 Merge them into one coherent, well-structured answer.
 
 Rules:
-- Preserve the strongest insight from each response
-- Resolve contradictions by noting the disagreement explicitly
+- Focus directly on explaining the news and answering the user query clearly and thoroughly
+- Explain what happened, who is involved, key details, and real-world significance
+- Citing verified news publishers with inline markers [1], [2] is encouraged
+- STRICTLY FORBIDDEN: Do not mention internal classifications or scores (e.g. 'Emerging', 'confidence score', 'assessed confidence level')
+- STRICTLY FORBIDDEN: Do not generate robotic academic sections like 'Logical Structure and Assumptions', 'Limitations', or 'Implications and Risks'
+- Knowledge gaps: Mention knowledge gaps ONLY when the user explicitly asks to predict or forecast future unknown outcomes
 - Do not add information that is not present in the selected responses
 - Do not mention that this is a synthesis or that multiple perspectives were used
-- Write as a single, natural, authoritative answer
-- Preserve inline citation markers such as [1], [2], [3] that attribute statements to retrieved evidence passages
-- Do NOT generate a 'Limitations', 'Critique and Limitations', or 'Weaknesses' section. Focus purely on substantive analysis.
+- Write as a single, natural, authoritative news explanation
 
 {selected}
 

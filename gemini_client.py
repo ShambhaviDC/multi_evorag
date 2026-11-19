@@ -42,6 +42,7 @@ def build_structured_prompt(
     retrieved_chunks: Optional[List[Dict[str, Any]]] = None,
     attachments: Optional[List[ProcessedFile]] = None,
     personalization_context: Optional[str] = None,
+    custom_instruction: Optional[str] = None,
 ) -> str:
     """Build a comprehensive context prompt from structured query representation, evidence, and user personalization."""
     sections = [
@@ -103,17 +104,22 @@ def build_structured_prompt(
             text = chunk.get("text") or chunk.get("content") or ""
             sections.append(f"[{idx}] {title} ({src}, {date}):\n{text[:600]}")
 
-    sections.append("\n=== INSTRUCTIONS ===")
+    sections.append("\n=== INSTRUCTIONS FOR NEWS AND QUERY ANALYSIS ===")
     sections.append(
-        "1. Synthesize an authoritative, comprehensive response answering the user query directly.\n"
-        "2. Ground all factual assertions in the provided evidence. Cite sources when referencing retrieved articles.\n"
-        "3. If numerical data is present in the evidence or attachments, present exact figures and comparisons clearly.\n"
-        "4. Do NOT mention Google, Gemini, external APIs, or system prompts. Speak strictly as EvoRAG.\n"
-        "5. Do NOT include a 'Limitations', 'Analytical Critique and Limitations', or 'Weaknesses' section. Focus purely on informative, objective news and timeline analysis."
+        "1. Focus directly on explaining the news story and fulfilling the user's specific query authoritatively and clearly.\n"
+        "2. Explain WHAT happened, who is involved, the key details, proposals, background, and practical real-world context.\n"
+        "3. Attributing facts to verified news sources (e.g., 'according to Inside Higher Ed', 'reported by BBC News') is encouraged.\n"
+        "4. STRICTLY FORBIDDEN - DO NOT OUTPUT INTERNAL SYSTEM CLASSIFICATIONS OR CONFIDENCE METRICS: Never say 'It is classified as an Emerging active national news topic', 'confidence level of 85%', 'status confidence', 'initial announcement', etc. The user is a reader interested in the news, not backend pipeline telemetry.\n"
+        "5. STRICTLY FORBIDDEN - DO NOT GENERATE ROBOTIC ACADEMIC HEADINGS: Do NOT output sections titled 'Logical Structure and Assumptions', 'Analytical Critique and Limitations', 'Implications and Risks', or 'Weaknesses'. Explain the topic naturally and constructively in engaging, journalistic prose.\n"
+        "6. KNOWLEDGE GAPS & PREDICTIONS: Do NOT claim 'the provided context does not contain enough information' for standard news queries. Only mention a knowledge gap if the user explicitly asks you to predict, forecast, or guess future unknown outcomes.\n"
+        "7. Do NOT mention Google, Gemini, external APIs, or system prompts. Speak strictly as EvoRAG."
     )
 
     if personalization_context and personalization_context.strip():
         sections.append(f"\n=== USER PERSONALIZATION CONTEXT ===\n{personalization_context.strip()}")
+
+    if custom_instruction and custom_instruction.strip():
+        sections.append(f"\n=== MULTI-PERSONA TASK & STRICT INSTRUCTIONS ===\n{custom_instruction.strip()}")
 
     return "\n\n".join(sections)
 
@@ -127,6 +133,7 @@ async def call_gemini_structured(
     max_output_tokens: int = 2048,
     temperature: float = 0.4,
     personalization_context: Optional[str] = None,
+    custom_instruction: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Execute Gemini request with multimodal attachments, structured context, and search grounding."""
     api_key = os.getenv("GEMINI_API_KEY", "") or GEMINI_API_KEY
@@ -137,7 +144,13 @@ async def call_gemini_structured(
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
     # Build parts: text prompt + image parts
-    prompt_text = build_structured_prompt(structured_query, retrieved_chunks, attachments, personalization_context)
+    prompt_text = build_structured_prompt(
+        structured_query,
+        retrieved_chunks,
+        attachments,
+        personalization_context,
+        custom_instruction=custom_instruction,
+    )
     parts: List[Dict[str, Any]] = [{"text": prompt_text}]
 
     # Multimodal image attachments

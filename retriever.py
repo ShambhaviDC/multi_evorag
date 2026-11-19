@@ -588,19 +588,18 @@ def retrieve_temporal_event_context(
 
         # Build clean formatted text block for persona matrix injection
         lines = [
-            f"=== TRACKED REAL-WORLD EVENT EVOLUTION: '{top_event.event_title}' ===",
-            f"Category: {top_event.event_category} | Current Status: {top_event.current_status}",
-            f"Active Period: {top_event.event_start_date or 'Initial'} -> {top_event.last_updated or 'Latest'}",
+            f"=== CHRONOLOGICAL NEWS TIMELINE & DEVELOPMENTS: '{top_event.event_title}' ===",
+            f"Topic Category: {top_event.event_category}",
+            f"Reporting Period: {top_event.event_start_date or 'Initial'} to {top_event.last_updated or 'Latest'}",
             "",
-            "CHRONOLOGICAL EVENT TIMELINE & DEVELOPMENTS:",
+            "REPORTED DEVELOPMENTS & TIMELINE:",
         ]
         for item in timeline:
             lines.append(
-                f"- [Seq #{item['event_sequence']} | {item['occurrence_date']} | {item['development_type']}] "
-                f"{item['headline']} (Source: {item['source']})"
+                f"- ({item['occurrence_date']}) {item['headline']} (Reported by {item['source']})"
             )
         lines.append("")
-        lines.append("EVOLUTION & TURNING POINTS NARRATIVE:")
+        lines.append("SUMMARY OF REPORTING:")
         lines.append(summary_data.get("synthesized_narrative", top_event.event_description))
         lines.append("=" * 65)
 

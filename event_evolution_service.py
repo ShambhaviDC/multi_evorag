@@ -427,7 +427,6 @@ def generate_event_evolution_summary(event_id: str, session: Session) -> Dict[st
         narrative_parts.append(
             f"**Latest Reported Development ({l_date})**: {latest['headline']} ({latest['development_type']} via {latest['source']})."
         )
-    narrative_parts.append(f"**Current Assessed Status**: {evt.current_status} (Confidence: {int(evt.status_confidence*100)}%).")
 
     synthesized_summary = " ".join(narrative_parts)
 
