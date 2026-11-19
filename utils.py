@@ -59,7 +59,7 @@ def _get_gemini_client() -> httpx.AsyncClient:
     global _gemini_client
     if _gemini_client is None or _gemini_client.is_closed:
         _gemini_client = httpx.AsyncClient(
-            timeout=90.0,
+            timeout=30.0,
             limits=httpx.Limits(max_connections=30, max_keepalive_connections=20)
         )
     return _gemini_client
@@ -68,8 +68,8 @@ def _get_gemini_client() -> httpx.AsyncClient:
 async def call_gemini_async(
     prompt: str,
     model: str = GEMINI_MODEL,
-    timeout_seconds: int = 90,
-    max_attempts: int = 4,
+    timeout_seconds: int = 30,
+    max_attempts: int = 2,
     retry_delay_seconds: float = 1.0,
     max_output_tokens: Optional[int] = None,
     temperature: Optional[float] = None,
@@ -218,14 +218,14 @@ def safe_json_loads(raw: Optional[str]) -> Optional[dict[str, Any]]:
     text = text.strip()
 
     try:
-        return json.loads(text)
-    except json.JSONDecodeError:
+        return json.loads(text, strict=False)
+    except Exception:
         match = re.search(r"\{.*\}", text, flags=re.DOTALL)
         if not match:
             return None
         try:
-            return json.loads(match.group(0))
-        except json.JSONDecodeError:
+            return json.loads(match.group(0), strict=False)
+        except Exception:
             return None
 
 

@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from config import PERSONAS, RETRIEVAL_TOP_K
+from config import GEMINI_ONLY_MODE, PERSONAS, RETRIEVAL_TOP_K
 from file_processor import ProcessedFile
 from gemini_client import call_gemini_structured
 from input_understanding_agent import understand_user_query
@@ -17,7 +17,7 @@ from response_planner import plan_adaptive_response
 from retriever import evaluate_retrieval, retrieve, retrieve_temporal_event_context
 from score_store import append_score_entry
 from synthesis import select_top_personas, synthesize_top_k
-from utils import call_gemini_async, word_count
+from utils import call_gemini_async, safe_json_loads, word_count
 from voting import build_score_matrix, compute_final_scores, summarize_received_scores
 from models import User
 from personalization_agent import (
@@ -299,7 +299,8 @@ async def evorag_query(
     has_tabular = any(a.file_type in ("csv", "xlsx") for a in attachments)
     has_doc = any(a.file_type in ("pdf", "docx", "txt") for a in attachments)
     requires_gemini = (
-        not is_sufficient
+        GEMINI_ONLY_MODE
+        or not is_sufficient
         or has_image
         or has_tabular
         or has_doc
@@ -325,7 +326,7 @@ async def evorag_query(
             f"User Question: {query}\n"
             f"Identified Intent: {structured_query.intent}\n"
             f"Identified Entities: {[e.name for e in structured_query.entities]}\n\n"
-            "Provide an authoritative, highly detailed consensus answer along with 8 distinct analytical perspectives corresponding to each of the 8 EvoRAG personas:\n"
+            "Provide an authoritative, detailed consensus news answer along with 8 distinct, concise analytical perspectives (1-2 sharp sentences each) corresponding to each of the 8 EvoRAG personas:\n"
             f"{persona_guide}\n\n"
             "STRICT RULES FOR NEWS & CONSENSUS REPORTING:\n"
             "- Focus directly on explaining the news and answering the user's specific query authoritatively and thoroughly.\n"
@@ -340,14 +341,14 @@ async def evorag_query(
             "{\n"
             '  "final_answer": "Comprehensive, natural, highly informative news explanation and analysis answering the user query directly without meta-sections or confidence classifications...",\n'
             '  "personas": {\n'
-            '    "analytical-critical": "Analytical breakdown of logic, mechanisms, and core components...",\n'
-            '    "empirical-evidential": "Empirical evidence, verifiable facts, data, and key milestones...",\n'
-            '    "adversarial-skeptical": "Substantive counter-perspectives, opposing political/economic viewpoints, and alternative arguments on the topic...",\n'
-            '    "synthesis-integrative": "Holistic synthesis connecting key themes and insights...",\n'
-            '    "domain-expert": "In-depth technical depth, specialized domain concepts, and precision...",\n'
-            '    "temporal-contextual": "Chronological timeline, evolution, and forward trajectory...",\n'
-            '    "risk-evaluative": "Risk assessment, strategic implications, uncertainties, and impacts...",\n'
-            '    "creative-lateral": "Novel framings, broader implications, and interdisciplinary connections..."\n'
+            '    "analytical-critical": "1-2 concise analytical sentences breaking down mechanisms and policy...",\n'
+            '    "empirical-evidential": "1-2 concise evidential sentences citing verified facts, figures, and dates...",\n'
+            '    "adversarial-skeptical": "1-2 concise counter-viewpoint sentences on opposing stakeholder positions...",\n'
+            '    "synthesis-integrative": "1-2 concise integrative sentences connecting key themes...",\n'
+            '    "domain-expert": "1-2 concise expert sentences on specialized domain context...",\n'
+            '    "temporal-contextual": "1-2 concise timeline sentences on sequence and evolution...",\n'
+            '    "risk-evaluative": "1-2 concise risk sentences assessing strategic implications...",\n'
+            '    "creative-lateral": "1-2 concise lateral sentences on novel framings and broader impacts..."\n'
             '  }\n'
             "}\n"
             "Output ONLY raw valid JSON, no surrounding markdown backticks or commentary."
@@ -359,29 +360,38 @@ async def evorag_query(
             retrieved_chunks=chunks,
             attachments=attachments,
             enable_search_grounding=structured_query.constraints.requires_latest_information,
-            max_output_tokens=2500,
+            max_output_tokens=1500,
             personalization_context=pers_context,
             custom_instruction=multimodal_instruction,
         )
         raw_response = gemini_result.get("answer") or ""
 
-        parsed_data = None
-        if raw_response:
-            try:
-                clean_json = raw_response.strip()
-                if clean_json.startswith("```"):
-                    clean_json = re.sub(r"^```(?:json)?\s*", "", clean_json)
-                    clean_json = re.sub(r"\s*```$", "", clean_json)
-                parsed_data = json.loads(clean_json)
-            except Exception:
-                parsed_data = None
-
+        parsed_data = safe_json_loads(raw_response)
+        p_dict = {}
         if isinstance(parsed_data, dict) and parsed_data.get("final_answer"):
-            final_answer = clean_final_answer(parsed_data["final_answer"].strip())
+            final_answer = clean_final_answer(str(parsed_data["final_answer"]).strip())
             p_dict = parsed_data.get("personas") or {}
         else:
-            final_answer = clean_final_answer((raw_response or "EvoRAG consensus analysis was unable to generate an answer at this time.").strip())
-            p_dict = {}
+            fa_match = re.search(r'"final_answer"\s*:\s*"(.*?)(?:"\s*,\s*"personas"|"\s*\})', raw_response, re.DOTALL)
+            if fa_match:
+                try:
+                    final_answer = clean_final_answer(fa_match.group(1).encode().decode("unicode_escape", errors="ignore").strip())
+                except Exception:
+                    final_answer = clean_final_answer(fa_match.group(1).strip())
+            else:
+                clean_raw = re.sub(r'^\s*\{\s*"final_answer"\s*:\s*"', '', raw_response)
+                clean_raw = re.sub(r'"\s*,\s*"personas"[\s\S]*$', '', clean_raw)
+                clean_raw = re.sub(r'"\s*\}\s*$', '', clean_raw)
+                final_answer = clean_final_answer(clean_raw.strip() if clean_raw.strip() else (raw_response or "EvoRAG consensus analysis was unable to generate an answer at this time.").strip())
+
+            for p in PERSONAS:
+                pid = p["id"]
+                p_match = re.search(rf'"{pid}"\s*:\s*"(.*?)(?:"\s*,\s*"|"\s*\}})', raw_response, re.DOTALL)
+                if p_match:
+                    try:
+                        p_dict[pid] = p_match.group(1).encode().decode("unicode_escape", errors="ignore").strip()
+                    except Exception:
+                        p_dict[pid] = p_match.group(1).strip()
 
         # Populate all 8 personas
         all_persona_ids = [p["id"] for p in PERSONAS]

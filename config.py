@@ -92,7 +92,7 @@ SCORE_STORE_FILE = ROOT_DIR / "score_store.json"
 # Gemini is unavailable/fails, Ollama's own result is still used when it lands.
 # (Only applies when GEMINI_ONLY_MODE is False.)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL = "gemini-flash-lite-latest"
+GEMINI_MODEL = "gemini-3-flash-preview"
 GEMINI_FALLBACK_SECONDS = 90
 
 # When True, Ollama is skipped entirely for personas/voting/synthesis — every

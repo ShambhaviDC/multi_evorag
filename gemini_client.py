@@ -31,7 +31,7 @@ def get_gemini_http_client() -> httpx.AsyncClient:
     global _gemini_http_client
     if _gemini_http_client is None or _gemini_http_client.is_closed:
         _gemini_http_client = httpx.AsyncClient(
-            timeout=100.0,
+            timeout=30.0,
             limits=httpx.Limits(max_connections=30, max_keepalive_connections=20)
         )
     return _gemini_http_client
@@ -173,25 +173,45 @@ async def call_gemini_structured(
         }
     }
 
-    # Enable Google Search grounding if query requires latest info or explicitly flagged
-    # Note: Gemini rejects search grounding when image inline_data is present, so disable tools for image attachments.
+    # Enable Google Search grounding if query explicitly requires latest info and no relevant local chunks were found.
+    # If local evidence is already available in the knowledge base or event timeline, prioritize local grounding
+    # to avoid 20-30s external search latency. Also, Gemini rejects search grounding when image inline_data is present.
     has_image_attachments = bool(attachments and any(att.image_base64 for att in attachments))
-    if (enable_search_grounding or structured_query.constraints.requires_latest_information) and not has_image_attachments:
+    has_local_chunks = bool(retrieved_chunks and len(retrieved_chunks) > 0)
+    need_search = (enable_search_grounding or structured_query.constraints.requires_latest_information) and not has_local_chunks
+    if need_search and not has_image_attachments:
         payload["tools"] = [{"googleSearch": {}}]
 
     client = get_gemini_http_client()
-    max_attempts = 4
+    models_to_try = [model]
+    for m in ["gemini-3-flash-preview", "gemini-flash-lite-latest", "gemini-flash-latest"]:
+        if m not in models_to_try:
+            models_to_try.append(m)
 
-    for attempt in range(1, max_attempts + 1):
+    last_error = None
+    for cur_model in models_to_try:
+        cur_url = f"https://generativelanguage.googleapis.com/v1beta/models/{cur_model}:generateContent"
         try:
-            response = await client.post(url, params={"key": api_key}, json=payload)
+            response = await client.post(cur_url, params={"key": api_key}, json=payload)
+            if response.status_code == 400 and "tools" in payload:
+                log.warning("Gemini HTTP 400 with tools on model %s; retrying without search tools...", cur_model)
+                payload_no_tools = dict(payload)
+                payload_no_tools.pop("tools", None)
+                response = await client.post(cur_url, params={"key": api_key}, json=payload_no_tools)
+
+            if response.status_code in (404, 503):
+                log.warning("Gemini model %s returned HTTP %s — failing over to next model...", cur_model, response.status_code)
+                last_error = f"HTTP {response.status_code} on {cur_model}"
+                continue
+
             response.raise_for_status()
             data = response.json()
 
             candidates = data.get("candidates") or []
             if not candidates:
-                log.warning("Gemini returned empty candidates list")
-                return {"answer": None, "grounding_metadata": None, "error": "No candidates returned"}
+                log.warning("Gemini (%s) returned empty candidates list", cur_model)
+                last_error = "No candidates returned"
+                continue
 
             cand = candidates[0]
             cand_parts = cand.get("content", {}).get("parts") or []
@@ -208,19 +228,13 @@ async def call_gemini_structured(
         except httpx.HTTPStatusError as exc:
             status = exc.response.status_code if exc.response is not None else None
             err_body = exc.response.text[:200] if exc.response is not None else ""
-            if status == 400 and "tools" in payload and attempt < max_attempts:
-                log.warning("Gemini HTTP 400 with tools ('%s'); retrying without search tools...", err_body)
-                payload.pop("tools", None)
-                continue
-            if status in _RETRYABLE_STATUS_CODES and attempt < max_attempts:
-                wait_time = 1.0 * (1.5 ** (attempt - 1))
-                log.warning("Gemini HTTP %s on attempt %d/%d — retrying in %.1fs...", status, attempt, max_attempts, wait_time)
-                await asyncio.sleep(wait_time)
-                continue
-            log.error("Gemini request failed (status %s): %s | %s", status, exc, err_body)
-            return {"answer": None, "grounding_metadata": None, "error": f"{exc} - {err_body}"}
+            log.warning("Gemini model %s HTTP %s error: %s", cur_model, status, err_body)
+            last_error = f"{status}: {err_body}"
+            continue
         except Exception as exc:
-            log.error("Gemini unexpected error: %s", exc)
-            return {"answer": None, "grounding_metadata": None, "error": str(exc)}
+            log.warning("Gemini model %s exception: %r", cur_model, exc)
+            last_error = repr(exc)
+            continue
 
-    return {"answer": None, "grounding_metadata": None, "error": "Max retries exceeded"}
+    log.error("All Gemini models failed: %s", last_error)
+    return {"answer": None, "grounding_metadata": None, "error": last_error or "All models failed"}
