@@ -2377,6 +2377,219 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       font-weight: 500;
     }
+
+    /* ── Feedback Intelligence & Like/Dislike System Styles ─────────── */
+    .feedback-controls-group {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      margin-left: 2px;
+    }
+    .feedback-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      padding: 0;
+    }
+    .feedback-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+    .feedback-btn.active.like {
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.16);
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+    .feedback-btn.active.like svg {
+      fill: #10b981;
+      stroke: #10b981;
+    }
+    .feedback-btn.active.dislike {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.16);
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+    .feedback-btn.active.dislike svg {
+      fill: #ef4444;
+      stroke: #ef4444;
+    }
+    .feedback-toast {
+      font-size: 11px;
+      font-weight: 600;
+      color: #10b981;
+      display: inline-flex;
+      align-items: center;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 2px 7px;
+      border-radius: 10px;
+      margin-left: 4px;
+      white-space: nowrap;
+      animation: fadeIn 0.2s ease;
+    }
+    .feedback-popover {
+      position: absolute;
+      left: 0;
+      top: 100%;
+      margin-top: 8px;
+      width: 320px;
+      background: #141724;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+      z-index: 1000;
+      text-align: left;
+    }
+    .feedback-popover-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .feedback-popover-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+    .feedback-popover-close {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0 4px;
+    }
+    .feedback-reason-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .feedback-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      color: #94a3b8;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+    }
+    .feedback-chip:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #f1f5f9;
+    }
+    .feedback-chip.selected {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+      color: #fca5a5;
+      font-weight: 600;
+    }
+    .feedback-comment-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f1f5f9;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 11.5px;
+      resize: vertical;
+      margin-bottom: 10px;
+      font-family: inherit;
+    }
+    .feedback-comment-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .feedback-submit-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .feedback-submit-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* Feedback Analytics Dashboard Modal Styles */
+    .analytics-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .analytics-kpi-card {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .analytics-kpi-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .analytics-kpi-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .analytics-chart-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+    .analytics-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      color: var(--text);
+    }
+    .analytics-table th, .analytics-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .analytics-table th {
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 10.5px;
+      letter-spacing: 0.5px;
+    }
+    .analytics-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .rec-card {
+      background: rgba(255, 255, 255, 0.02);
+      border-left: 3px solid var(--primary);
+      border-radius: 4px 8px 8px 4px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      font-size: 12.5px;
+    }
   </style>
   <script src="/static/auth.js"></script>
 </head>
@@ -2392,6 +2605,9 @@
         <span id="history-count" class="badge-count">0</span>
       </button>
       <button id="new-chat-btn" class="nav-btn primary-subtle" title="Start New Conversation">+ New Chat</button>
+      <button id="open-feedback-dashboard-btn" class="nav-btn" title="Feedback Intelligence & Quality Analytics">
+        <span>📊 Feedback Analytics</span>
+      </button>
     </div>
     <div class="nav-auth-group" id="nav-user-container">
       <a href="/static/login.html" class="nav-auth-btn login">Log In</a>
@@ -2543,6 +2759,97 @@
         <button id="modal-analyze-event-btn" class="welcome-chip-btn" style="background:var(--primary); color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:600; cursor:pointer;">
           ⚡ Analyze this Event with EvoRAG
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Feedback Intelligence Analytics Dashboard Modal ── -->
+  <div id="feedback-analytics-modal" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
+    <div class="modal-content" style="background:var(--surface); border:1px solid var(--border); border-radius:16px; width:94%; max-width:1050px; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.7);">
+      <div style="padding:18px 24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02);">
+        <div>
+          <div style="display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(16, 185, 129, 0.15); color:#10b981; font-weight:700; margin-bottom:4px;">CONTINUOUS QUALITY IMPROVEMENT</div>
+          <h3 style="margin:0; font-size:18px; color:var(--text); font-weight:700;">📊 Feedback Intelligence &amp; System Diagnostics</h3>
+        </div>
+        <button id="feedback-modal-close-btn" style="background:transparent; border:none; color:var(--muted); font-size:24px; cursor:pointer; padding:0 6px;">✕</button>
+      </div>
+      <div style="padding:22px 24px; overflow-y:auto; flex:1;">
+        <!-- KPI Metrics Grid -->
+        <div class="analytics-kpi-grid">
+          <div class="analytics-kpi-card">
+            <div class="analytics-kpi-title">Total Feedback Submissions</div>
+            <div class="analytics-kpi-value" id="fb-total-submissions">0</div>
+          </div>
+          <div class="analytics-kpi-card">
+            <div class="analytics-kpi-title">Positive (Likes)</div>
+            <div class="analytics-kpi-value" id="fb-likes-count" style="color:#10b981;">0</div>
+          </div>
+          <div class="analytics-kpi-card">
+            <div class="analytics-kpi-title">Negative (Dislikes)</div>
+            <div class="analytics-kpi-value" id="fb-dislikes-count" style="color:#ef4444;">0</div>
+          </div>
+          <div class="analytics-kpi-card">
+            <div class="analytics-kpi-title">Satisfaction Rate</div>
+            <div class="analytics-kpi-value" id="fb-satisfaction-pct" style="color:var(--accent2);">0.0%</div>
+          </div>
+        </div>
+
+        <!-- Charts Grid (2 columns: Doughnut + Bar) -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:18px; margin-bottom:20px;">
+          <div class="analytics-chart-box">
+            <div style="font-weight:700; font-size:13px; margin-bottom:12px; color:var(--text);">User Satisfaction Distribution</div>
+            <div style="height:210px; position:relative;">
+              <canvas id="feedback-doughnut-chart"></canvas>
+            </div>
+          </div>
+          <div class="analytics-chart-box">
+            <div style="font-weight:700; font-size:13px; margin-bottom:12px; color:var(--text);">Negative Feedback Issues Breakdown</div>
+            <div style="height:210px; position:relative;">
+              <canvas id="feedback-reasons-bar-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trend Line Chart -->
+        <div class="analytics-chart-box">
+          <div style="font-weight:700; font-size:13px; margin-bottom:12px; color:var(--text);">Feedback Trends Over Time (Daily Likes vs Dislikes)</div>
+          <div style="height:220px; position:relative;">
+            <canvas id="feedback-trend-line-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Pipeline Diagnostics & Recommendations -->
+        <div class="analytics-chart-box">
+          <div style="font-weight:700; font-size:13px; margin-bottom:12px; color:var(--text);">Continuous System Recommendations</div>
+          <div id="feedback-recommendations-list">
+            <!-- Populated via API -->
+          </div>
+        </div>
+
+        <!-- Multi-Persona Performance Table -->
+        <div class="analytics-chart-box">
+          <div style="font-weight:700; font-size:13px; margin-bottom:12px; color:var(--text);">Multi-Persona Satisfaction &amp; Performance</div>
+          <div style="overflow-x:auto;">
+            <table class="analytics-table">
+              <thead>
+                <tr>
+                  <th>Persona</th>
+                  <th>Evaluations</th>
+                  <th>Likes</th>
+                  <th>Dislikes</th>
+                  <th>Satisfaction</th>
+                  <th>Reported Quality Issues</th>
+                </tr>
+              </thead>
+              <tbody id="feedback-persona-tbody">
+                <!-- Populated via API -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 24px; border-top:1px solid var(--border); background:rgba(0,0,0,0.2); display:flex; justify-content:flex-end;">
+        <button id="feedback-modal-close-footer-btn" class="news-action-btn">Close Dashboard</button>
       </div>
     </div>
   </div>
@@ -3714,6 +4021,11 @@ function renderAdaptiveComponentsHtml(components, turnIdx) {
   if (!components || !components.length) return '';
   let html = '<div class="adaptive-components-section">';
   components.forEach((comp, cIdx) => {
+    if (!comp) return;
+    // Suppress unwanted arbitrary numerical highlights charts
+    if (comp.title && (comp.title.includes('Numerical Highlights') || comp.title.includes('Reported Numerical Highlights') || comp.title.includes('Key Metrics'))) {
+      return;
+    }
     const title = escHtml(comp.title || comp.type);
     if (comp.type === 'media_gallery') {
       const items = comp.data?.items || [];
@@ -3869,6 +4181,10 @@ function mountAdaptiveCharts(components, turnIdx) {
   window._evoragChartInstances = window._evoragChartInstances || {};
 
   components.forEach((comp, cIdx) => {
+    if (!comp) return;
+    if (comp.title && (comp.title.includes('Numerical Highlights') || comp.title.includes('Reported Numerical Highlights') || comp.title.includes('Key Metrics'))) {
+      return;
+    }
     if (comp.type.endsWith('_chart') && comp.data) {
       const canvasId = `chart-canvas-${turnIdx}-${cIdx}`;
       const canvasEl = document.getElementById(canvasId);
@@ -3974,6 +4290,13 @@ function renderThread(messages) {
         topPersonasHtml = `<div class="chat-top-personas-pills" title="Top scoring personas for this response">${pills}</div>`;
       }
 
+      const msgId = String(msg.id || msg.message_id || ('turn-' + idx));
+      if (!msg.id) msg.id = msgId;
+
+      const cachedFeedback = (typeof getFeedbackFromLocalState === 'function') ? getFeedbackFromLocalState(msgId) : null;
+      const isLiked = cachedFeedback && cachedFeedback.feedback_type === 'like';
+      const isDisliked = cachedFeedback && cachedFeedback.feedback_type === 'dislike';
+
       msgEl.innerHTML = `
         <div class="chat-assistant-meta">
           <span class="chat-assistant-avatar">🤖</span>
@@ -3989,6 +4312,37 @@ function renderThread(messages) {
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             <span>Copy</span>
           </button>
+          <div class="feedback-btn-group" style="position:relative; display:inline-flex; align-items:center; gap:3px; margin-left:3px;">
+            <button class="feedback-btn feedback-like-btn ${isLiked ? 'active like' : ''}" title="Helpful answer" aria-label="Like response">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+            </button>
+            <button class="feedback-btn feedback-dislike-btn ${isDisliked ? 'active dislike' : ''}" title="Unhelpful or inaccurate answer" aria-label="Dislike response">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path></svg>
+            </button>
+            <span class="feedback-toast" id="fb-toast-${idx}" style="display:none;"></span>
+            
+            <!-- Dislike Popover -->
+            <div class="feedback-popover" id="fb-popover-${idx}" style="display:none;">
+              <div class="feedback-popover-header">
+                <span class="feedback-popover-title">What could be improved?</span>
+                <button type="button" class="feedback-popover-close" id="fb-popover-close-${idx}" title="Close">✕</button>
+              </div>
+              <div class="feedback-reason-chips" id="fb-chips-${idx}">
+                <button type="button" class="feedback-chip" data-reason="factually_incorrect">Factually incorrect</button>
+                <button type="button" class="feedback-chip" data-reason="outdated_information">Outdated information</button>
+                <button type="button" class="feedback-chip" data-reason="irrelevant_query">Irrelevant to my query</button>
+                <button type="button" class="feedback-chip" data-reason="incomplete_answer">Incomplete answer</button>
+                <button type="button" class="feedback-chip" data-reason="poor_explanation">Poor explanation</button>
+                <button type="button" class="feedback-chip" data-reason="missing_sources">Missing supporting sources</button>
+                <button type="button" class="feedback-chip" data-reason="length_issue">Too lengthy or too short</button>
+                <button type="button" class="feedback-chip" data-reason="other">Other</button>
+              </div>
+              <textarea class="feedback-comment-input" id="fb-comment-${idx}" rows="2" placeholder="Optional details (e.g. what should be changed)..."></textarea>
+              <div style="display:flex; justify-content:flex-end; gap:6px;">
+                <button type="button" class="feedback-submit-btn" id="fb-submit-reason-${idx}">Submit Reason</button>
+              </div>
+            </div>
+          </div>
           <button class="chat-tool-btn speak-btn" title="Listen to this response">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
             <span>Listen</span>
@@ -4010,6 +4364,11 @@ function renderThread(messages) {
           .catch(() => showToast('Select + copy text manually'));
       });
 
+      // Wire feedback controls for this assistant turn
+      if (typeof wireFeedbackTurn === 'function') {
+        wireFeedbackTurn(msgEl, msg, msgId, idx);
+      }
+
       // Wire audio buttons for this assistant turn
       const audioContainer = msgEl.querySelector(`#msg-audio-${idx}`);
       const speakBtn = audioContainer.querySelector('.speak-btn');
@@ -4030,6 +4389,464 @@ function renderThread(messages) {
       mountAdaptiveCharts(otherComps, idx);
     }
   });
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Feedback Intelligence & Continuous Personalization Client Engine
+   ════════════════════════════════════════════════════════════════════ */
+function getGuestSessionId() {
+  let sid = localStorage.getItem('evorag_guest_session_id');
+  if (!sid) {
+    sid = 'guest_sess_' + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).substring(2) + Date.now().toString(36)));
+    localStorage.setItem('evorag_guest_session_id', sid);
+  }
+  return sid;
+}
+
+window._evoragFeedbackCache = window._evoragFeedbackCache || {};
+
+function loadFeedbackCache() {
+  try {
+    const raw = sessionStorage.getItem('evorag_feedback_cache');
+    if (raw) {
+      window._evoragFeedbackCache = Object.assign({}, JSON.parse(raw), window._evoragFeedbackCache);
+    }
+  } catch (e) {}
+}
+loadFeedbackCache();
+
+function getFeedbackFromLocalState(msgId) {
+  return window._evoragFeedbackCache[String(msgId)] || null;
+}
+
+function setFeedbackInLocalState(msgId, fbData) {
+  window._evoragFeedbackCache[String(msgId)] = fbData;
+  try {
+    sessionStorage.setItem('evorag_feedback_cache', JSON.stringify(window._evoragFeedbackCache));
+  } catch (e) {}
+}
+
+function removeFeedbackFromLocalState(msgId) {
+  delete window._evoragFeedbackCache[String(msgId)];
+  try {
+    sessionStorage.setItem('evorag_feedback_cache', JSON.stringify(window._evoragFeedbackCache));
+  } catch (e) {}
+}
+
+async function handleSubmitFeedback(payload) {
+  const token = window.EvoRAG ? window.EvoRAG.getToken() : localStorage.getItem('evorag_token');
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Session-ID': getGuestSessionId()
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const bodyData = {
+    message_id: String(payload.message_id),
+    feedback_type: payload.feedback_type,
+    reason: payload.reason || null,
+    comment: payload.comment || null,
+    conversation_id: payload.conversation_id ? String(payload.conversation_id) : null,
+    query_text: payload.query_text || '',
+    session_id: getGuestSessionId(),
+    execution_metadata: payload.execution_metadata || {}
+  };
+
+  // Optimistically save to local state
+  setFeedbackInLocalState(payload.message_id, bodyData);
+
+  try {
+    const resp = await fetch('/api/feedback', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(bodyData)
+    });
+    if (resp.ok) {
+      const result = await resp.json();
+      if (result && result.feedback) {
+        setFeedbackInLocalState(payload.message_id, result.feedback);
+      }
+      return result;
+    }
+  } catch (e) {
+    console.warn('Feedback submission failed:', e);
+  }
+}
+
+async function handleRemoveFeedback(messageId) {
+  const token = window.EvoRAG ? window.EvoRAG.getToken() : localStorage.getItem('evorag_token');
+  const headers = {
+    'X-Session-ID': getGuestSessionId()
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  removeFeedbackFromLocalState(messageId);
+
+  try {
+    await fetch(`/api/feedback/${encodeURIComponent(messageId)}`, {
+      method: 'DELETE',
+      headers
+    });
+  } catch (e) {
+    console.warn('Feedback removal failed:', e);
+  }
+}
+
+function wireFeedbackTurn(msgEl, msg, msgId, idx) {
+  const likeBtn = msgEl.querySelector('.feedback-like-btn');
+  const dislikeBtn = msgEl.querySelector('.feedback-dislike-btn');
+  const toastEl = msgEl.querySelector(`#fb-toast-${idx}`);
+  const popoverEl = msgEl.querySelector(`#fb-popover-${idx}`);
+  const popoverCloseBtn = msgEl.querySelector(`#fb-popover-close-${idx}`);
+  const submitReasonBtn = msgEl.querySelector(`#fb-submit-reason-${idx}`);
+  const commentInput = msgEl.querySelector(`#fb-comment-${idx}`);
+  const chipsContainer = msgEl.querySelector(`#fb-chips-${idx}`);
+  let selectedReason = null;
+
+  if (!likeBtn || !dislikeBtn) return;
+
+  function showFbToast(text, duration = 3000) {
+    if (!toastEl) return;
+    toastEl.textContent = text;
+    toastEl.style.display = 'inline-flex';
+    clearTimeout(toastEl._timer);
+    toastEl._timer = setTimeout(() => {
+      toastEl.style.display = 'none';
+    }, duration);
+  }
+
+  // Pre-fill reason & comment if cached
+  const cached = getFeedbackFromLocalState(msgId);
+  if (cached && cached.reason && chipsContainer) {
+    const chip = chipsContainer.querySelector(`[data-reason="${cached.reason}"]`);
+    if (chip) {
+      chip.classList.add('selected');
+      selectedReason = cached.reason;
+    }
+  }
+  if (cached && cached.comment && commentInput) {
+    commentInput.value = cached.comment;
+  }
+
+  if (chipsContainer) {
+    chipsContainer.querySelectorAll('.feedback-chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const reason = chip.getAttribute('data-reason');
+        if (selectedReason === reason) {
+          chip.classList.remove('selected');
+          selectedReason = null;
+        } else {
+          chipsContainer.querySelectorAll('.feedback-chip').forEach(c => c.classList.remove('selected'));
+          chip.classList.add('selected');
+          selectedReason = reason;
+        }
+      });
+    });
+  }
+
+  if (popoverCloseBtn) {
+    popoverCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (popoverEl) popoverEl.style.display = 'none';
+    });
+  }
+
+  likeBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const isCurrentlyLike = likeBtn.classList.contains('active');
+    if (isCurrentlyLike) {
+      await handleRemoveFeedback(msgId);
+      likeBtn.classList.remove('active', 'like');
+      showFbToast('Feedback removed');
+    } else {
+      await handleSubmitFeedback({
+        message_id: msgId,
+        feedback_type: 'like',
+        conversation_id: activeConversationId ? String(activeConversationId) : null,
+        query_text: msg.query_text || (msg.content ? msg.content.slice(0, 200) : ''),
+        execution_metadata: {
+          top_personas: msg.top_personas || [],
+          sources_count: (msg.sources || []).length
+        }
+      });
+      likeBtn.classList.add('active', 'like');
+      dislikeBtn.classList.remove('active', 'dislike');
+      if (popoverEl) popoverEl.style.display = 'none';
+      showFbToast('Thanks for your feedback');
+    }
+  });
+
+  dislikeBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const isCurrentlyDislike = dislikeBtn.classList.contains('active');
+    if (isCurrentlyDislike) {
+      await handleRemoveFeedback(msgId);
+      dislikeBtn.classList.remove('active', 'dislike');
+      if (popoverEl) popoverEl.style.display = 'none';
+      showFbToast('Feedback removed');
+    } else {
+      // Record lightweight dislike immediately
+      await handleSubmitFeedback({
+        message_id: msgId,
+        feedback_type: 'dislike',
+        conversation_id: activeConversationId ? String(activeConversationId) : null,
+        query_text: msg.query_text || (msg.content ? msg.content.slice(0, 200) : ''),
+        execution_metadata: {
+          top_personas: msg.top_personas || [],
+          sources_count: (msg.sources || []).length
+        }
+      });
+      dislikeBtn.classList.add('active', 'dislike');
+      likeBtn.classList.remove('active', 'like');
+      showFbToast('Thanks for your feedback');
+      // Open popover for optional detailed reason & comment
+      if (popoverEl) popoverEl.style.display = 'block';
+    }
+  });
+
+  if (submitReasonBtn) {
+    submitReasonBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const comment = (commentInput ? commentInput.value.trim() : '') || null;
+      await handleSubmitFeedback({
+        message_id: msgId,
+        feedback_type: 'dislike',
+        reason: selectedReason,
+        comment: comment,
+        conversation_id: activeConversationId ? String(activeConversationId) : null,
+        query_text: msg.query_text || (msg.content ? msg.content.slice(0, 200) : ''),
+        execution_metadata: {
+          top_personas: msg.top_personas || [],
+          sources_count: (msg.sources || []).length
+        }
+      });
+      if (popoverEl) popoverEl.style.display = 'none';
+      showFbToast('Reason submitted! Thank you.');
+    });
+  }
+}
+
+// Global click-outside listener to dismiss dislike popovers
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.feedback-popover') && !e.target.closest('.feedback-dislike-btn')) {
+    document.querySelectorAll('.feedback-popover').forEach(pop => {
+      pop.style.display = 'none';
+    });
+  }
+});
+
+let feedbackDoughnutChartInstance = null;
+let feedbackBarChartInstance = null;
+let feedbackLineChartInstance = null;
+
+async function openFeedbackDashboard() {
+  const modal = $('feedback-analytics-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+
+  try {
+    const [analyticsResp, recsResp] = await Promise.all([
+      fetch('/api/feedback/analytics'),
+      fetch('/api/feedback/recommendations')
+    ]);
+
+    if (!analyticsResp.ok) throw new Error('Failed to load feedback analytics');
+
+    const data = await analyticsResp.json();
+    const recsData = recsResp.ok ? await recsResp.json() : { recommendations: [] };
+
+    // Update KPI Cards
+    const summary = data.summary || {};
+    $('fb-total-submissions').textContent = summary.total_submissions || 0;
+    $('fb-likes-count').textContent = summary.likes_count || 0;
+    $('fb-dislikes-count').textContent = summary.dislikes_count || 0;
+    $('fb-satisfaction-pct').textContent = (summary.positive_percentage || 0).toFixed(1) + '%';
+
+    // Render Charts
+    renderFeedbackDashboardCharts(data.charts || {});
+
+    // Render Recommendations
+    const recsList = $('feedback-recommendations-list');
+    if (recsList) {
+      const recs = recsData.recommendations || data.recommendations || [];
+      if (!recs.length) {
+        recsList.innerHTML = `<div style="color:var(--muted); font-size:12px; padding:8px 0;">No diagnostic alerts. System pipeline is performing nominally.</div>`;
+      } else {
+        recsList.innerHTML = recs.map(r => `
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-left:3px solid var(--accent); border-radius:8px; padding:10px 14px; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-weight:700; font-size:12.5px; color:var(--text);">${escHtml(r.component || 'Pipeline Component')}</span>
+              <span style="font-size:10px; text-transform:uppercase; background:rgba(99,102,241,0.18); color:#818cf8; padding:2px 6px; border-radius:4px; font-weight:700;">${escHtml(r.type || 'DIAGNOSTIC')}</span>
+            </div>
+            <div style="font-size:11.5px; color:var(--muted); margin-bottom:4px;"><strong>Observation:</strong> ${escHtml(r.observation || '')}</div>
+            <div style="font-size:11.5px; color:#38bdf8;"><strong>Recommendation:</strong> ${escHtml(r.recommendation || '')}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Render Persona Performance Table
+    const tbody = $('feedback-persona-tbody');
+    if (tbody) {
+      const personas = data.persona_performance || [];
+      if (!personas.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:16px;">No persona feedback data captured yet.</td></tr>`;
+      } else {
+        tbody.innerHTML = personas.map(p => {
+          const total = (p.likes || 0) + (p.dislikes || 0);
+          const topIssues = Object.entries(p.associated_dislike_reasons || {})
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 2)
+            .map(([r, c]) => `${r} (${c})`)
+            .join(', ') || 'None';
+          const satPct = total > 0 ? (p.satisfaction_rate || 0).toFixed(1) + '%' : 'N/A';
+          const satColor = (p.satisfaction_rate >= 70) ? '#10b981' : ((p.satisfaction_rate >= 50) ? '#fbbf24' : '#ef4444');
+
+          return `
+            <tr>
+              <td style="font-weight:600; color:var(--text);">${escHtml(p.name)}</td>
+              <td>${total}</td>
+              <td style="color:#10b981;">${p.likes || 0}</td>
+              <td style="color:#ef4444;">${p.dislikes || 0}</td>
+              <td style="font-weight:700; color:${satColor};">${satPct}</td>
+              <td style="color:var(--muted); font-size:11px;">${escHtml(topIssues)}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+  } catch (err) {
+    console.error('Error rendering feedback dashboard:', err);
+    showToast('Failed to load feedback analytics');
+  }
+}
+
+function closeFeedbackDashboard() {
+  const modal = $('feedback-analytics-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function renderFeedbackDashboardCharts(chartsData) {
+  if (typeof Chart === 'undefined') return;
+
+  // 1. Doughnut Chart: Satisfaction (Likes vs Dislikes)
+  const dCanvas = $('feedback-doughnut-chart');
+  if (dCanvas) {
+    if (feedbackDoughnutChartInstance) feedbackDoughnutChartInstance.destroy();
+    const dData = chartsData.satisfaction_doughnut || { labels: ['Likes', 'Dislikes'], data: [0, 0], colors: ['#10b981', '#ef4444'] };
+    feedbackDoughnutChartInstance = new Chart(dCanvas, {
+      type: 'doughnut',
+      data: {
+        labels: dData.labels,
+        datasets: [{
+          data: dData.data,
+          backgroundColor: dData.colors || ['#10b981', '#ef4444'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12, font: { size: 11 } } }
+        },
+        cutout: '68%'
+      }
+    });
+  }
+
+  // 2. Bar Chart: Negative Feedback Reasons Breakdown
+  const bCanvas = $('feedback-reasons-bar-chart');
+  if (bCanvas) {
+    if (feedbackBarChartInstance) feedbackBarChartInstance.destroy();
+    const bData = chartsData.dislike_reasons_bar || { labels: [], data: [], colors: [] };
+    feedbackBarChartInstance = new Chart(bCanvas, {
+      type: 'bar',
+      data: {
+        labels: bData.labels.length ? bData.labels : ['No negative reports'],
+        datasets: [{
+          label: 'Reports',
+          data: bData.data.length ? bData.data : [0],
+          backgroundColor: bData.colors || '#ef4444',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        scales: {
+          x: { ticks: { color: '#94a3b8', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: { ticks: { color: '#e2e8f0', font: { size: 11 } }, grid: { display: false } }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  }
+
+  // 3. Line Chart: Feedback Trends Over Time
+  const lCanvas = $('feedback-trend-line-chart');
+  if (lCanvas) {
+    if (feedbackLineChartInstance) feedbackLineChartInstance.destroy();
+    const tData = chartsData.trends_line || { labels: [], likes: [], dislikes: [] };
+    feedbackLineChartInstance = new Chart(lCanvas, {
+      type: 'line',
+      data: {
+        labels: tData.labels.length ? tData.labels : ['Today'],
+        datasets: [
+          {
+            label: 'Likes',
+            data: tData.likes.length ? tData.likes : [0],
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: true,
+            tension: 0.3
+          },
+          {
+            label: 'Dislikes',
+            data: tData.dislikes.length ? tData.dislikes : [0],
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            fill: true,
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: { ticks: { color: '#94a3b8', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        },
+        plugins: {
+          legend: { position: 'top', labels: { color: '#94a3b8', boxWidth: 12, font: { size: 11 } } }
+        }
+      }
+    });
+  }
+}
+
+// Wire navbar and modal dashboard buttons
+const openFbDashBtn = $('open-feedback-dashboard-btn');
+if (openFbDashBtn) {
+  openFbDashBtn.addEventListener('click', openFeedbackDashboard);
+}
+const closeFbDashBtn = $('feedback-modal-close-btn');
+if (closeFbDashBtn) {
+  closeFbDashBtn.addEventListener('click', closeFeedbackDashboard);
+}
+const closeFbDashFooterBtn = $('feedback-modal-close-footer-btn');
+if (closeFbDashFooterBtn) {
+  closeFbDashFooterBtn.addEventListener('click', closeFeedbackDashboard);
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -5485,9 +6302,12 @@ async function runQuery() {
     updateEvolutionChart(state.evolutionHistory, data.scores || {}, data.top_personas || [], queryText);
 
     // Add assistant turn to active conversation thread
+    const turnMsgId = 'turn-' + Date.now() + '-' + (activeMessages.length + 1);
     const assistantMsgObj = {
+      id: turnMsgId,
       role: 'assistant',
       content: data.final_answer || '',
+      query_text: queryText,
       sources: data.sources || [],
       top_personas: data.top_personas || [],
       components: data.components || [],
@@ -5508,19 +6328,29 @@ async function runQuery() {
 
     // 4. Persist assistant message to active conversation
     if (token && activeConversationId && data.final_answer) {
-      await fetch(`/conversations/${activeConversationId}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          role: 'assistant',
-          content: data.final_answer,
-          sources: data.sources || [],
-          components: data.components || []
-        })
-      }).catch(e => console.warn('Error saving assistant message:', e));
+      try {
+        const msgResp = await fetch(`/conversations/${activeConversationId}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            role: 'assistant',
+            content: data.final_answer,
+            sources: data.sources || [],
+            components: data.components || []
+          })
+        });
+        if (msgResp.ok) {
+          const savedMsg = await msgResp.json();
+          if (savedMsg && savedMsg.id) {
+            assistantMsgObj.id = String(savedMsg.id);
+          }
+        }
+      } catch (e) {
+        console.warn('Error saving assistant message:', e);
+      }
 
       // Refresh list to update message counts & timestamps
       await loadConversations();

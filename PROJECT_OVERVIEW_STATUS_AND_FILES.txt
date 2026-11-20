@@ -102,6 +102,8 @@ evorag_major/
 ├── event_evolution_service.py                 # Timeline synthesis & milestone progression
 ├── evorag.db                                  # Active SQLite database file
 ├── evorag_design_framework.png                # High-level architecture visualization diagram
+├── feedback_api.py                             # REST endpoints for like/dislike feedback & analytics
+├── feedback_intelligence.py                   # Feedback Intelligence & Continuous Personalization Engine
 ├── fetcher.py                                 # Multi-source RSS feed & web article scraper
 ├── file_processor.py                          # Multimodal parser for PDF, DOCX, CSV, XLSX, Images
 ├── gemini_client.py                           # Google Gemini API client (multimodal & consensus)
@@ -130,6 +132,7 @@ evorag_major/
 ├── utils.py                                   # Shared helper utilities (text cleaning, hashing)
 ├── voting.py                                  # Multi-persona evaluation matrix & ranking logic
 │
+├── test_feedback_intelligence.py              # 12-scenario test suite for feedback intelligence & learning
 ├── test_guest_news_autocomplete.py            # Unit test for autocomplete & guest endpoints
 ├── test_phase6_orchestration.py               # Comprehensive verification test for RAG pipeline
 ├── test_phase7_multimodal.py                  # Test suite for document & image file uploads
@@ -476,10 +479,44 @@ PART 3: WHAT EACH FILE DOES IN BRIEF & TOOLS USED
   * LaTeX / TeX: Typesetting engine for academic engineering project reports.
 
 --------------------------------------------------------------------------------
-25. Test & Validation Suites (*_test.py, validate_*.py)
+25. feedback_intelligence.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  The core intelligence engine analyzing user response satisfaction and driving continuous
+  personalization. Implements 3 analytical dimensions:
+  * Dimension A (User Personalization): Analyzes repeated feedback patterns (technical depth,
+    evidence density, formatting) without overriding explicit onboarding preferences.
+  * Dimension B (Response Quality): Classifies negative feedback reasons into pipeline
+    component bottlenecks (Query Understanding, Retrieval, Freshness, Grounding, Synthesis).
+  * Dimension C (Persona Performance): Correlates feedback with winning personas to track
+    per-persona satisfaction rates and diagnostic alerts.
+  Also generates automated system improvement recommendations and aggregate Chart.js data.
+- Tools & Libraries Used:
+  * SQLModel / SQLAlchemy: Persistence and querying of ResponseFeedback entities.
+  * collections (Counter, defaultdict): Statistical aggregation of issue patterns.
+  * json & datetime: Serialization and timestamped longitudinal trend calculation.
+
+--------------------------------------------------------------------------------
+26. feedback_api.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  RESTful router exposing endpoints for feedback capture, retrieval, analytics, and diagnostics.
+  * POST /api/feedback: Records or updates like/dislike with optional reason and comment.
+  * DELETE /api/feedback/{msg_id}: Removes feedback when user toggles the active button.
+  * GET /api/feedback/message/{msg_id}: Fetches active feedback for an assistant turn.
+  * GET /api/feedback/user: Retrieves historical feedback for an authenticated user.
+  * GET /api/feedback/analytics: Compiles live KPI metrics and Chart.js datasets.
+  * GET /api/feedback/recommendations: Returns continuous pipeline improvement suggestions.
+- Tools & Libraries Used:
+  * FastAPI & APIRouter: Async endpoint handling, dependency injection, and BackgroundTasks.
+  * Pydantic (FeedbackCreate, FeedbackRead): Payload validation and response schemas.
+
+--------------------------------------------------------------------------------
+27. Test & Validation Suites (*_test.py, validate_*.py, test_*.py)
 --------------------------------------------------------------------------------
 - Purpose in Brief:
   Comprehensive test automation verifying all architectural phases:
+  - test_feedback_intelligence.py: 12-scenario test suite for feedback intelligence & learning.
   - validate_phase1.py to validate_phase5.py: Validates each milestone phase.
   - test_temporal_event_tracking.py: 14-scenario verification for event evolution.
   - test_phase7_multimodal.py: Verifies document and image uploads.

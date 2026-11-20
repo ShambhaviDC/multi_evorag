@@ -581,6 +581,15 @@ def compute_personalization_scores(
 
         # Weighted combination: 50% explicit + 35% historical + 15% immediate perspective
         s_pers = 0.50 * s_explicit + 0.35 * s_historical + 0.15 * s_perspective
+
+        # Subtle boost for personas the user has repeatedly liked in past feedback
+        try:
+            learned = json.loads(getattr(profile, "learned_preferences_json", None) or "{}")
+            if pid in learned.get("favored_personas", []):
+                s_pers = min(1.0, s_pers + 0.08)
+        except Exception:
+            pass
+
         persona_scores[pid] = round(max(0.1, min(1.0, s_pers)), 4)
 
     return persona_scores
@@ -594,6 +603,7 @@ def build_personalization_context(
     """
     Build a compact context injection block for persona prompts.
     Provides personal focus instructions without overriding factual grounding.
+    Integrates continuous preferences learned from repeated user feedback.
     """
     if not profile or not profile.enabled:
         return None
@@ -613,6 +623,11 @@ def build_personalization_context(
     except Exception:
         inferred = []
 
+    try:
+        learned = json.loads(getattr(profile, "learned_preferences_json", None) or "{}")
+    except Exception:
+        learned = {}
+
     # Get active recurring or strong interests
     active_interests = [
         item["category"]
@@ -620,14 +635,15 @@ def build_personalization_context(
         if item.get("status") in ("strong", "recurring")
     ][:4]
 
-    # If no explicit or implicit preferences exist yet, omit injection
-    if not preferred_cats and not preferred_persp and not active_interests and profile.preferred_language == "English":
+    # If no explicit, implicit, or learned preferences exist yet, omit injection
+    has_learned = any(learned.get(k) for k in ("prefer_sources", "prefer_technical_depth", "prefer_concise", "prefer_visual_components"))
+    if not preferred_cats and not preferred_persp and not active_interests and not has_learned and profile.preferred_language == "English":
         return None
 
     lines = ["[USER PERSONALIZATION CONTEXT]"]
 
     if preferred_persp:
-        lines.append(f"- Preferred Analytical Angles: {', '.join(preferred_persp[:4])}")
+        lines.append(f"- Preferred Analytical Angles (Explicit): {', '.join(preferred_persp[:4])}")
 
     combined_interests = list(dict.fromkeys(preferred_cats + active_interests))
     if combined_interests:
@@ -638,6 +654,16 @@ def build_personalization_context(
 
     if profile.preferred_length and profile.preferred_length != "detailed":
         lines.append(f"- Preferred Response Depth: {profile.preferred_length}")
+
+    # Inject continuous preferences learned from repeated feedback
+    if learned.get("prefer_sources"):
+        lines.append("- Learned Feedback Preference: User values verified source citations and publisher attribution.")
+    if learned.get("prefer_technical_depth"):
+        lines.append("- Learned Feedback Preference: User appreciates detailed technical depth, policy mechanisms, and practical context.")
+    if learned.get("prefer_concise") and not (profile.preferred_length and profile.preferred_length == "detailed"):
+        lines.append("- Learned Feedback Preference: User prefers concise, direct summaries without filler.")
+    if learned.get("prefer_visual_components"):
+        lines.append("- Learned Feedback Preference: User engages positively with structured comparison tables and visual components.")
 
     lines.append(
         "- DIRECTIVE: Calibrate analysis emphasis, technical depth, and synthesis angle "

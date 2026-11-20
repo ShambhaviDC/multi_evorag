@@ -561,54 +561,8 @@ def _build_news_charts(
             }
         ))
 
-    # 2. Extract numerical metrics from final answer for a Key Figures Bar Chart
-    num_matches = []
-    patterns = [
-        r"([A-Z][a-zA-Z\s]{2,25})\s*(?:amounted to|recorded|increased by|rose|stands at|reached|estimated at|of|by)?\s*(\$?\d+(?:\.\d+)?)\s*(%|billion|million|trillion|points|seats)?",
-        r"(\d+(?:\.\d+)?)\s*(%|billion|million|trillion|seats)?\s*(?:for|in|of)\s*([A-Z][a-zA-Z\s]{2,25})",
-    ]
-    seen_labels = set()
-    for line in final_answer.split("\n"):
-        for pat in patterns:
-            for m in re.finditer(pat, line):
-                groups = m.groups()
-                if len(groups) == 3:
-                    if groups[0].replace("$", "").replace(".", "").isdigit():
-                        num_str, unit, lbl = groups[0], groups[1], groups[2]
-                    else:
-                        lbl, num_str, unit = groups[0], groups[1], groups[2]
-
-                    clean_lbl = lbl.strip(":,.;- ").title()
-                    if len(clean_lbl) < 3 or len(clean_lbl) > 28 or clean_lbl in seen_labels:
-                        continue
-                    try:
-                        val = float(num_str.replace("$", ""))
-                        if val > 0:
-                            seen_labels.add(clean_lbl)
-                            unit_str = f" ({unit})" if unit else ""
-                            num_matches.append((f"{clean_lbl}{unit_str}", val))
-                    except ValueError:
-                        pass
-
-    if len(num_matches) >= 3:
-        chart_labels = [item[0] for item in num_matches[:6]]
-        chart_vals = [item[1] for item in num_matches[:6]]
-        charts.append(UIComponent(
-            type="bar_chart",
-            title="Reported Numerical Highlights & Key Metrics",
-            data={
-                "chartType": "bar",
-                "labels": chart_labels,
-                "datasets": [{
-                    "label": "Reported Figures",
-                    "data": chart_vals,
-                    "backgroundColor": [CHART_COLORS[i % len(CHART_COLORS)] for i in range(len(chart_labels))],
-                    "borderColor": [CHART_BORDERS[i % len(CHART_BORDERS)] for i in range(len(chart_labels))],
-                    "borderWidth": 1.5,
-                }]
-            }
-        ))
-    elif temporal_context and temporal_context.get("timeline") and len(temporal_context["timeline"]) >= 2:
+    # 2. Timeline chart if rich chronological milestones exist
+    if temporal_context and temporal_context.get("timeline") and len(temporal_context["timeline"]) >= 2:
         tl = temporal_context["timeline"]
         tl_labels = []
         tl_seq = []

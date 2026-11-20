@@ -83,6 +83,7 @@ class PersonalizationProfile(SQLModel, table=True):
     preferred_perspectives_json: str = Field(default="[]") # JSON: ["Technical", "Economic", ...]
     preferred_language: str = Field(default="English")
     preferred_length: str = Field(default="detailed")
+    learned_preferences_json: str = Field(default="{}")    # JSON: learned style preferences from repeated feedback
     last_profile_update: datetime = Field(default_factory=utc_now)
 
 
@@ -237,4 +238,52 @@ class PersonalizationProfileUpdate(BaseModel):
     preferred_language: Optional[str] = None
     preferred_length: Optional[str] = None
     excluded_interests: Optional[List[str]] = None
+
+
+# ── Response Feedback & Intelligence Models ───────────────────────────────────
+
+class ResponseFeedback(SQLModel, table=True):
+    """User satisfaction signals, issue classifications, and feedback intelligence for assistant responses."""
+    __tablename__ = "response_feedback"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    feedback_id: str = Field(unique=True, index=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="user.id", index=True, nullable=True)
+    session_id: Optional[str] = Field(default=None, index=True, nullable=True)
+    conversation_id: Optional[int] = Field(default=None, foreign_key="conversation.id", index=True, nullable=True)
+    message_id: str = Field(index=True)  # unique assistant message identifier or query_id
+    query_text: Optional[str] = Field(default=None, nullable=True)
+    feedback_type: str = Field(index=True)  # "like" or "dislike"
+    reason: Optional[str] = Field(default=None, index=True, nullable=True)
+    comment: Optional[str] = Field(default=None, nullable=True)
+    execution_metadata_json: Optional[str] = Field(default="{}", nullable=True)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now, sa_column_kwargs={"onupdate": utc_now})
+
+
+class FeedbackCreate(BaseModel):
+    message_id: str
+    feedback_type: str  # "like" or "dislike"
+    conversation_id: Optional[int] = None
+    query_text: Optional[str] = None
+    reason: Optional[str] = None
+    comment: Optional[str] = None
+    session_id: Optional[str] = None
+    execution_metadata: Optional[Dict[str, Any]] = None
+
+
+class FeedbackRead(BaseModel):
+    feedback_id: str
+    user_id: Optional[int] = None
+    session_id: Optional[str] = None
+    conversation_id: Optional[int] = None
+    message_id: str
+    query_text: Optional[str] = None
+    feedback_type: str
+    reason: Optional[str] = None
+    comment: Optional[str] = None
+    execution_metadata: Optional[Dict[str, Any]] = None
+    created_at: str
+    updated_at: str
+
 
