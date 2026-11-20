@@ -1,0 +1,493 @@
+================================================================================
+EVORAG: EVOLUTIONARY RETRIEVAL-AUGMENTED GENERATION FOR NEWS INTELLIGENCE
+PROJECT STATUS, REPOSITORY FILE STRUCTURE, AND TOOLSTACK REFERENCE GUIDE
+================================================================================
+Generated Date: November 2026
+System: EvoRAG Multi-Persona Consensus & Temporal Event Tracking Platform
+Workspace: e:\Major\evorag_major
+Git Remote: https://github.com/ShambhaviDC/multi_evorag.git (Branch: main)
+================================================================================
+
+
+================================================================================
+PART 1: PROJECT STATUS & CAPABILITIES SUMMARY
+================================================================================
+
+1. SYSTEM STATUS: FULLY OPERATIONAL & PRODUCTION READY
+   - Backend API: Running on FastAPI (ASGI) and Uvicorn on http://0.0.0.0:8000
+   - Vector Store: FAISS Index with 139 dense semantic vectors (384-dimensional)
+   - Relational Database: SQLite (evorag.db) managed via SQLModel / SQLAlchemy ORM
+   - Consensus LLM Engine: Dual-tier orchestration combining Google Gemini API
+     (gemini-2.5-flash / gemini-1.5-flash) with local Ollama LLM execution
+   - Frontend UI: ChatGPT-style responsive single-page web application (HTML5,
+     Vanilla JavaScript, CSS3, Chart.js)
+
+2. CORE FUNCTIONAL CAPABILITIES:
+   a. Multi-Persona Consensus Synthesis:
+      - 8 distinct analytical personas evaluate every query from different perspectives:
+        1. analytical-critical (policy mechanisms, structural analysis)
+        2. empirical-evidential (verified dates, metrics, data points)
+        3. adversarial-skeptical (counter-arguments, stakeholder positions)
+        4. synthesis-integrative (holistic themes, big picture)
+        5. domain-expert (technical, legal, and subject depth)
+        6. temporal-contextual (historical evolution and future trajectories)
+        7. risk-evaluative (operational vulnerabilities, impact analysis)
+        8. creative-lateral (cross-disciplinary and unconventional angles)
+      - Computes an 8x8 peer-scoring evaluation matrix across factual grounding,
+        reasoning quality, and completeness to elect winning perspectives.
+
+   b. Multimodal Document & File Intelligence:
+      - Supports direct drag-and-drop file uploads for PDF, DOCX, TXT, CSV,
+        XLSX, PNG, JPG, and JPEG.
+      - Automatically extracts tabular datasets, text paragraphs, and prepares
+        base64 image payloads for multimodal vision grounding.
+
+   c. Temporal News Event Tracking & Evolution:
+      - Automatically clusters real-world news articles into evolving event entities.
+      - Tracks event status progression (Emerging -> Developing -> Ongoing -> Resolved).
+      - Computes chronological milestones, policy shifts, clarifications, and controversies.
+
+   d. Personalized News Discovery & Dynamic Feeds:
+      - Covers 18 major journalistic categories (AI, Technology, Cricket, Sports,
+        Politics, Business, Economy, Agriculture, Science, Healthcare, etc.).
+      - Decoupled user interest scoring adapts dynamically to reading habits without
+        compromising underlying peer factual consensus.
+
+   e. Rich Visual Responses (ChatGPT-Style Media & Charts):
+      - Top Media Carousel: Queries article photos or matches high-resolution
+        editorial imagery with publisher attribution chips.
+      - Bottom Dynamic Visualizations: Mounts responsive Chart.js components
+        (Multi-Persona Consensus Radar Charts, metric Bar Charts, Line Charts,
+        and chronological Timelines).
+
+   f. Deterministic Response Sanitation:
+      - Enforces clean, authoritative journalistic prose.
+      - Completely strips internal pipeline jargon (e.g., "Emerging with 85% confidence",
+        "single recorded chronological data point", "assessed confidence rating").
+      - Completely eliminates robotic meta-academic disclaimers ("Logical Structure
+        and Assumptions", "Analytical Critique and Limitations", "Implications and Risks").
+      - Only flags knowledge gaps when the user explicitly requests future predictions.
+
+   g. Sub-Minute Latency Performance:
+      - Async FastAPI endpoints with bounded timeouts.
+      - Pre-warmed FAISS memory caching and thread-pool retrieval.
+      - Fast structured consensus routing to eliminate multi-round query bottlenecks.
+
+
+================================================================================
+PART 2: REPOSITORY DIRECTORY & FILE STRUCTURE
+================================================================================
+
+evorag_major/
+├── .env.example                               # Environment variable blueprint
+├── PROJECT_OVERVIEW_STATUS_AND_FILES.txt      # This status, structure, & tools file
+├── PROJECT_STATUS.md                          # Markdown milestone status tracker
+├── README.md                                  # Repository overview and setup instructions
+├── SYSTEM_ARCHITECTURE_AND_WORKFLOW.md        # Comprehensive technical architecture & workflow
+├── instruction.md                             # Academic thesis instructions and guidelines
+├── project-files-info.md                      # Supplementary file notes
+├── project_state_report.md                    # Project state and phase documentation
+│
+├── api.py                                     # FastAPI root application server & router hub
+├── auth.py                                    # User authentication, JWT tokens, & sessions
+├── autocomplete_service.py                    # Predictive search query autocomplete engine
+├── build_ai_corpus.py                         # Standalone script to build AI news test corpus
+├── config.py                                  # Global system settings & environment variables
+├── conversations.py                           # Multi-turn chat persistence & conversation APIs
+├── database.py                                # SQLModel / SQLite database engine configuration
+├── embedder.py                                # Dense vector embedding service (MiniLM-L6-v2)
+├── evaluate_temporal_novelty.py               # Empirical evaluation benchmarks for event tracking
+├── event_api.py                               # REST endpoints for evolving event timelines
+├── event_clustering_service.py                # Incremental semantic news event clustering
+├── event_evolution_service.py                 # Timeline synthesis & milestone progression
+├── evorag.db                                  # Active SQLite database file
+├── evorag_design_framework.png                # High-level architecture visualization diagram
+├── fetcher.py                                 # Multi-source RSS feed & web article scraper
+├── file_processor.py                          # Multimodal parser for PDF, DOCX, CSV, XLSX, Images
+├── gemini_client.py                           # Google Gemini API client (multimodal & consensus)
+├── generate_framework_diagram.py              # Script generating system architecture PNG
+├── input_understanding_agent.py               # Natural language query intent & entity extractor
+├── knowledge_scheduler.py                     # Background cron scheduler for live feed ingestion
+├── models.py                                  # SQLModel database schemas & entity definitions
+├── news_api.py                                # REST endpoints for personalized feeds & articles
+├── news_service.py                            # News article curation, deduplication, & filtering
+├── personalization_agent.py                   # User interest profile modeling & category weights
+├── personalization_api.py                     # REST endpoints for managing user interests
+├── personas.py                                # Definitions and system prompts for 8 personas
+├── pipeline.py                                # Core end-to-end multi-persona consensus orchestration
+├── preferences.py                             # User UI preferences and persona weight overrides
+├── query_models.py                            # Pydantic schemas for input understanding & queries
+├── recommendations.py                         # Collaborative/content-based article recommendation
+├── requirements.txt                           # Python package dependencies & version pins
+├── response_planner.py                        # Adaptive visual component planner (media & charts)
+├── retrieval_diagnostics.py                   # Retrieval health check & diagnostic utility
+├── retriever.py                               # FAISS hybrid vector retrieval & sufficiency check
+├── run_app.ps1                                # PowerShell launch script for Uvicorn server
+├── run_scheduler.ps1                          # PowerShell launch script for ingestion scheduler
+├── score_store.json                           # Historical score matrix logging cache
+├── score_store.py                             # Evaluation matrix storage & analytics helper
+├── synthesis.py                               # Final persona response merging & consensus prompt
+├── utils.py                                   # Shared helper utilities (text cleaning, hashing)
+├── voting.py                                  # Multi-persona evaluation matrix & ranking logic
+│
+├── test_guest_news_autocomplete.py            # Unit test for autocomplete & guest endpoints
+├── test_phase6_orchestration.py               # Comprehensive verification test for RAG pipeline
+├── test_phase7_multimodal.py                  # Test suite for document & image file uploads
+├── test_temporal_event_tracking.py            # 14-scenario verification for event evolution
+├── test_user_personalization.py               # Verification suite for user category personalization
+├── validate_phase1.py                         # Phase 1 validation script (Feed ingestion)
+├── validate_phase2.py                         # Phase 2 validation script (Vector embeddings)
+├── validate_phase3.py                         # Phase 3 validation script (Retrieval pipeline)
+├── validate_phase4.py                         # Phase 4 validation script (Persona consensus)
+├── validate_phase5.py                         # Phase 5 validation script (Persona evolution)
+│
+├── data/                                      # Offline JSON news article chunks & seed datasets
+│   ├── chunks_Anthropic_Claude_AI_news_*.json
+│   ├── chunks_Google_DeepMind_Gemini_AI_*.json
+│   ├── chunks_OpenAI_recent_developments_*.json
+│   └── chunks_seed.json
+│
+├── evorag_phase2/                             # Academic thesis report LaTeX documentation
+│   ├── CourseOutcomes.tex                     # Course outcome mapping
+│   ├── ProjectEvaluationRubrics.tex           # Project evaluation rubrics
+│   ├── abstract.tex                           # Thesis abstract
+│   ├── acknowledgement.tex                    # Acknowledgement section
+│   ├── appendix.tex                           # Thesis appendices
+│   ├── bibliography.tex                       # Citation references
+│   ├── certificate.tex                        # Institutional certificate
+│   ├── conclusion.tex                         # Thesis conclusion
+│   ├── cover_page.tex                         # Thesis cover page
+│   ├── implementation.tex                     # Implementation details
+│   ├── introduction.tex                       # Introduction chapter
+│   ├── literature_review.tex                  # Literature review & related work
+│   ├── main_report.tex                        # Master LaTeX document
+│   ├── results.tex                            # Experimental results & evaluation
+│   ├── technical_description.tex              # Theoretical & mathematical formulations
+│   └── *.png / *.jpg                          # High-resolution architectural diagrams
+│
+├── frontend/                                  # Responsive client-side web application
+│   ├── auth.js                                # Frontend authentication & token management
+│   ├── chat.html                              # Chat application layout template
+│   ├── index.html                             # Main single-page web UI (chat, news feed, modals)
+│   ├── login.html                             # User login page
+│   ├── onboarding.html                        # New user category preference onboarding
+│   ├── signup.html                            # User registration page
+│   └── styles.css                             # Unified modern dark-mode stylesheet
+│
+├── index/                                     # Persistent vector database artifacts
+│   ├── evorag.faiss                           # FAISS binary vector index
+│   ├── evorag_meta.json                       # Chunk metadata mapping (title, url, text)
+│   └── ingestion_status.json                  # Timestamped ingestion tracking status
+│
+└── persona_evolution/                         # Autonomous evolutionary persona adaptation module
+    ├── __init__.py                            # Package initialization
+    ├── detector.py                            # Detects underperforming or stagnant personas
+    ├── mutator.py                             # Mutates system prompts to improve factual depth
+    ├── replacer.py                            # Retires low-scoring personas with superior mutants
+    └── tracker.py                             # Historical performance and win-rate tracker
+
+
+================================================================================
+PART 3: WHAT EACH FILE DOES IN BRIEF & TOOLS USED
+================================================================================
+
+--------------------------------------------------------------------------------
+1. api.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  The central backend application entry point. Initializes FastAPI, configures
+  CORS middleware, mounts static files for the frontend UI, registers all API
+  routers (auth, news, events, conversations, personalization), and exposes the
+  primary /query/consensus endpoint.
+- Tools & Libraries Used:
+  * fastapi (FastAPI, APIRouter, Request, HTTPException): High-performance ASGI web framework.
+  * uvicorn: Lightning-fast ASGI web server.
+  * sqlmodel (Session, select): ORM for session dependencies and database queries.
+  * pydantic (BaseModel): Strict request/response payload schema validation.
+  * starlette.middleware.cors (CORSMiddleware): Cross-origin resource sharing security.
+  * starlette.staticfiles (StaticFiles): Serves client HTML/CSS/JS frontend assets.
+
+--------------------------------------------------------------------------------
+2. pipeline.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  The master orchestration pipeline for EvoRAG. Coordinates Step 1 (Input
+  Understanding), Step 2 (Intelligent FAISS Retrieval & Temporal Context Lookup),
+  Step 3 (Multimodal Consensus via Gemini Structured Generation), and Step 4
+  (Local Multi-Persona Racing & Voting). It includes deterministic cleaning of
+  the final answer and invokes response planning for media and charts.
+- Tools & Libraries Used:
+  * asyncio: Async concurrency for running retrieval, understanding, and consensus.
+  * re (Regular Expressions): Powers clean_final_answer to strip internal telemetry,
+    confidence ratings, and unwanted robotic academic headers.
+  * sqlmodel (Session): Database session access for user and event contexts.
+  * pydantic: Structured component schemas and query validation.
+  * logging: Production logging of pipeline timing and execution branches.
+
+--------------------------------------------------------------------------------
+3. retriever.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Performs hybrid dense retrieval against FAISS. Encodes queries into 384-d
+  vectors, computes cosine similarities, scores freshness/relevance, evaluates
+  evidence sufficiency, and performs temporal context lookup for evolving events.
+- Tools & Libraries Used:
+  * faiss-cpu (faiss): Ultra-fast vector similarity search library.
+  * numpy: Dense vector array manipulation and normalization.
+  * sentence-transformers: Converts natural language text into dense semantic embeddings.
+  * sqlmodel (Session, select): Retrieves associated metadata and event records.
+  * re (Regular Expressions): Keyword boundary matching for event candidate filtering.
+
+--------------------------------------------------------------------------------
+4. embedder.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Singleton wrapper for the sentence embedding model (`all-MiniLM-L6-v2`).
+  Ensures the neural network is loaded into memory only once and provides thread-safe
+  batch and single-query vector encoding.
+- Tools & Libraries Used:
+  * sentence-transformers (SentenceTransformer): Open-source Hugging Face embedding model.
+  * torch (PyTorch): Deep learning runtime engine powering MiniLM on CPU.
+  * numpy: Vector array normalization and dimension validation.
+
+--------------------------------------------------------------------------------
+5. gemini_client.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  High-speed HTTP client for the Google Gemini API. Handles structured multimodal
+  prompts (text, base64 images, document chunks, tables), manages model failover
+  between gemini-2.5-flash, gemini-flash-lite, and gemini-flash, and handles
+  Google Search Grounding when real-time external discovery is needed.
+- Tools & Libraries Used:
+  * httpx (AsyncClient): High-throughput async HTTP client with connection pooling.
+  * os & dotenv: Secure loading of GEMINI_API_KEY from environment variables.
+  * json: Serialization and parsing of structured JSON responses.
+
+--------------------------------------------------------------------------------
+6. file_processor.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Multimodal file processing engine for uploaded files. Extracts clean text,
+  tabular summaries, and visual data from PDFs, Word documents, plain text,
+  spreadsheets, and images, enforcing strict size limits (25MB per file, 60MB total).
+- Tools & Libraries Used:
+  * pypdf / pdfplumber: Extracts text and tables from PDF documents.
+  * python-docx (docx): Extracts headings, body paragraphs, and tables from Word (.docx).
+  * openpyxl & pandas: Parses Excel (.xlsx) and CSV spreadsheets into structured tables.
+  * PIL (Pillow): Image loading, resizing, validation, and format conversion.
+  * pytesseract: Optical Character Recognition (OCR) for extracted image text.
+  * base64 & hashlib: Base64 encoding for vision models and SHA-256 duplicate hashing.
+
+--------------------------------------------------------------------------------
+7. response_planner.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Generates adaptive user interface components to enrich answers beyond plain text.
+  Builds the Media Gallery carousel (matching stored news photos or curated
+  editorial images) and prepares Chart.js visual configurations (Multi-Persona
+  Consensus Radar Charts, numerical Bar Charts, Line Charts, and Timelines).
+- Tools & Libraries Used:
+  * sqlmodel (Session, select): Queries NewsArticle table for real article photos and URLs.
+  * pydantic: Structured schema creation for UIComponent objects.
+  * re: Regex extraction of numerical figures and historical milestone years.
+
+--------------------------------------------------------------------------------
+8. event_clustering_service.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Background clustering algorithm that groups unassigned incoming news articles into
+  coherent real-world event clusters based on semantic similarity and shared entities.
+- Tools & Libraries Used:
+  * sqlmodel (Session, select): Database queries and transaction persistence.
+  * numpy: Vector dot product similarity computations between article embeddings.
+  * json: Serialization of involved entities and associated topics.
+
+--------------------------------------------------------------------------------
+9. event_evolution_service.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Analyzes how clustered events evolve over time. Sorts articles chronologically,
+  identifies milestones (genesis, policy shifts, investigations, resolutions),
+  synthesizes the event narrative, and tracks status confidence.
+- Tools & Libraries Used:
+  * sqlmodel (Session, select): Database queries for NewsEvent and EventArticleMapping.
+  * datetime: Chronological ordering and time-interval calculations.
+
+--------------------------------------------------------------------------------
+10. event_api.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  REST API endpoints for evolving events: lists tracked events, filters by category
+  and status, delivers detailed event timelines, and triggers manual clustering sweeps.
+- Tools & Libraries Used:
+  * fastapi (APIRouter, Depends, Query, HTTPException): HTTP route declarations.
+  * sqlmodel (Session): Database transactions.
+
+--------------------------------------------------------------------------------
+11. input_understanding_agent.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Step 1 of the RAG pipeline. Analyzes user queries and file attachments to extract
+  intent (factual, comparative, timeline, prediction), identified entities, domain
+  category, constraints (latest info needed), and recommended output presentation plan.
+- Tools & Libraries Used:
+  * pydantic: Enforces StructuredQuery validation schema.
+  * gemini_client / httpx: Calls LLM with fast structured JSON extraction.
+
+--------------------------------------------------------------------------------
+12. news_service.py & news_api.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Collects, parses, cleans, deduplicates, and serves live news articles.
+  Powers the Personalized News Feed with category filtering and keyword searches.
+- Tools & Libraries Used:
+  * fastapi: REST endpoints for /api/news/feed and category listings.
+  * sqlmodel: CRUD operations on the NewsArticle database table.
+  * feedparser: RSS feed parsing.
+  * beautifulsoup4: HTML content sanitization and plain-text extraction.
+
+--------------------------------------------------------------------------------
+13. fetcher.py & knowledge_scheduler.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Scheduled web scraper and live ingestion engine. Periodically fetches RSS feeds
+  from major publishers (BBC, Reuters, TechCrunch, The Verge, ESPN, Nature, etc.),
+  extracts full article text, generates embeddings, and updates the FAISS index.
+- Tools & Libraries Used:
+  * apscheduler (AsyncIOScheduler): Robust background cron job scheduling.
+  * requests / httpx: HTTP requests for downloading RSS feeds.
+  * feedparser: RSS XML feed processing.
+  * beautifulsoup4: Cleans boilerplate, ads, and HTML markup from article bodies.
+
+--------------------------------------------------------------------------------
+14. models.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Defines the application's relational data schemas. Includes models for User,
+  UserProfile, UserPersonalizationHistory, NewsArticle, NewsEvent,
+  EventArticleMapping, EventRelationship, Conversation, and Message.
+- Tools & Libraries Used:
+  * sqlmodel (SQLModel, Field, Relationship): Combines SQLAlchemy ORM with Pydantic.
+  * datetime: Timestamp tracking (created_at, updated_at).
+
+--------------------------------------------------------------------------------
+15. database.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Database engine creation, session factory, connection pooling, and automated
+  table schema migration on startup.
+- Tools & Libraries Used:
+  * sqlmodel (create_engine, Session, SQLModel): SQLite engine configuration.
+  * os: File path resolution for evorag.db.
+
+--------------------------------------------------------------------------------
+16. auth.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Handles user registration, login, secure password hashing, JWT bearer token
+  generation, and user session verification dependencies for protected routes.
+- Tools & Libraries Used:
+  * passlib (CryptContext with bcrypt): Enterprise-grade password hashing.
+  * python-jose (jwt, JWTError): Encodes and decodes JSON Web Tokens (JWT).
+  * fastapi.security (OAuth2PasswordBearer): Extracts bearer tokens from headers.
+
+--------------------------------------------------------------------------------
+17. personalization_agent.py & personalization_api.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Analyzes user interactions to learn preferred news categories (e.g., Technology,
+  Politics, Cricket). Dynamically weights persona selection while preserving objective
+  factual grounding.
+- Tools & Libraries Used:
+  * sqlmodel: Updates user preference records in SQLite.
+  * pydantic: Validates user onboarding preference payloads.
+
+--------------------------------------------------------------------------------
+18. personas.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Contains the detailed cognitive profiles, analytical system prompts, and IDs
+  for all 8 EvoRAG personas (analytical-critical, empirical-evidential, etc.).
+- Tools & Libraries Used:
+  * Python dictionaries & data structures: Standard library.
+
+--------------------------------------------------------------------------------
+19. voting.py & synthesis.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  voting.py constructs the 8x8 peer-scoring evaluation matrix and calculates weighted
+  rankings. synthesis.py merges top persona insights into a single unified consensus.
+- Tools & Libraries Used:
+  * asyncio: Parallel execution of persona calls.
+  * numpy / math: Mathematical normalization and scoring averages.
+  * httpx / gemini_client / ollama: Generates synthesized consensus text.
+
+--------------------------------------------------------------------------------
+20. conversations.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Provides persistent multi-turn chat storage. Allows users to create conversation
+  threads, view past message histories, delete topics, and load prior turns.
+- Tools & Libraries Used:
+  * fastapi (APIRouter, Depends): REST endpoints for chat session management.
+  * sqlmodel (Session, select): Persists Conversation and Message models to SQLite.
+
+--------------------------------------------------------------------------------
+21. autocomplete_service.py
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Provides ultra-low-latency query auto-completion and search suggestions as the
+  user types in the chat input bar.
+- Tools & Libraries Used:
+  * sqlmodel: Matches user prefixes against indexed news titles and event names.
+
+--------------------------------------------------------------------------------
+22. frontend/index.html & frontend/styles.css
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  The complete client web interface. Features a ChatGPT-style layout with a
+  conversational stream, file upload dropzone, personalized news feed cards,
+  interactive event timeline modals, media galleries, and dynamic Chart.js canvases.
+- Tools & Libraries Used:
+  * HTML5 & CSS3: Modern dark-mode UI with flexbox and CSS grid layouts.
+  * Vanilla JavaScript (ES6+): Asynchronous DOM manipulation, fetch API, and state management.
+  * Chart.js (CDN): Client-side rendering of radar, bar, line, and doughnut charts.
+  * FontAwesome / System Emojis: Visual icons for categories, sources, and actions.
+
+--------------------------------------------------------------------------------
+23. persona_evolution/ (detector.py, mutator.py, replacer.py, tracker.py)
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  An autonomous research module implementing Evolutionary Computation on LLM personas.
+  Tracks win rates, identifies stagnant personas, mutates prompt heuristics, and
+  replaces underperforming personas with higher-scoring variants.
+- Tools & Libraries Used:
+  * json: Long-term persona generation logging.
+  * random / numpy: Evolutionary selection algorithms and mutation operators.
+
+--------------------------------------------------------------------------------
+24. evorag_phase2/ (main_report.tex & Chapter Modules)
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  The complete formal academic thesis report documenting EvoRAG. Contains LaTeX
+  sources covering the introduction, literature review, technical architecture,
+  implementation, experimental results, and conclusion.
+- Tools & Libraries Used:
+  * LaTeX / TeX: Typesetting engine for academic engineering project reports.
+
+--------------------------------------------------------------------------------
+25. Test & Validation Suites (*_test.py, validate_*.py)
+--------------------------------------------------------------------------------
+- Purpose in Brief:
+  Comprehensive test automation verifying all architectural phases:
+  - validate_phase1.py to validate_phase5.py: Validates each milestone phase.
+  - test_temporal_event_tracking.py: 14-scenario verification for event evolution.
+  - test_phase7_multimodal.py: Verifies document and image uploads.
+  - test_phase6_orchestration.py: End-to-end integration test of the consensus engine.
+- Tools & Libraries Used:
+  * pytest / unittest: Automated test execution and assertion reporting.
+  * httpx: Automated integration testing against running API endpoints.
+
+================================================================================
+END OF PROJECT STATUS, REPOSITORY FILE STRUCTURE, AND TOOLSTACK REFERENCE
+================================================================================
