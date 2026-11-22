@@ -53,6 +53,54 @@ def sanitize_source_url(url: Optional[str]) -> str:
     return clean
 
 
+def extract_text_from_final_answer(text: str) -> str:
+    """
+    If text contains a raw JSON object, markdown code block, or {"final_answer": "..."},
+    cleanly extract the inner answer string and unescape it.
+    """
+    if not text:
+        return ""
+    text = text.strip()
+
+    # Strip leading/trailing markdown code fences (e.g. ```json ... ```)
+    text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*```$", "", text).strip()
+
+    # Direct json parse attempt
+    try:
+        data = json.loads(text, strict=False)
+        if isinstance(data, dict) and data.get("final_answer"):
+            return str(data["final_answer"]).strip()
+    except Exception:
+        pass
+
+    # Regex extraction of "final_answer": "..."
+    if '"final_answer"' in text:
+        if '"personas"' in text:
+            # Greedily match up to ", \s* "personas" so quotes inside final_answer are preserved
+            m = re.search(r'"final_answer"\s*:\s*"(.*)",\s*"personas"\s*:', text, re.DOTALL)
+            if not m:
+                m = re.search(r'"final_answer"\s*:\s*"(.*)"\s*,\s*"[a-zA-Z_-]+"\s*:', text, re.DOTALL)
+            if m:
+                val = m.group(1).replace('\\"', '"').replace('\\n', '\n').strip()
+                return val
+        else:
+            m = re.search(r'"final_answer"\s*:\s*"(.*)"\s*\}\s*$', text, re.DOTALL)
+            if m:
+                val = m.group(1).replace('\\"', '"').replace('\\n', '\n').strip()
+                return val
+
+        # Fallback strip prefix and suffix
+        sub = re.sub(r'^[\s\S]*?"final_answer"\s*:\s*"', '', text)
+        sub = re.sub(r'",\s*"personas"[\s\S]*$', '', sub)
+        sub = re.sub(r'"\s*\}\s*$', '', sub)
+        sub = sub.replace('\\"', '"').replace('\\n', '\n').strip()
+        if sub:
+            return sub
+
+    return text
+
+
 def clean_final_answer(text: str) -> str:
     """
     Clean robotic headers, metadata artifacts, and unwanted limitation/assumption sections from final answer.
@@ -60,6 +108,8 @@ def clean_final_answer(text: str) -> str:
     """
     if not text:
         return ""
+
+    text = extract_text_from_final_answer(text)
 
     # 1. Strip meta lead-ins like:
     # "Based on the provided context, the event regarding ... is tracked as an emerging political development [1]."
@@ -372,6 +422,7 @@ async def evorag_query(
             f"{persona_guide}\n\n"
             "STRICT RULES FOR NEWS & CONSENSUS REPORTING:\n"
             "- Focus directly on explaining the real-world news story and answering the user's specific query authoritatively and thoroughly.\n"
+            "- LENGTH & DEPTH: You MUST provide an in-depth, substantive news answer of AT LEAST 5 to 6 full, informative lines (approximately 130-220 words). Never output brief 1-2 sentence replies. Thoroughly explain the background, key entities involved, specific statements or statistics, timeline of developments, and real-world significance.\n"
             "- Explain WHAT happened, who is involved, key proposals/statements, historical context, and practical significance.\n"
             "- Attribution: Citing verified news publishers (e.g. Inside Higher Ed, BBC News, Reuters) is encouraged.\n"
             "- INTEGRATING REAL-WORLD KNOWLEDGE: If retrieved snippets or timeline entries are brief, actively integrate your deep real-world knowledge of the figures, institutions, and events to provide a comprehensive, engaging story. NEVER critique the database or claim 'context lacks details', 'single-source reliance', or 'isolated announcement'.\n"
@@ -382,7 +433,7 @@ async def evorag_query(
             "- Speak strictly as the EvoRAG Consensus Engine.\n\n"
             "Format your response as a valid JSON object with this exact structure:\n"
             "{\n"
-            '  "final_answer": "Comprehensive, natural, highly informative news explanation and analysis answering the user query directly without meta-sections or confidence classifications...",\n'
+            '  "final_answer": "Substantive, comprehensive news explanation of AT LEAST 5 to 6 full lines (130-220 words) thoroughly answering the user query without meta-sections or confidence classifications...",\n'
             '  "personas": {\n'
             '    "analytical-critical": "1-2 concise analytical sentences breaking down mechanisms and policy...",\n'
             '    "empirical-evidential": "1-2 concise evidential sentences citing verified facts, figures, and dates...",\n'
@@ -415,17 +466,8 @@ async def evorag_query(
             final_answer = clean_final_answer(str(parsed_data["final_answer"]).strip())
             p_dict = parsed_data.get("personas") or {}
         else:
-            fa_match = re.search(r'"final_answer"\s*:\s*"(.*?)(?:"\s*,\s*"personas"|"\s*\})', raw_response, re.DOTALL)
-            if fa_match:
-                try:
-                    final_answer = clean_final_answer(fa_match.group(1).encode().decode("unicode_escape", errors="ignore").strip())
-                except Exception:
-                    final_answer = clean_final_answer(fa_match.group(1).strip())
-            else:
-                clean_raw = re.sub(r'^\s*\{\s*"final_answer"\s*:\s*"', '', raw_response)
-                clean_raw = re.sub(r'"\s*,\s*"personas"[\s\S]*$', '', clean_raw)
-                clean_raw = re.sub(r'"\s*\}\s*$', '', clean_raw)
-                final_answer = clean_final_answer(clean_raw.strip() if clean_raw.strip() else (raw_response or "EvoRAG consensus analysis was unable to generate an answer at this time.").strip())
+            extracted = extract_text_from_final_answer(raw_response)
+            final_answer = clean_final_answer(extracted.strip() if extracted.strip() else (raw_response or "EvoRAG consensus analysis was unable to generate an answer at this time.").strip())
 
             for p in PERSONAS:
                 pid = p["id"]

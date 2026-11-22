@@ -69,6 +69,7 @@ Merge them into one coherent, well-structured answer.
 
 Rules:
 - Focus directly on explaining the news and answering the user query clearly and thoroughly
+- LENGTH & DEPTH: Provide a substantive, well-developed answer of AT LEAST 5 to 6 full lines (approximately 130-220 words). Never output brief 1-2 sentence summaries.
 - Explain what happened, who is involved, key details, and real-world significance
 - Citing verified news publishers with inline markers [1], [2] is encouraged
 - STRICTLY FORBIDDEN: Do not mention internal classifications or scores (e.g. 'Emerging', 'confidence score', 'assessed confidence level')

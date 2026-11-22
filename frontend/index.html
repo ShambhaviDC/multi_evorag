@@ -2650,9 +2650,18 @@
 
   <!-- ── Welcome Hero (Shown when conversation is empty) ─────────── -->
   <div id="chat-welcome-hero" class="chat-welcome-hero">
-    <div class="welcome-hero-badge">Evolutionary Multi-Persona RAG</div>
-    <h1>EvoRAG Research Assistant</h1>
-    <p>Synthesizing diverse perspectives from 8 specialized AI personas with peer-reviewed consensus voting — powered by local Ollama &amp; FAISS.</p>
+    <div class="welcome-hero-badge">⚡ Evolutionary Multi-Persona Consensus RAG</div>
+    <h1>EvoRAG Research &amp; News Intelligence</h1>
+    <p style="max-width:740px; margin:0 auto 12px; line-height:1.6; font-size:14px; color:var(--muted);">An intelligent Multi-Persona Retrieval-Augmented Generation platform. Every news query is analyzed across 8 specialized AI personas (Analytical, Empirical, Skeptical, Domain-Expert, Temporal, Risk, Integrative, and Lateral) evaluated through peer consensus voting, real-time event evolution tracking, and continuous personalization.</p>
+
+    <!-- Project Architecture Feature Highlights -->
+    <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin: 12px auto 18px; max-width:760px;">
+      <span class="welcome-feature-pill" style="font-size:11.5px; padding:4px 10px; border-radius:20px; background:rgba(108,99,255,0.12); border:1px solid rgba(108,99,255,0.3); color:#a5b4fc;">🤖 8 AI Personas</span>
+      <span class="welcome-feature-pill" style="font-size:11.5px; padding:4px 10px; border-radius:20px; background:rgba(0,210,255,0.12); border:1px solid rgba(0,210,255,0.3); color:#67e8f9;">🗳️ Peer Consensus Matrix</span>
+      <span class="welcome-feature-pill" style="font-size:11.5px; padding:4px 10px; border-radius:20px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); color:#6ee7b7;">⏳ Temporal Event Tracking</span>
+      <span class="welcome-feature-pill" style="font-size:11.5px; padding:4px 10px; border-radius:20px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); color:#fcd34d;">📎 Multimodal Grounding</span>
+      <span class="welcome-feature-pill" style="font-size:11.5px; padding:4px 10px; border-radius:20px; background:rgba(236,72,153,0.12); border:1px solid rgba(236,72,153,0.3); color:#f472b6;">🎯 Continuous Personalization</span>
+    </div>
     
     <!-- Personalized Prompt Recommendations (if logged in) -->
     <div id="recommendations-container" class="recommendations-box" style="display:none; width:100%; margin-bottom:16px;">
@@ -4278,7 +4287,25 @@ function renderThread(messages) {
       otherComps = components.filter(c => c.type !== 'media_gallery');
       const mediaHtml = renderAdaptiveComponentsHtml(mediaGalleryComp, `${idx}-top`);
       const otherComponentsHtml = renderAdaptiveComponentsHtml(otherComps, idx);
-      const contentHtml = renderMarkdownWithCitations(msg.content, sources, `thread-${idx}`);
+
+      let cleanContent = msg.content || '';
+      const trimmed = cleanContent.trim();
+      if ((trimmed.startsWith('{') || trimmed.startsWith('```')) && trimmed.includes('"final_answer"')) {
+        try {
+          const strippedFences = trimmed.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+          const parsed = JSON.parse(strippedFences);
+          if (parsed && parsed.final_answer) {
+            cleanContent = parsed.final_answer;
+          }
+        } catch (e) {
+          const match = trimmed.match(/"final_answer"\s*:\s*"([\s\S]*?)(?:"\s*,\s*"personas"|"\s*,\s*"[a-zA-Z_-]+"\s*:|"\s*\}\s*$)/);
+          if (match) {
+            cleanContent = match[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').trim();
+          }
+        }
+      }
+
+      const contentHtml = renderMarkdownWithCitations(cleanContent, sources, `thread-${idx}`);
       const sourcesHtml = sources.length ? renderSourcesSectionHtml(sources, `thread-${idx}`) : '';
 
       let topPersonasHtml = '';
