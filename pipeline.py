@@ -13,6 +13,7 @@ from gemini_client import call_gemini_structured
 from input_understanding_agent import understand_user_query
 from personas import run_all_personas
 from query_models import StructuredQuery, UIComponent
+from explainability import build_xai_explanation
 from response_planner import plan_adaptive_response
 from retriever import evaluate_retrieval, retrieve, retrieve_temporal_event_context
 from score_store import append_score_entry
@@ -593,9 +594,30 @@ async def evorag_query(
                     }
                 ))
 
+        # Generate Explainable AI (XAI) analysis record
+        xai_record = build_xai_explanation(
+            query=query,
+            final_answer=final_answer,
+            retrieved_chunks=chunks,
+            sources=sources,
+            persona_responses=all_responses,
+            score_matrix=score_matrix,
+            final_scores=final_scores,
+            top_personas=top_personas,
+            structured_query=structured_query.model_dump() if structured_query else None,
+            temporal_context=temporal_context,
+            applied_personalization=pers_scores if is_personalized else None,
+        )
+        components.append(UIComponent(
+            type="xai_explanation",
+            title="Why this answer? (Explainable AI Insights)",
+            data=xai_record.model_dump(),
+        ))
+
         return {
             "final_answer": final_answer,
             "components": [c.model_dump() for c in components],
+            "xai_explanation": xai_record.model_dump(),
             "structured_query": structured_query.model_dump(),
             "top_personas": top_personas,
             "scores": final_scores,
@@ -693,21 +715,43 @@ async def evorag_query(
                 }
             ))
 
+    # Generate Explainable AI (XAI) analysis record
+    sources_list = build_filtered_sources(
+        chunks=chunks,
+        attachments=attachments,
+        gemini_result=None,
+        structured_query=structured_query,
+    )
+    xai_record = build_xai_explanation(
+        query=query,
+        final_answer=final_answer,
+        retrieved_chunks=chunks,
+        sources=sources_list,
+        persona_responses=responses,
+        score_matrix=score_matrix,
+        final_scores=final_scores,
+        top_personas=top_personas,
+        structured_query=structured_query.model_dump() if structured_query else None,
+        temporal_context=temporal_context,
+        applied_personalization=pers_scores if is_personalized else None,
+    )
+    components.append(UIComponent(
+        type="xai_explanation",
+        title="Why this answer? (Explainable AI Insights)",
+        data=xai_record.model_dump(),
+    ))
+
     return {
         "final_answer": clean_final_answer(final_answer),
         "components": [c.model_dump() for c in components],
+        "xai_explanation": xai_record.model_dump(),
         "structured_query": structured_query.model_dump(),
         "top_personas": top_personas,
         "scores": final_scores,
         "all_responses": responses,
         "score_matrix": score_matrix,
         "query_id": query_id,
-        "sources": build_filtered_sources(
-            chunks=chunks,
-            attachments=attachments,
-            gemini_result=None,
-            structured_query=structured_query,
-        ),
+        "sources": sources_list,
         "attachments_processed": [a.to_dict() for a in attachments],
         "retrieval_status": {
             "sufficient": True,

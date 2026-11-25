@@ -179,6 +179,7 @@ class ConsensusQueryResponse(BaseModel):
     retrieval_status: Optional[Dict[str, Any]] = None
     personalization_summary: Optional[str] = ""
     applied_personalization: Optional[Dict[str, Any]] = None
+    xai_explanation: Optional[Dict[str, Any]] = None
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -614,6 +615,28 @@ async def persona_status():
         "total_replacements":            total_replacements,
         "queries_since_last_replacement": queries_since,
     }
+
+
+@app.get("/xai/explanation/{message_id}", summary="Get Explainable AI breakdown for a message")
+async def get_message_xai_explanation(
+    message_id: int,
+    session: Session = Depends(get_session),
+):
+    """Retrieve the explainability record (claims, persona selection, consensus, uncertainty) for a message."""
+    import json
+    from models import Message
+    msg = session.get(Message, message_id)
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    if msg.components_json:
+        try:
+            comps = json.loads(msg.components_json)
+            for c in comps:
+                if c.get("type") == "xai_explanation":
+                    return c.get("data", {})
+        except Exception:
+            pass
+    return {"message": "No XAI explanation recorded for this message."}
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
