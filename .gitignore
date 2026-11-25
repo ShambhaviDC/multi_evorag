@@ -17,3 +17,4 @@ consensus_result*.json
 consensus_dummy.json
 api_server.log
 *.log
+reports/

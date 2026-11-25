@@ -3403,6 +3403,69 @@
       font-size: 9px;
       left: 0;
     }
+
+    /* ── Evolutionary Persona Dashboard & Diff Styles ─────────────── */
+    .evo-roster-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .evo-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 12px;
+      padding: 14px 16px;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .evo-card:hover {
+      border-color: rgba(236, 72, 153, 0.4);
+      background: rgba(236, 72, 153, 0.02);
+    }
+    .evo-meter {
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .evo-meter-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+    .diff-box {
+      font-family: 'Consolas', 'Fira Code', monospace;
+      font-size: 11.5px;
+      line-height: 1.5;
+      background: #0d1117;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 10px 12px;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    .diff-line {
+      padding: 1px 4px;
+      border-radius: 2px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .diff-added {
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+    }
+    .diff-removed {
+      background: rgba(239, 68, 68, 0.18);
+      color: #f87171;
+      text-decoration: line-through;
+    }
+    .diff-unchanged {
+      color: var(--muted);
+    }
   </style>
   <script src="/static/auth.js"></script>
 </head>
@@ -3425,6 +3488,9 @@
         <button id="new-chat-btn" class="nav-btn primary-subtle" title="Start New Conversation">+ New Chat</button>
         <button id="open-feedback-dashboard-btn" class="nav-btn" title="Feedback Intelligence & Quality Analytics">
           <span>📊 Feedback Analytics</span>
+        </button>
+        <button id="open-evolution-modal-btn" class="nav-btn" style="border-color:rgba(236,72,153,0.3); color:#f472b6;" title="Evolutionary Persona Adaptation & Staging Dashboard">
+          <span>🧬 Persona Evolution</span>
         </button>
       </div>
       <div class="nav-auth-group" id="nav-user-container">
@@ -3697,6 +3763,118 @@
             <span>Generate &amp; Download</span>
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- ── Evolutionary Persona Adaptation Dashboard Modal ── -->
+    <div id="evolution-modal" class="modal-backdrop"
+      style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+      <div class="modal-content"
+        style="background:var(--surface); border:1px solid rgba(236,72,153,0.3); border-radius:16px; width:95%; max-width:1150px; max-height:90vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,0.8);">
+        
+        <!-- Modal Header -->
+        <div style="padding:18px 24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:linear-gradient(90deg, rgba(236,72,153,0.08), rgba(99,102,241,0.08));">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+              <span style="font-size:10.5px; padding:2px 8px; border-radius:10px; background:rgba(236,72,153,0.2); color:#f472b6; font-weight:700;">MODULE 3: EVOLUTIONARY OPTIMIZER</span>
+              <span style="font-size:10.5px; padding:2px 8px; border-radius:10px; background:rgba(16,185,129,0.15); color:#10b981; font-weight:600;">ACTIVE ROSTER: 8 CANONICAL PERSONAS</span>
+            </div>
+            <h3 style="margin:0; font-size:19px; color:var(--text); font-weight:700; display:flex; align-items:center; gap:8px;">
+              <span>🧬 Evolutionary Persona Adaptation &amp; Replacement</span>
+            </h3>
+            <p style="margin:4px 0 0; font-size:12px; color:var(--muted);">Continuous genetic adaptation, empirical feedback-directed mutation, champion-challenger benchmarking, and 1-click prompt rollback.</p>
+          </div>
+          <button id="evolution-modal-close-btn"
+            style="background:transparent; border:none; color:var(--muted); font-size:24px; cursor:pointer; padding:4px 8px; border-radius:8px;">✕</button>
+        </div>
+
+        <!-- Controls & Adaptation Bar -->
+        <div style="padding:12px 24px; background:rgba(255,255,255,0.02); border-bottom:1px solid var(--border); display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px;">
+          <!-- Tabs -->
+          <div style="display:flex; gap:6px;">
+            <button type="button" id="evo-tab-roster-btn" class="evo-nav-tab" style="padding:7px 14px; border-radius:8px; border:1px solid rgba(236,72,153,0.4); background:rgba(236,72,153,0.15); color:#f472b6; font-size:12.5px; font-weight:600; cursor:pointer;">
+              👥 Active Roster &amp; Fitness
+            </button>
+            <button type="button" id="evo-tab-candidates-btn" class="evo-nav-tab" style="padding:7px 14px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--muted); font-size:12.5px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+              <span>⚔️ Staged Challengers</span>
+              <span id="evo-candidates-badge" style="background:rgba(236,72,153,0.25); color:#f472b6; padding:1px 6px; border-radius:10px; font-size:10.5px;">0</span>
+            </button>
+            <button type="button" id="evo-tab-history-btn" class="evo-nav-tab" style="padding:7px 14px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--muted); font-size:12.5px; font-weight:600; cursor:pointer;">
+              📜 Audit History &amp; Rollbacks
+            </button>
+          </div>
+
+          <!-- Trigger Genetic Action -->
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label style="font-size:12px; color:var(--muted);">Strategy:</label>
+            <select id="evo-strategy-select" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:5px 8px; font-size:12px; outline:none;">
+              <option value="mutation" selected>Targeted Mutation (Feedback Guided)</option>
+              <option value="crossover">Elite Crossover (Hybrid Challenger)</option>
+            </select>
+            <button type="button" id="evo-trigger-btn" style="padding:6px 14px; border-radius:8px; border:none; background:linear-gradient(135deg, #ec4899, #8b5cf6); color:#fff; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 3px 10px rgba(236,72,153,0.3);">
+              <span>⚡ Trigger Adaptation Cycle</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Notification Status Bar -->
+        <div id="evo-modal-status" style="display:none; padding:8px 24px; font-size:12px; border-bottom:1px solid var(--border);"></div>
+
+        <!-- Body Scroll Area -->
+        <div style="padding:20px 24px; overflow-y:auto; flex:1;">
+          
+          <!-- TAB 1: ACTIVE ROSTER -->
+          <div id="evo-view-roster">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <div>
+                <h4 style="margin:0; font-size:14px; color:var(--text); font-weight:700;">Current Generation Persona Configurations</h4>
+                <div style="font-size:11.5px; color:var(--muted); margin-top:2px;">
+                  Multi-Factor Fitness Formula: <code>F = 0.30·FB + 0.25·EG + 0.20·RQ + 0.15·CP + 0.10·CS</code> (with sample size confidence discounting)
+                </div>
+              </div>
+              <button type="button" id="evo-roster-refresh-btn" style="padding:4px 10px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.03); color:var(--muted); font-size:11.5px; cursor:pointer;">
+                🔄 Refresh Metrics
+              </button>
+            </div>
+            <div id="evo-roster-container" class="evo-roster-grid">
+              <div style="text-align:center; padding:40px; color:var(--muted); font-size:13px; grid-column:1/-1;">
+                ⏳ Loading active persona registry and empirical fitness scores...
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: STAGED CHALLENGERS & DIFFS -->
+          <div id="evo-view-candidates" style="display:none;">
+            <div style="margin-bottom:14px;">
+              <h4 style="margin:0; font-size:14px; color:var(--text); font-weight:700;">Staged Challenger Benchmarking &amp; Prompt Diff Review</h4>
+              <p style="margin:3px 0 0; font-size:11.5px; color:var(--muted);">
+                Challengers must outperform baseline champions by at least <strong>+8.0%</strong> on historical benchmarks before administrator promotion.
+              </p>
+            </div>
+            <div id="evo-candidates-container">
+              <div style="text-align:center; padding:40px; color:var(--muted); font-size:13px;">
+                ⏳ Checking staged candidates...
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: AUDIT HISTORY -->
+          <div id="evo-view-history" style="display:none;">
+            <div style="margin-bottom:14px;">
+              <h4 style="margin:0; font-size:14px; color:var(--text); font-weight:700;">Evolutionary Audit Trail &amp; Version Lineage</h4>
+              <p style="margin:3px 0 0; font-size:11.5px; color:var(--muted);">
+                Complete record of genetic triggers, candidate promotions, benchmarks, and 1-click rollbacks.
+              </p>
+            </div>
+            <div id="evo-history-container">
+              <div style="text-align:center; padding:40px; color:var(--muted); font-size:13px;">
+                ⏳ Loading evolution audit history...
+              </div>
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </div>
 
@@ -6630,6 +6808,459 @@
         }
       });
     }
+
+    /* ════════════════════════════════════════════════════════════════════
+       Stage 3: Evolutionary Persona Adaptation & Multi-Objective Optimizer
+       ════════════════════════════════════════════════════════════════════ */
+    let currentEvoTab = 'roster';
+
+    function openEvolutionModal() {
+      const modal = $('evolution-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        switchEvoTab('roster');
+        loadEvolutionRoster();
+        loadEvolutionCandidates();
+        loadEvolutionHistory();
+      }
+    }
+
+    function closeEvolutionModal() {
+      const modal = $('evolution-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function switchEvoTab(tabName) {
+      currentEvoTab = tabName;
+      const tabs = [
+        { id: 'evo-tab-roster-btn', view: 'evo-view-roster', name: 'roster' },
+        { id: 'evo-tab-candidates-btn', view: 'evo-view-candidates', name: 'candidates' },
+        { id: 'evo-tab-history-btn', view: 'evo-view-history', name: 'history' },
+      ];
+
+      tabs.forEach(t => {
+        const btn = $(t.id);
+        const view = $(t.view);
+        if (t.name === tabName) {
+          if (btn) {
+            btn.style.borderColor = 'rgba(236,72,153,0.4)';
+            btn.style.background = 'rgba(236,72,153,0.15)';
+            btn.style.color = '#f472b6';
+          }
+          if (view) view.style.display = 'block';
+        } else {
+          if (btn) {
+            btn.style.borderColor = 'var(--border)';
+            btn.style.background = 'transparent';
+            btn.style.color = 'var(--muted)';
+          }
+          if (view) view.style.display = 'none';
+        }
+      });
+    }
+
+    function showEvoStatus(msg, type = 'info') {
+      const el = $('evo-modal-status');
+      if (!el) return;
+      el.style.display = 'block';
+      if (type === 'success') {
+        el.style.background = 'rgba(16, 185, 129, 0.15)';
+        el.style.color = '#10b981';
+      } else if (type === 'error') {
+        el.style.background = 'rgba(239, 68, 68, 0.15)';
+        el.style.color = '#ef4444';
+      } else {
+        el.style.background = 'rgba(236, 72, 153, 0.12)';
+        el.style.color = '#f472b6';
+      }
+      el.innerHTML = msg;
+    }
+
+    async function loadEvolutionRoster() {
+      const container = $('evo-roster-container');
+      if (!container) return;
+      try {
+        const resp = await fetch('/evolution/personas');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        const personas = Array.isArray(data) ? data : (data.personas || []);
+        if (personas.length === 0) {
+          container.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--muted); padding:30px;">No personas found in registry.</div>`;
+          return;
+        }
+
+        container.innerHTML = personas.map(p => {
+          const fit = p.composite_fitness !== undefined ? p.composite_fitness : (p.fitness ? p.fitness.composite_fitness : 5.0);
+          const fitPct = Math.min(100, Math.max(0, (fit / 10.0) * 100));
+          const color = fit >= 8.0 ? '#10b981' : (fit >= 6.0 ? '#3b82f6' : '#f59e0b');
+          const dims = p.dimension_scores || (p.fitness ? p.fitness.dimensions : {});
+          const fb = (dims.feedback !== undefined ? dims.feedback : (dims.feedback_score || 5.0)).toFixed(1);
+          const eg = (dims.evidence !== undefined ? dims.evidence : (dims.evidence_grounding || 5.0)).toFixed(1);
+          const rq = (dims.relevance !== undefined ? dims.relevance : (dims.relevance_score || 5.0)).toFixed(1);
+          const cp = (dims.completeness !== undefined ? dims.completeness : (dims.completeness_score || 5.0)).toFixed(1);
+          const cs = (dims.consistency !== undefined ? dims.consistency : (dims.consistency_score || 5.0)).toFixed(1);
+          const samples = p.sample_count !== undefined ? p.sample_count : (p.fitness ? p.fitness.sample_count : 0);
+          const versions = p.available_versions || [1];
+
+          let rollbackHtml = '';
+          if (versions.length > 1) {
+            const opts = versions.filter(v => v !== p.version).map(v => `<option value="${v}">v${v}</option>`).join('');
+            rollbackHtml = `
+              <div style="display:flex; align-items:center; gap:6px; margin-top:10px; border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
+                <span style="font-size:11px; color:var(--muted);">Rollback:</span>
+                <select id="rollback-sel-${p.persona_id}" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:4px; color:var(--text); font-size:11px; padding:2px 6px;">
+                  ${opts}
+                </select>
+                <button type="button" onclick="handleRollbackPersona('${p.persona_id}')" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171; font-size:11px; padding:2px 8px; border-radius:4px; cursor:pointer;">
+                  Restore
+                </button>
+              </div>
+            `;
+          }
+
+          return `
+            <div class="evo-card">
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <span style="font-size:11px; font-weight:700; color:#f472b6; text-transform:uppercase; letter-spacing:0.5px;">${escHtml(p.role || p.persona_id)}</span>
+                    <h5 style="margin:2px 0 0; font-size:14px; font-weight:700; color:var(--text);">${escHtml(p.name)}</h5>
+                  </div>
+                  <span style="font-size:10.5px; padding:2px 7px; border-radius:10px; background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid rgba(255,255,255,0.08);">
+                    Gen ${p.generation} · v${p.version}
+                  </span>
+                </div>
+
+                <div style="font-size:11px; color:var(--muted); line-height:1.3; margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                  ${escHtml(p.domain_expertise || '')}
+                </div>
+
+                <!-- Fitness Meter -->
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:11.5px; margin-top:8px;">
+                  <span style="color:var(--muted);">Multi-Factor Fitness</span>
+                  <span style="font-weight:700; color:${color}; font-size:13px;">${fit.toFixed(2)} <span style="font-size:10px; color:var(--muted);">/ 10</span></span>
+                </div>
+                <div class="evo-meter">
+                  <div class="evo-meter-fill" style="width:${fitPct}%; background:${color};"></div>
+                </div>
+
+                <!-- 5 Dimension Badges -->
+                <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:4px; text-align:center; margin-top:6px; font-size:10px;">
+                  <div style="background:rgba(255,255,255,0.03); padding:4px 2px; border-radius:4px;" title="User Feedback (30% weight)">
+                    <div style="color:var(--muted); font-size:9px;">FB</div>
+                    <div style="font-weight:700; color:#10b981;">${fb}</div>
+                  </div>
+                  <div style="background:rgba(255,255,255,0.03); padding:4px 2px; border-radius:4px;" title="Evidence Grounding (25% weight)">
+                    <div style="color:var(--muted); font-size:9px;">EG</div>
+                    <div style="font-weight:700; color:#3b82f6;">${eg}</div>
+                  </div>
+                  <div style="background:rgba(255,255,255,0.03); padding:4px 2px; border-radius:4px;" title="Reasoning & Relevance (20% weight)">
+                    <div style="color:var(--muted); font-size:9px;">RQ</div>
+                    <div style="font-weight:700; color:#8b5cf6;">${rq}</div>
+                  </div>
+                  <div style="background:rgba(255,255,255,0.03); padding:4px 2px; border-radius:4px;" title="Completeness (15% weight)">
+                    <div style="color:var(--muted); font-size:9px;">CP</div>
+                    <div style="font-weight:700; color:#ec4899;">${cp}</div>
+                  </div>
+                  <div style="background:rgba(255,255,255,0.03); padding:4px 2px; border-radius:4px;" title="Consistency & Agreement (10% weight)">
+                    <div style="color:var(--muted); font-size:9px;">CS</div>
+                    <div style="font-weight:700; color:#f59e0b;">${cs}</div>
+                  </div>
+                </div>
+
+                <div style="font-size:10px; color:var(--muted); margin-top:8px; display:flex; justify-content:space-between;">
+                  <span>Evaluated over: <strong>${samples} turns</strong></span>
+                  <span style="color:#10b981;">● Active</span>
+                </div>
+              </div>
+
+              ${rollbackHtml}
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        container.innerHTML = `<div style="grid-column:1/-1; color:#ef4444; padding:20px;">Failed to load personas: ${err.message}</div>`;
+      }
+    }
+
+    async function loadEvolutionCandidates() {
+      const container = $('evo-candidates-container');
+      const badge = $('evo-candidates-badge');
+      if (!container) return;
+      try {
+        const resp = await fetch('/evolution/candidates');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        const candidates = Array.isArray(data) ? data : (data.candidates || []);
+        if (badge) badge.textContent = candidates.length;
+
+        if (candidates.length === 0) {
+          container.innerHTML = `
+            <div style="text-align:center; padding:48px 20px; border:1px dashed var(--border); border-radius:12px; background:rgba(255,255,255,0.01);">
+              <span style="font-size:32px; display:block; margin-bottom:12px;">🛡️</span>
+              <div style="font-size:14px; font-weight:600; color:var(--text);">No Staged Challengers Pending Approval</div>
+              <p style="font-size:12px; color:var(--muted); max-width:440px; margin:8px auto 16px;">
+                All 8 canonical persona champions are performing optimally. You can trigger a new Genetic Adaptation Cycle above to breed mutated or hybrid challengers.
+              </p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = candidates.map(c => {
+          const bench = c.benchmark_result || c.benchmark_metrics || {};
+          const cfg = c.persona_config || {};
+          const targetPersona = c.target_persona_id || c.champion_id || (cfg.parent_ids && cfg.parent_ids[0]) || cfg.persona_id?.split('-v')[0] || 'Persona';
+          const champFit = bench.champion_score !== undefined ? bench.champion_score.toFixed(2) : (bench.champion_fitness !== undefined ? bench.champion_fitness.toFixed(2) : 'N/A');
+          const chalFit = bench.challenger_score !== undefined ? bench.challenger_score.toFixed(2) : (bench.challenger_fitness !== undefined ? bench.challenger_fitness.toFixed(2) : 'N/A');
+          const deltaPct = bench.improvement_pct !== undefined ? bench.improvement_pct.toFixed(1) : (bench.delta_percentage !== undefined ? bench.delta_percentage.toFixed(1) : '0.0');
+          const meetsThreshold = bench.qualified_for_promotion !== undefined ? bench.qualified_for_promotion : bench.meets_promotion_threshold;
+          const statusBadge = meetsThreshold
+            ? `<span style="background:rgba(16,185,129,0.2); color:#10b981; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; border:1px solid rgba(16,185,129,0.4);">✓ Qualified (+${deltaPct}%)</span>`
+            : `<span style="background:rgba(245,158,11,0.2); color:#f59e0b; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; border:1px solid rgba(245,158,11,0.4);">⚠ Below Threshold (+${deltaPct}%)</span>`;
+
+          const diffLines = (c.prompt_diff || []).map(line => {
+            const type = typeof line === 'string' ? (line.startsWith('+') ? 'added' : (line.startsWith('-') ? 'removed' : 'unchanged')) : line.type;
+            const text = typeof line === 'string' ? line : (type === 'added' ? '+ ' : (type === 'removed' ? '- ' : '  ')) + line.text;
+            if (type === 'added') return `<div class="diff-line diff-added">${escHtml(text)}</div>`;
+            if (type === 'removed') return `<div class="diff-line diff-removed">${escHtml(text)}</div>`;
+            return `<div class="diff-line diff-unchanged">${escHtml(text)}</div>`;
+          }).join('');
+
+          return `
+            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(236,72,153,0.3); border-radius:12px; padding:18px; margin-bottom:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                <div>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:11px; font-weight:700; color:#ec4899; text-transform:uppercase;">${escHtml(c.strategy || 'mutation')}</span>
+                    <h4 style="margin:0; font-size:15px; color:var(--text); font-weight:700;">Challenger for: ${escHtml(targetPersona)}</h4>
+                    ${statusBadge}
+                  </div>
+                  <div style="font-size:11.5px; color:var(--muted); margin-top:4px;">
+                    ID: <code>${escHtml(c.candidate_id)}</code> · Target Gen ${cfg.generation || c.generation || 1} v${cfg.version || c.version || 2}
+                  </div>
+                </div>
+
+                <div style="display:flex; gap:8px;">
+                  <button type="button" onclick="handleApproveCandidate('${c.candidate_id}')" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; border-radius:6px; padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px; box-shadow:0 2px 8px rgba(16,185,129,0.3);">
+                    ✓ Approve Promotion
+                  </button>
+                  <button type="button" onclick="handleRejectCandidate('${c.candidate_id}')" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171; border-radius:6px; padding:6px 12px; font-size:12px; cursor:pointer;">
+                    ✕ Reject
+                  </button>
+                </div>
+              </div>
+
+              <!-- Rationale -->
+              <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:12px; font-size:12px; line-height:1.4; color:var(--text);">
+                <strong>Adaptation Rationale:</strong> ${escHtml(bench.reason || c.rationale || cfg.role || 'Feedback-directed optimization')}
+              </div>
+
+              <!-- Benchmark stats -->
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; margin-bottom:14px;">
+                <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:8px 12px; font-size:11.5px;">
+                  <div style="color:var(--muted); font-size:10px;">CHAMPION FITNESS</div>
+                  <div style="font-weight:700; color:var(--text); font-size:14px; margin-top:2px;">${champFit}</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:8px 12px; font-size:11.5px;">
+                  <div style="color:var(--muted); font-size:10px;">CHALLENGER FITNESS</div>
+                  <div style="font-weight:700; color:#10b981; font-size:14px; margin-top:2px;">${chalFit}</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:8px 12px; font-size:11.5px;">
+                  <div style="color:var(--muted); font-size:10px;">IMPROVEMENT (Δ%)</div>
+                  <div style="font-weight:700; color:${meetsThreshold ? '#10b981' : '#f59e0b'}; font-size:14px; margin-top:2px;">+${deltaPct}%</div>
+                </div>
+              </div>
+
+              <!-- Prompt Diff View -->
+              <div style="font-size:11px; font-weight:600; color:var(--muted); margin-bottom:6px; display:flex; justify-content:space-between;">
+                <span>SYSTEM PROMPT DIFF (CHAMPION ➔ CHALLENGER):</span>
+                <span><span style="color:#34d399;">+ Added</span> &nbsp;|&nbsp; <span style="color:#f87171; text-decoration:line-through;">- Removed</span></span>
+              </div>
+              <div class="diff-box">
+                ${diffLines || '<div style="color:var(--muted);">No prompt changes recorded.</div>'}
+              </div>
+            </div>
+          `;
+        }).join('');
+                <span><span style="color:#34d399;">+ Added</span> &nbsp;|&nbsp; <span style="color:#f87171; text-decoration:line-through;">- Removed</span></span>
+              </div>
+              <div class="diff-box">
+                ${diffLines || '<div style="color:var(--muted);">No prompt changes recorded.</div>'}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        container.innerHTML = `<div style="color:#ef4444; padding:20px;">Failed to load candidates: ${err.message}</div>`;
+      }
+    }
+
+    async function loadEvolutionHistory() {
+      const container = $('evo-history-container');
+      if (!container) return;
+      try {
+        const resp = await fetch('/evolution/history');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        const history = Array.isArray(data) ? data : (data.history || []);
+        if (history.length === 0) {
+          container.innerHTML = `<div style="text-align:center; color:var(--muted); padding:30px;">No audit records found yet.</div>`;
+          return;
+        }
+
+        container.innerHTML = `
+          <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border); color:var(--muted); font-size:11px; text-transform:uppercase;">
+                <th style="padding:8px 10px;">Timestamp</th>
+                <th style="padding:8px 10px;">Action</th>
+                <th style="padding:8px 10px;">Persona</th>
+                <th style="padding:8px 10px;">Version Transition</th>
+                <th style="padding:8px 10px;">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${history.map(h => `
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                  <td style="padding:8px 10px; color:var(--muted); white-space:nowrap;">${escHtml(new Date(h.timestamp).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' }))}</td>
+                  <td style="padding:8px 10px;">
+                    <span style="padding:2px 6px; border-radius:4px; font-weight:600; font-size:11px; ${
+                      h.action === 'candidate_promoted' ? 'background:rgba(16,185,129,0.2); color:#10b981;' :
+                      h.action === 'rollback' ? 'background:rgba(239,68,68,0.2); color:#f87171;' :
+                      'background:rgba(236,72,153,0.2); color:#f472b6;'
+                    }">${escHtml(h.action)}</span>
+                  </td>
+                  <td style="padding:8px 10px; font-weight:600; color:var(--text);">${escHtml(h.persona_id || 'System')}</td>
+                  <td style="padding:8px 10px; color:var(--muted);">
+                    ${h.old_version !== undefined && h.new_version !== undefined ? `v${h.old_version} ➔ v${h.new_version}` : '—'}
+                  </td>
+                  <td style="padding:8px 10px; color:var(--muted);">${escHtml(h.details || '')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div style="color:#ef4444; padding:20px;">Failed to load history: ${err.message}</div>`;
+      }
+    }
+
+    // Trigger adaptation cycle button
+    const evoTriggerBtn = $('evo-trigger-btn');
+    if (evoTriggerBtn) {
+      evoTriggerBtn.addEventListener('click', async () => {
+        const strategySelect = $('evo-strategy-select');
+        const strategy = strategySelect ? strategySelect.value : 'mutation';
+        evoTriggerBtn.disabled = true;
+        evoTriggerBtn.innerHTML = `<span>⏳ Synthesizing &amp; Benchmarking...</span>`;
+        showEvoStatus(`Executing ${strategy} cycle and running historical benchmark tests...`, 'info');
+
+        try {
+          const resp = await fetch('/evolution/trigger', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ strategy }),
+          });
+
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({ detail: `HTTP ${resp.status}` }));
+            throw new Error(err.detail || `Server error (${resp.status})`);
+          }
+
+          const res = await resp.json();
+          showEvoStatus(`✓ Genetic adaptation cycle completed! Challenger <code>${res.challenger_id}</code> created for <strong>${res.target_persona}</strong> (Δ%: +${(res.benchmark_metrics?.delta_percentage || 0).toFixed(1)}%).`, 'success');
+          showToast(`Challenger staged for ${res.target_persona}!`);
+
+          // Refresh data and switch to candidates tab
+          await loadEvolutionCandidates();
+          await loadEvolutionHistory();
+          switchEvoTab('candidates');
+        } catch (err) {
+          showEvoStatus(`Failed to execute adaptation cycle: ${err.message}`, 'error');
+        } finally {
+          evoTriggerBtn.disabled = false;
+          evoTriggerBtn.innerHTML = `<span>⚡ Trigger Adaptation Cycle</span>`;
+        }
+      });
+    }
+
+    // Approve candidate handler
+    window.handleApproveCandidate = async function(candidateId) {
+      if (!confirm(`Are you sure you want to promote candidate ${candidateId} to active champion?`)) return;
+      showEvoStatus(`Promoting candidate ${candidateId}...`, 'info');
+      try {
+        const resp = await fetch(`/evolution/candidate/${encodeURIComponent(candidateId)}/approve`, { method: 'POST' });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({ detail: `HTTP ${resp.status}` }));
+          throw new Error(err.detail || `Server error (${resp.status})`);
+        }
+        const res = await resp.json();
+        showEvoStatus(`✓ ${res.message}! Active roster hot-swapped to v${res.new_version}.`, 'success');
+        showToast(`Candidate promoted: ${candidateId}`);
+        await loadEvolutionRoster();
+        await loadEvolutionCandidates();
+        await loadEvolutionHistory();
+        switchEvoTab('roster');
+      } catch (err) {
+        showEvoStatus(`Error promoting candidate: ${err.message}`, 'error');
+      }
+    };
+
+    // Reject candidate handler
+    window.handleRejectCandidate = async function(candidateId) {
+      if (!confirm(`Reject and dismiss candidate ${candidateId}?`)) return;
+      try {
+        const resp = await fetch(`/evolution/candidate/${encodeURIComponent(candidateId)}/reject`, { method: 'POST' });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        showToast(`Candidate rejected: ${candidateId}`);
+        showEvoStatus(`Candidate ${candidateId} rejected.`, 'info');
+        await loadEvolutionCandidates();
+        await loadEvolutionHistory();
+      } catch (err) {
+        showEvoStatus(`Error rejecting candidate: ${err.message}`, 'error');
+      }
+    };
+
+    // Rollback persona handler
+    window.handleRollbackPersona = async function(personaId) {
+      const sel = $(`rollback-sel-${personaId}`);
+      if (!sel) return;
+      const targetVersion = parseInt(sel.value, 10);
+      if (!targetVersion) return;
+      if (!confirm(`Rollback persona ${personaId} to version ${targetVersion}?`)) return;
+
+      try {
+        const resp = await fetch(`/evolution/rollback/${encodeURIComponent(personaId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ target_version: targetVersion }),
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const res = await resp.json();
+        showToast(`Rollback complete: ${personaId} restored to v${targetVersion}`);
+        showEvoStatus(`✓ ${res.message}!`, 'success');
+        await loadEvolutionRoster();
+        await loadEvolutionHistory();
+      } catch (err) {
+        showEvoStatus(`Rollback failed: ${err.message}`, 'error');
+      }
+    };
+
+    // Tab buttons wiring
+    $('evo-tab-roster-btn')?.addEventListener('click', () => switchEvoTab('roster'));
+    $('evo-tab-candidates-btn')?.addEventListener('click', () => switchEvoTab('candidates'));
+    $('evo-tab-history-btn')?.addEventListener('click', () => switchEvoTab('history'));
+    $('evo-roster-refresh-btn')?.addEventListener('click', loadEvolutionRoster);
+
+    // Modal trigger wiring
+    $('open-evolution-modal-btn')?.addEventListener('click', openEvolutionModal);
+    $('evolution-modal-close-btn')?.addEventListener('click', closeEvolutionModal);
+    $('evolution-modal')?.addEventListener('click', (e) => {
+      if (e.target === $('evolution-modal')) closeEvolutionModal();
+    });
 
     // Wire refresh events button
     const refreshEventsBtn = $('refresh-events-btn');

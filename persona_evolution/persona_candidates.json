@@ -1,0 +1,231 @@
+[
+  {
+    "candidate_id": "cand-a035fff0",
+    "persona_config": {
+      "persona_id": "creative-lateral-v2",
+      "name": "Creative-Lateral (Evolved v2)",
+      "version": 2,
+      "generation": 1,
+      "role": "Unconventional framing and non-obvious connection discovery [Targeted Adaptation]",
+      "responsibilities": [
+        "Explore second-order consequences and non-linear implications",
+        "Formulate novel framings while staying grounded in source facts",
+        "Draw unexpected parallels across adjacent industry domains"
+      ],
+      "domain_expertise": [
+        "Lateral Thinking",
+        "Second-Order Effects",
+        "Cross-Domain Analogy",
+        "Novel Perspective"
+      ],
+      "system_prompt": "You are a lateral thinker. Go beyond the obvious interpretation. Draw unexpected connections, propose novel framings, and surface non-obvious implications from the context. Be creative but grounded in what is stated. Use only the provided context.\n\nANALYTICAL RIGOR: Focus on concrete, high-information analysis. Eliminate filler and deliver authoritative, insight-dense explanations directly answering the user query.",
+      "parent_ids": [
+        "creative-lateral"
+      ],
+      "mutation_history": [
+        {
+          "timestamp": "2026-11-25T15:51:13.756794+00:00",
+          "parent_version": 1,
+          "tags": [
+            "precision_and_substance_refinement"
+          ],
+          "prior_fitness": 6.94
+        }
+      ],
+      "created_at": "2026-11-25T15:51:13.756794+00:00",
+      "is_active": false,
+      "status": "challenger",
+      "fitness_score": null
+    },
+    "benchmark_result": {
+      "champion_id": "creative-lateral",
+      "challenger_id": "creative-lateral-v2",
+      "champion_score": 6.96,
+      "challenger_score": 6.98,
+      "delta": 0.02,
+      "improvement_pct": 0.3,
+      "qualified_for_promotion": false,
+      "benchmark_queries_count": 3,
+      "evaluation_breakdown": [
+        {
+          "category": "Technology & AI",
+          "query": "Analyze the impact of recent frontier AI safety agreements on global tech regulation.",
+          "champion_estimated_score": 6.96,
+          "challenger_estimated_score": 6.98,
+          "delta": 0.02
+        },
+        {
+          "category": "Economics & Governance",
+          "query": "What are the primary drivers of recent inflation trends and central bank interest rate decisions?",
+          "champion_estimated_score": 6.96,
+          "challenger_estimated_score": 6.98,
+          "delta": 0.02
+        },
+        {
+          "category": "International & Climate",
+          "query": "Explain the major outcomes, points of contention, and commitments from recent international summits.",
+          "champion_estimated_score": 6.96,
+          "challenger_estimated_score": 6.98,
+          "delta": 0.02
+        }
+      ],
+      "reason": "Challenger achieved +0.3% improvement (Δ=+0.02), below the required +8.0% threshold."
+    },
+    "staged_at": "2026-11-25T15:51:13.757793+00:00",
+    "status": "approved",
+    "approved_at": "2026-11-25T15:51:13.784007+00:00",
+    "approved_by": "AdminTest"
+  },
+  {
+    "candidate_id": "cand-6c4cf1e6",
+    "persona_config": {
+      "persona_id": "creative-lateral-v2",
+      "name": "Creative-Lateral (Evolved v2)",
+      "version": 2,
+      "generation": 1,
+      "role": "Unconventional framing and non-obvious connection discovery [Targeted Adaptation]",
+      "responsibilities": [
+        "Explore second-order consequences and non-linear implications",
+        "Formulate novel framings while staying grounded in source facts",
+        "Draw unexpected parallels across adjacent industry domains"
+      ],
+      "domain_expertise": [
+        "Lateral Thinking",
+        "Second-Order Effects",
+        "Cross-Domain Analogy",
+        "Novel Perspective"
+      ],
+      "system_prompt": "You are a lateral thinker. Go beyond the obvious interpretation. Draw unexpected connections, propose novel framings, and surface non-obvious implications from the context. Be creative but grounded in what is stated. Use only the provided context.\n\nANALYTICAL RIGOR: Focus on concrete, high-information analysis. Eliminate filler and deliver authoritative, insight-dense explanations directly answering the user query.",
+      "parent_ids": [
+        "creative-lateral"
+      ],
+      "mutation_history": [
+        {
+          "timestamp": "2026-11-25T16:08:33.150759+00:00",
+          "parent_version": 1,
+          "tags": [
+            "precision_and_substance_refinement"
+          ],
+          "prior_fitness": 6.94
+        }
+      ],
+      "created_at": "2026-11-25T16:08:33.150759+00:00",
+      "is_active": false,
+      "status": "challenger",
+      "fitness_score": null
+    },
+    "benchmark_result": {
+      "champion_id": "creative-lateral",
+      "challenger_id": "creative-lateral-v2",
+      "champion_score": 6.96,
+      "challenger_score": 6.98,
+      "delta": 0.02,
+      "improvement_pct": 0.3,
+      "qualified_for_promotion": false,
+      "benchmark_queries_count": 3,
+      "evaluation_breakdown": [
+        {
+          "category": "Technology & AI",
+          "query": "Analyze the impact of recent frontier AI safety agreements on global tech regulation.",
+          "champion_estimated_score": 6.96,
+          "challenger_estimated_score": 6.98,
+          "delta": 0.02
+        },
+        {
+          "category": "Economics & Governance",
+          "query": "What are the primary drivers of recent inflation trends and central bank interest rate decisions?",
+          "champion_estimated_score": 6.96,
+          "challenger_estimated_score": 6.98,
+          "delta": 0.02
+        },
+        {
+          "category": "International & Climate",
+          "query": "Explain the major outcomes, points of contention, and commitments from recent international summits.",
+          "champion_estimated_score": 6.96,
+          "challenger_estimated_score": 6.98,
+          "delta": 0.02
+        }
+      ],
+      "reason": "Challenger achieved +0.3% improvement (Δ=+0.02), below the required +8.0% threshold."
+    },
+    "staged_at": "2026-11-25T16:08:33.151638+00:00",
+    "status": "benchmark_failed"
+  },
+  {
+    "candidate_id": "cand-ed93b1f6",
+    "persona_config": {
+      "persona_id": "creative-lateral-v2",
+      "name": "Creative-Lateral (Evolved v2)",
+      "version": 2,
+      "generation": 1,
+      "role": "Unconventional framing and non-obvious connection discovery [Targeted Adaptation]",
+      "responsibilities": [
+        "Explore second-order consequences and non-linear implications",
+        "Formulate novel framings while staying grounded in source facts",
+        "Draw unexpected parallels across adjacent industry domains"
+      ],
+      "domain_expertise": [
+        "Lateral Thinking",
+        "Second-Order Effects",
+        "Cross-Domain Analogy",
+        "Novel Perspective"
+      ],
+      "system_prompt": "You are a lateral thinker. Go beyond the obvious interpretation. Draw unexpected connections, propose novel framings, and surface non-obvious implications from the context. Be creative but grounded in what is stated. Use only the provided context.\n\nANALYTICAL RIGOR: Focus on concrete, high-information analysis. Eliminate filler and deliver authoritative, insight-dense explanations directly answering the user query.",
+      "parent_ids": [
+        "creative-lateral"
+      ],
+      "mutation_history": [
+        {
+          "timestamp": "2026-11-25T16:10:23.175836+00:00",
+          "parent_version": 1,
+          "tags": [
+            "precision_and_substance_refinement"
+          ],
+          "prior_fitness": 6.94
+        }
+      ],
+      "created_at": "2026-11-25T16:10:23.175836+00:00",
+      "is_active": false,
+      "status": "challenger",
+      "fitness_score": null
+    },
+    "benchmark_result": {
+      "champion_id": "creative-lateral",
+      "challenger_id": "creative-lateral-v2",
+      "champion_score": 6.96,
+      "challenger_score": 6.98,
+      "delta": 0.02,
+      "improvement_pct": 0.3,
+      "qualified_for_promotion": false,
+      "benchmark_queries_count": 3,
+      "evaluation_breakdown": [
+        {
+          "category": "Technology & AI",
+          "query": "Analyze the impact of recent frontier AI safety agreements on global tech regulation.",
+          "champion_estimated_score": 6.96,
+          "challenger_estimated_score": 6.98,
+          "delta": 0.02
+        },
+        {
+          "category": "Economics & Governance",
+          "query": "What are the primary drivers of recent inflation trends and central bank interest rate decisions?",
+          "champion_estimated_score": 6.96,
+          "challenger_estimated_score": 6.98,
+          "delta": 0.02
+        },
+        {
+          "category": "International & Climate",
+          "query": "Explain the major outcomes, points of contention, and commitments from recent international summits.",
+          "champion_estimated_score": 6.96,
+          "challenger_estimated_score": 6.98,
+          "delta": 0.02
+        }
+      ],
+      "reason": "Challenger achieved +0.3% improvement (Δ=+0.02), below the required +8.0% threshold."
+    },
+    "staged_at": "2026-11-25T16:10:23.175836+00:00",
+    "status": "approved",
+    "approved_at": "2026-11-25T16:10:23.197255+00:00",
+    "approved_by": "Admin"
+  }
+]

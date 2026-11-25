@@ -60,6 +60,12 @@ async def lifespan(app: FastAPI):
         log.info(f"Index ready: {index.ntotal} vectors, dim={index.d}")
         # Initialize DB tables on startup
         create_db_and_tables()
+        # Initialize and sync versioned persona evolution registry
+        from persona_evolution.config_schema import load_persona_registry
+        from persona_evolution.admin_service import _hot_swap_runtime_personas
+        registry = load_persona_registry()
+        _hot_swap_runtime_personas(list(registry.values()))
+        log.info(f"Persona evolution registry ready: {len(registry)} personas active.")
     except FileNotFoundError as e:
         log.error(str(e))
         log.error("Run 'python embedder.py --build' to create the index first.")
@@ -90,6 +96,7 @@ from news_api import router as news_router
 from event_api import router as event_router
 from feedback_api import router as feedback_router
 from report_api import router as report_router
+from evolution_api import router as evolution_router
 
 app.include_router(auth_router)
 app.include_router(conversations_router)
@@ -100,6 +107,7 @@ app.include_router(news_router)
 app.include_router(event_router)
 app.include_router(feedback_router)
 app.include_router(report_router)
+app.include_router(evolution_router)
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
