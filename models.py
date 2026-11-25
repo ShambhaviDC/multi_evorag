@@ -287,3 +287,68 @@ class FeedbackRead(BaseModel):
     updated_at: str
 
 
+# ── Intelligent Report Generation & Analysis Snapshot Models ──────────────────
+
+class AnalysisSnapshot(SQLModel, table=True):
+    """Immutable snapshot of a complete consensus analysis for report generation and auditability."""
+    __tablename__ = "analysis_snapshot"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    snapshot_id: str = Field(unique=True, index=True)
+    conversation_id: Optional[int] = Field(default=None, foreign_key="conversation.id", index=True, nullable=True)
+    message_id: Optional[str] = Field(default=None, index=True, nullable=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="user.id", index=True, nullable=True)
+    query: str
+    final_answer: str
+    domain: str = Field(default="General News")
+    top_personas_json: str = Field(default="[]")
+    all_responses_json: str = Field(default="{}")
+    score_matrix_json: str = Field(default="{}")
+    final_scores_json: str = Field(default="{}")
+    sources_json: str = Field(default="[]")
+    retrieved_chunks_json: str = Field(default="[]")
+    xai_record_json: str = Field(default="{}")
+    temporal_context_json: str = Field(default="{}")
+    user_preferences_json: str = Field(default="{}")
+    created_at: datetime = Field(default_factory=utc_now)
+
+
+class GeneratedReport(SQLModel, table=True):
+    """Metadata record for an executive or detailed report produced from an analysis snapshot."""
+    __tablename__ = "generated_report"
+
+    id: str = Field(primary_key=True)
+    snapshot_id: str = Field(foreign_key="analysis_snapshot.snapshot_id", index=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="user.id", index=True, nullable=True)
+    conversation_id: Optional[int] = Field(default=None, index=True, nullable=True)
+    report_type: str = Field(index=True)  # "executive" or "detailed"
+    format: str = Field(index=True)       # "pdf" or "docx"
+    title: str
+    file_path: str
+    file_size_kb: float = Field(default=0.0)
+    created_at: datetime = Field(default_factory=utc_now)
+
+
+class ReportGenerateRequest(BaseModel):
+    snapshot_id: Optional[str] = None
+    conversation_id: Optional[int] = None
+    message_id: Optional[str] = None
+    report_type: str = "executive"  # "executive" or "detailed"
+    format: str = "pdf"            # "pdf" or "docx"
+    file_format: Optional[str] = None
+
+
+class ReportRead(BaseModel):
+    id: str
+    report_id: Optional[str] = None
+    snapshot_id: str
+    user_id: Optional[int] = None
+    conversation_id: Optional[int] = None
+    report_type: str
+    format: str
+    title: str
+    file_size_kb: float
+    download_url: str
+    created_at: str
+
+

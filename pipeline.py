@@ -92,9 +92,8 @@ def extract_text_from_final_answer(text: str) -> str:
                 return val
 
         # Fallback strip prefix and suffix
-        sub = re.sub(r'^[\s\S]*?"final_answer"\s*:\s*"', '', text)
-        sub = re.sub(r'",\s*"personas"[\s\S]*$', '', sub)
-        sub = re.sub(r'"\s*\}\s*$', '', sub)
+        sub = re.sub(r'^[\s\S]*?"final_answer"\s*:\s*"?', '', text)
+        sub = re.sub(r'(?:",\s*"personas"[\s\S]*|"\s*\}?\s*[\s\S]*|"\s*\}?\s*)$', '', sub)
         sub = sub.replace('\\"', '"').replace('\\n', '\n').strip()
         if sub:
             return sub
@@ -656,7 +655,8 @@ async def evorag_query(
     score_matrix = await build_score_matrix(query, responses)
     final_scores = compute_final_scores(score_matrix)
     top_personas = select_top_personas(final_scores, responses, personalization_scores=pers_scores)
-    final_answer = await synthesize_top_k(query, top_personas, responses, final_scores)
+    raw_final_answer = await synthesize_top_k(query, top_personas, responses, final_scores)
+    final_answer = clean_final_answer(raw_final_answer)
 
     received = summarize_received_scores(score_matrix)
     persona_scores = {}

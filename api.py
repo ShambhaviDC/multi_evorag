@@ -89,6 +89,7 @@ from personalization_agent import update_user_interests_incremental
 from news_api import router as news_router
 from event_api import router as event_router
 from feedback_api import router as feedback_router
+from report_api import router as report_router
 
 app.include_router(auth_router)
 app.include_router(conversations_router)
@@ -98,6 +99,7 @@ app.include_router(personalization_router)
 app.include_router(news_router)
 app.include_router(event_router)
 app.include_router(feedback_router)
+app.include_router(report_router)
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -180,6 +182,7 @@ class ConsensusQueryResponse(BaseModel):
     personalization_summary: Optional[str] = ""
     applied_personalization: Optional[Dict[str, Any]] = None
     xai_explanation: Optional[Dict[str, Any]] = None
+    snapshot_id: Optional[str] = None
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -454,6 +457,28 @@ async def consensus_endpoint(
         log.exception("Unexpected error during consensus processing")
         raise HTTPException(status_code=500, detail=f"Internal error: {e}")
 
+    # Save immutable AnalysisSnapshot for deterministic, instant Report Generation
+    try:
+        from report_service import save_analysis_snapshot
+        user_id = current_user.id if current_user else None
+        snap = save_analysis_snapshot(
+            query=req.query,
+            query_id=result.get("query_id", ""),
+            final_answer=result.get("final_answer", ""),
+            top_personas=result.get("top_personas", []),
+            all_responses=result.get("all_responses", {}),
+            score_matrix=result.get("score_matrix", {}),
+            scores=result.get("scores", {}),
+            sources=result.get("sources", []),
+            retrieved_chunks=result.get("retrieved_chunks", []),
+            xai_explanation=result.get("xai_explanation", {}),
+            session=session,
+            user_id=user_id,
+        )
+        result["snapshot_id"] = snap.snapshot_id
+    except Exception as snap_err:
+        log.warning("Snapshot save failed (non-critical): %s", snap_err)
+
     # Run evolution check AFTER the response is built — adds zero latency
     background_tasks.add_task(_run_evolution_check)
 
@@ -524,6 +549,28 @@ async def consensus_multimodal_endpoint(
     except Exception as e:
         log.exception("Unexpected error during multimodal consensus processing")
         raise HTTPException(status_code=500, detail=f"Internal error: {e}")
+
+    # Save immutable AnalysisSnapshot for deterministic, instant Report Generation
+    try:
+        from report_service import save_analysis_snapshot
+        user_id = current_user.id if current_user else None
+        snap = save_analysis_snapshot(
+            query=actual_query,
+            query_id=result.get("query_id", ""),
+            final_answer=result.get("final_answer", ""),
+            top_personas=result.get("top_personas", []),
+            all_responses=result.get("all_responses", {}),
+            score_matrix=result.get("score_matrix", {}),
+            scores=result.get("scores", {}),
+            sources=result.get("sources", []),
+            retrieved_chunks=result.get("retrieved_chunks", []),
+            xai_explanation=result.get("xai_explanation", {}),
+            session=session,
+            user_id=user_id,
+        )
+        result["snapshot_id"] = snap.snapshot_id
+    except Exception as snap_err:
+        log.warning("Snapshot save failed (non-critical): %s", snap_err)
 
     background_tasks.add_task(_run_evolution_check)
 
